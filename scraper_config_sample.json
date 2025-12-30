@@ -1,0 +1,19 @@
+{
+  "question_class": "question-content",
+  "chapter_class": "chapter-content",
+  "htmltag": "div",
+  "folder": "c:/story",
+  "imagefolder": "image",
+  "oneHtmlSite": false,
+  "htmlSiteOverride": true,
+  "recursionlimit": 1500,
+  "login": {
+    "login_url": "https://chyoa.com/auth/login",
+    "username": "Yourusername",
+    "password": "xxxxx"
+  },
+  "urls": [
+    "https://chyoa.com/story/sample1.12345",
+    "https://chyoa.com/story/sample2.52900"
+  ]
+}
