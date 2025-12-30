@@ -16,11 +16,19 @@ class parser:
 
                 soup = parser.getSoup(debug, session, url)
                 story_header1, story_header2, foldername = parser.scrape_storytitle(debug, soup)
+                if len(foldername) > 100:
+                    foldername = foldername[0:100]
                 story_title = story_header2
                 filenameMap = foldername+"-map.html"
                 
                 # create folder
                 folderPath = os.path.join(folder, foldername)
+                counter = 1
+                while os.path.exists(folderPath):
+                    folderPath = f"{folderPath}_{counter}"
+                    if debug:
+                        print(f"folderPath: {folderPath}")
+                    counter += 1
                 os.makedirs(folderPath, exist_ok=True)
 
                 imageFolderPath = os.path.join(folderPath, imageFolderNameOnly)
