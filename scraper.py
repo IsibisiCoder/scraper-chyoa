@@ -1,9 +1,12 @@
+# (c) 2025-2026 by IsibisiCoder, MIT-License, https://github.com/IsibisiCoder
+
 import sys
 import os
 import json
 import requests
 import login
-from chyoa import parser
+from config import Config
+from chyoa import Chyoa
 
 #call: python scraper.py scraper_config.json <url>
 def main():
@@ -11,11 +14,11 @@ def main():
     if debug:
         print(f"args: {len(sys.argv)}")
     if len(sys.argv) < 2:
-        print("call: python scraper.py <config_datei> optional: <url>")
+        print("call: python scraper.py <config_file> optional: <url>")
         sys.exit(1)
 
     def __init__(self):
-        self.parser = parser()
+        self.chyoa = Chyoa()
 
     config_json_file = sys.argv[1]
     url = ""
@@ -34,29 +37,41 @@ def main():
         print(f"config '{config_json_file}' can not loaded '{e}'")
         return
 
+    loginData = config.get("login")
+    if not login:
+        print(f"No login defined.")
     question_class = config.get("question_class")
-    content_class = config.get("chapter_class")
-    chapter_htmltag = config.get("htmltag")
-    recursionlimit = config.get("recursionlimit")
-    oneHtmlSite = config.get("oneHtmlSite")
-    htmlSiteOverride = config.get("htmlSiteOverride")
+    contentClass = config.get("chapter_class")
+    chapterHtmltag = config.get("htmltag")
+    recursionLimit = config.get("recursionlimit")
+    multiplePages = config.get("multiple_pages")
+    wholeStoryOnePage = config.get("whole_story_one_page")
+    overrideHtmlSites = config.get("override_html_sites")
+    storyNameWithId = config.get("storyname_with_id")
+
+    if multiplePages == False and  wholeStoryOnePage == False:
+        print("Configuration error: Please set either `multiplepages` or `wholeStoryOnePage` to True")
+        return
+
     if not question_class:
         print("configfile: question_class not found!")
         sys.exit(1)
-    if not chapter_htmltag:
-        chapter_htmltag = "div"
+    if not chapterHtmltag:
+        chapterHtmltag = "div"
     
-    folder = config.get("folder")
-    if not folder:
-        folder = "story"
-    imagefolder = config.get("imagefolder")
-    if not imagefolder:
-        imagefolder = "image"
+    folderPathStories = config.get("folder")
+    if not folderPathStories:
+        folderPathStories = "story"
+    foldernameImage = config.get("foldername_image")
+    if not foldernameImage:
+        foldernameImage = "image"
+
+    configuration = Config(loginData, question_class, contentClass, chapterHtmltag, recursionLimit, storyNameWithId, multiplePages, wholeStoryOnePage, overrideHtmlSites, folderPathStories, foldernameImage)
 
     if debug:
-        print(f"download-folder is: '{folder}'")
-        print(f"content_class {content_class} ...")
-        print(f"htmltag {chapter_htmltag} ...")
+        print(f"download-folder is: '{folderPathStories}'")
+        print(f"content_class {contentClass} ...")
+        print(f"htmltag {chapterHtmltag} ...")
 
     # read url's from config, if one url not in args
     urls = []
@@ -69,11 +84,11 @@ def main():
         urls.append(url)
 
     with requests.Session() as session:
-        login.login(debug, session, config)
+        login.login(debug, session, configuration)
 
         if debug:
             print(f"urls: {urls}")
-        parser.getStories(debug, session, folder, imagefolder, urls, question_class, content_class, chapter_htmltag, oneHtmlSite, htmlSiteOverride, recursionlimit )
+        Chyoa.getStories(debug, session, configuration, urls)
 
 if __name__ == "__main__":
     main()

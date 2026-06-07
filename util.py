@@ -1,3 +1,4 @@
+# (c) 2025-2026 by IsibisiCoder, MIT-License, https://github.com/IsibisiCoder
 import os
 import shutil
 import re
@@ -37,7 +38,7 @@ def download_image(debug, filename_base_name, imageFolderPath, imageFolderNameOn
     if debug:
         print(f"suffix: {suffix}")
         print(f"img_url: {img_url}")
-
+    print(f"imageFolderPath: {imageFolderPath}")
     os.makedirs(imageFolderPath, exist_ok=True)
     filename = get_unique_filename(debug, imageFolderPath, filename_base_name, suffix)
     filepath = os.path.join(imageFolderPath, filename)
@@ -53,6 +54,7 @@ def download_image(debug, filename_base_name, imageFolderPath, imageFolderNameOn
             print(f"image saved: {filepath}")
     except Exception as e:
         print(f"error load image {img_url}: {e}")
+    print(f"filepathRelativ: {filepathRelativ}")
     return filepathRelativ
 
 def save(debug, foldername, filename, node, html, htmlSiteOverride):

@@ -2,6 +2,14 @@
 Python script for saving chyoa stories in an interactive HTML webpage or for saving chapters in individual HTML webpages  
 This Python script allows you to download interactive stories from the Story website [chyoa](https://chyoa.com/).  
 
+## whats new in this branch:  
+- refectoring of code
+- File names begin with a four-digit ID
+- The page title has been updated to include the chapter heading
+
+The configuration has been updated: `oneHtmlSite` has been removed, and two new parameters, `multiple_pages` and `whole_story_one_page`, have been added. Setting `multiple_pages: true` saves the chapters individually, while setting `whole_story_one_page` saves all chapters in a single HTML file. One of these parameters must be set to `true`; however, if neither parameter is set to `true`, a single file with the suffix `-total.html` will be generated in addition to the individual files.
+
+
 ## features
 
 * Saving a chapter as a separate HTML page
@@ -15,8 +23,10 @@ This Python script allows you to download interactive stories from the Story web
 
 ## install
 
-The Python scripts used several other external Python scripts that must be installed beforehand:  
-* pip install beautifulsoup4
+Install the dependencies:
+```script
+pip install -r requirements.txt
+```
 
 ## configuration
 
@@ -96,6 +106,10 @@ Dieses Python-Script bietet die Möglich, interaktive Stories von der Story-Webs
 
 Die Python-Scripte verwendete einige weitere externe Python-Scripte, die vorher installiert werden müssen:  
 * pip install beautifulsoup4
+
+## Was ist neu:
+
+Die Konfiguration wurde angepasst: `oneHtmlSite` entfällt, statt dessen gibt es zwei neue Parameter `multiple_pages` und `whole_story_one_page`. Mit `multiple_pages: true` werden die Kapitel einzelnd gespeichert, mit `whole_story_one_page` werden alle Kapitel in einer einziger Html-Datei gespeichert. Einer dieser Parameter muss `true` sein, es können nun aber auch keine Parameter `true` ein, dann werden neben den Einzeldateien auch eine Gesamtdatei mit dem Suffix `-total.html` erzeugt.
 
 ## Konfiguration
 

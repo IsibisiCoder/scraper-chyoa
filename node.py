@@ -1,3 +1,4 @@
+# (c) 2025-2026 by IsibisiCoder, MIT-License, https://github.com/IsibisiCoder
 class Node:
     def __init__(self, value):
         self.value = value
