@@ -20,6 +20,9 @@ The configuration has been updated: `oneHtmlSite` has been removed, and two new 
 * Downloading embedded images
 * Configuration of login data possible (automatic login)
 * Download and storage of multiple stories possible
+* feat. add description, author, published_time, category, language, tag
+* fix failure when html-link is 'Add a link chapter'
+* refac
 
 ## install
 
@@ -77,9 +80,28 @@ e.g.
 python scraper.py scraper_config_sample.json
 ```
 
+## Note
+
+Some stories under "What's Next" link to existing chapters in a different sequence (recursion). To prevent this from becoming an infinite loop, the link is broken at this point. The console output displays the following message:  
+
+```
+Url: https://chyoa.com/chapter/... exists and links from url do not follow!.
+```
+
+When saving, the program also attempts to save this file multiple times, which is obviously unnecessary.
+However, an error message is displayed, which can be ignored in this case: 
+
+```
+File cannot be saved because the filename already exists!
+```
+
 ## development
 
 To test the functionality or to obtain detailed output during development, the environment variable `DEBUG` must be set.   
+
+```bash
+export DEBUG=True
+```
 
 ### License
 
@@ -160,9 +182,27 @@ e.g.
 python scraper.py scraper_config_sample.json
 ```
 
+## Hinweise
+
+Einige Geschichten verweisen unter "what's next" auf bereits bestehende Kapitel in einem anderen  Ablauf (Rekursivität). Damit hieraus keine endlose Rekursion wird, wird die Verfolgung des Links an dieser Stelle abgebrochen. In der Konsolenausgabe erfolgt der Hinweis:  
+```
+Url: https://chyoa.com/chapter/... exists and links from url do not follow!.
+```
+
+Beim Speichern versucht das Programm ebenfalls, diese Datei mehrfach abzuspeichern, was natürlich nicht notwendig ist.
+Es wird aber eine Fehlemeldung ausgegeben, die in diesem Fall ignoriert werden kann: 
+
+```
+File can not saved, because filename exists!
+```
+
 ### Entwicklung / debugging
 
 Um die Funktionsweise zu testen bzw. während der Entwicklung detaillierte Ausgaben zu bekommen, muss die Umgebungsvariable `DEBUG` gesetzt werden.  
+
+```bash
+export DEBUG=True
+```
 
 ### License
 

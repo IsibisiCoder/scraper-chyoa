@@ -6,11 +6,13 @@ class Config:
         self.contentClass = contentClass
         self.chapterHtmltag = chapterHtmltag
         self.recursionLimit = recursionLimit
-        self.multiplePages = multiplePages
-        self.wholeStoryOnePage = wholeStoryOnePage
+        self.multiple_pages = multiplePages
+        self.whole_story_one_page = wholeStoryOnePage
         self.overrideHtmlSites = overrideHtmlSites
         self.storyNameWithId = storyNameWithId,
 
         # Foldername and path
         self.folderpathStories = folderpathStories
         self.foldernameImage = foldernameImage
+
+

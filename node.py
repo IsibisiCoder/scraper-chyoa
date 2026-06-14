@@ -11,13 +11,17 @@ class Node:
 
     def contains(node, url):
         if node.value.url == url:
-            #print(f'Root: {node.value.id} / {node.value.url}-{url}')
+            #if debug:
+            #    print(f'Root: {node.value.id} / {node.value.url}-{url}')
             return True, node
         for child in node.children:
-            #print(f'Child: {child.value.url}-{url}')
+            #if debug:
+            #    print(f'Child: {child.value.url}-{url}')
             containsUrl, containsNode = Node.contains(child, url)
             if containsUrl:
-                #print(f'Child: true => {url}')
+                #if debug:
+                #    print(f'Child: true => {url}')
                 return True, containsNode
-        #print(f'Child: false => {url}')
+        #if debug:
+        #    print(f'Child: false => {url}')
         return False, None
