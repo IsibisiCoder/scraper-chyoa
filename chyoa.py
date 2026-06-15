@@ -375,13 +375,19 @@ class Chyoa:
             htmltext.append(f'<h2 id={str(node.value.id)} class="chapterheader">{node.value.chapter_title}')
         if node.value.meta.author.strip():
             htmltext.append(f" by {node.value.meta.author}")
-            if node.value.meta.published_time.strip() or node.value.meta.modified_time.strip():
+            if node.value.meta.published_time_short != "" or node.value.meta.modified_time_short != "":
                 htmltext.append('<span class="publisheddate">')
-                htmltext.append(f" created on {node.value.meta.published_time_short}, updated on {node.value.meta.published_time_short}")
+                time = ""
+                if node.value.meta.published_time_short != "":
+                    time = f" created on {node.value.meta.published_time_short}"
+                if node.value.meta.published_time_short != "" and node.value.meta.modified_time_short != "":
+                    time = f"{time}, "
+                if node.value.meta.modified_time_short != "":
+                    time = f"{time}updated on {node.value.meta.modified_time_short}"
+                htmltext.append(time)
                 htmltext.append('</span>')
         htmltext.append("</h2><br>")
 
-#        if multiple_pages:
         htmltext = self.create_description_body(htmltext, node)
 
         if node.value.story_header2.strip():
@@ -457,7 +463,18 @@ class Chyoa:
         if not linktext:
             linktext = node.value.story_title
 
-        additional_text = f'<span class="author-link">by {node.value.meta.author}</span><span class="publisheddate-link">      (created on {node.value.meta.published_time_short},   updated on {node.value.meta.published_time_short})' + '</span>'
+        additional_text = ""
+        if node.value.meta.author != "":
+            additional_text = additional_text + f'<span class="author-link">by {node.value.meta.author}</span>'
+        if node.value.meta.published_time_short != "" or node.value.meta.modified_time_short != "":
+            time = '<span class="publisheddate-link">'
+            if node.value.meta.published_time_short != "":
+                time = f"{time} (created on {node.value.meta.published_time_short}"
+            if node.value.meta.published_time_short != "" and node.value.meta.modified_time_short != "":
+                time = f"{time},   "
+            if node.value.meta.modified_time_short != "":
+                time = f"{time}updated on {node.value.meta.published_time_short}"
+            time = time + '</span>'
 
         style = "margin-left: 30px;"
         #display = "display: block;"

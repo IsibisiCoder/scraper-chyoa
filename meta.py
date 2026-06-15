@@ -30,14 +30,18 @@ class Meta:
     def scrape_meta_properties(self, soup):
         """scrape all properties"""
         self.title = self.scrape_meta_property(soup, "og:title")
-        self.published_time = self.scrape_meta_property(soup, "article:published_time")
+        self.published_time = self.scrape_meta_property(soup, "article:published_time").strip()
         self.modified_time = self.scrape_meta_property(soup, "article:modified_time")
         self.description = self.scrape_meta_property(soup, "og:description")
+        if not self.published_time == '':
+            self.published_time_short = datetime.fromisoformat(self.published_time).date().isoformat()
+        else:
+            self.published_time_short = ""
 
-        dt = datetime.fromisoformat(self.published_time)
-        self.published_time_short = dt.strftime("%Y-%m-%d")
-        dt = datetime.fromisoformat(self.modified_time)
-        self.modified_time_short = dt.strftime("%Y-%m-%d")
+        if not self.modified_time == '':
+            self.modified_time_short = datetime.fromisoformat(self.modified_time).date().isoformat()
+        else:
+            self.modified_time_short = ""
 
         self.scrape_pairs_columns(soup)
 
