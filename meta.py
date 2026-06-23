@@ -88,28 +88,33 @@ class Meta:
 
         if script:
             # load json content
-            data = json.loads(script.string)
+            try:
+                data = json.loads(script.string, strict=False)
 
-            if "inLanguage" in data and "name" in data["inLanguage"]:
-                self.speech = data["inLanguage"]["name"]
-            else:
-                self.speech = ""
+                if "inLanguage" in data and "name" in data["inLanguage"]:
+                    self.speech = data["inLanguage"]["name"]
+                else:
+                    self.speech = ""
 
-            if "keywords" in data:
-                self.tag = data["keywords"]
-            else:
-                self.tag = ""
+                if "keywords" in data:
+                    self.tag = data["keywords"]
+                else:
+                    self.tag = ""
 
+                stats = {
+                    stat["interactionType"].split("/")[-1]: int(stat["userInteractionCount"])
+                    for stat in data["interactionStatistic"]
+                }
+                self.likes = stats["LikeAction"]
+                self.views = stats["WatchAction"]
 
-            stats = {
-                stat["interactionType"].split("/")[-1]: int(stat["userInteractionCount"])
-                for stat in data["interactionStatistic"]
-            }
-            self.likes = stats["LikeAction"]
-            self.views = stats["WatchAction"]
-
-            if self.debug:
-                print(f"tag: {self.tag}")
-                print(f"speech: {self.speech}")
-                print(f"likes: {self.likes}")
-                print(f"views: {self.views}")
+                if self.debug:
+                    print(f"tag: {self.tag}")
+                    print(f"speech: {self.speech}")
+                    print(f"likes: {self.likes}")
+                    print(f"views: {self.views}")
+            except Exception as e:
+                print("Typ:", type(e))
+                print("Typ-Name:", type(e).__name__)
+                print(f"Error: '{e}")
+                print(script.string)

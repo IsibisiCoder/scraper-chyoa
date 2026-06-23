@@ -6,6 +6,11 @@ This Python script allows you to download interactive stories from the Story web
 - refectoring of code
 - File names begin with a four-digit ID
 - The page title has been updated to include the chapter heading
+- feat.: add description, author, published_time, category, language, tag
+- feat.: foldername contains modified_date
+- fix: failure when html-link is 'Add a link chapter'
+- fix: Crash when loading invalid JavaScript
+- refac
 
 The configuration has been updated: `oneHtmlSite` has been removed, and two new parameters, `multiple_pages` and `whole_story_one_page`, have been added. Setting `multiple_pages: true` saves the chapters individually, while setting `whole_story_one_page` saves all chapters in a single HTML file. One of these parameters must be set to `true`; however, if neither parameter is set to `true`, a single file with the suffix `-total.html` will be generated in addition to the individual files.
 
@@ -20,9 +25,7 @@ The configuration has been updated: `oneHtmlSite` has been removed, and two new 
 * Downloading embedded images
 * Configuration of login data possible (automatic login)
 * Download and storage of multiple stories possible
-* feat. add description, author, published_time, category, language, tag
-* fix failure when html-link is 'Add a link chapter'
-* refac
+* Add properties e.g. description, author, published_time, category, language, tag
 
 ## install
 

@@ -24,11 +24,14 @@ class Chyoa:
                 if len(foldername_story) > 100:
                     foldername_story = foldername_story[0:100]
                 story_title = story_header2
-                foldername_story = foldername_story.lstrip("-")
-
-                story_id = 1
 
                 meta = Meta(debug)
+                meta.scrape_meta_properties(soup)
+                meta.scrape_json(soup)
+
+                foldername_story = foldername_story.strip("-")
+
+                story_id = 1
 
                 root_story = Story(
                     config = config,
@@ -44,8 +47,11 @@ class Chyoa:
                     filename_total = foldername_story + "-total.html"
                 )
 
-                # create folder
-                root_story.create_folder(foldername_story)
+                # create folder with modified_time
+                folder = foldername_story
+                if meta.modified_time_short != '':
+                    folder = folder + f' ({meta.modified_time_short})'
+                root_story.create_folder(folder)
                 root_story.create_folder_image()
                 if debug:
                     print(f"root.storyFolderpath: {root_story.folderpath_story}")
@@ -53,8 +59,6 @@ class Chyoa:
 
                 print(f"downloading {url} -> title: {story_title}, folder: {root_story.folderpath_story}")
 
-                meta.scrape_meta_properties(soup)
-                meta.scrape_json(soup)
                 chapter_title, author,  _, _ = self.scrape_chapter_title_story_header(debug, soup)
                 root_story.meta.author = author
                 filename = self.create_filename(debug, story_header2, story_title, config.folderpathStories).lstrip("-")
