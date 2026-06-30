@@ -40,6 +40,7 @@ def main():
     recursionlimit = config.get("recursionlimit")
     oneHtmlSite = config.get("oneHtmlSite")
     htmlSiteOverride = config.get("htmlSiteOverride")
+    createEpub = config.get("createEpub", False)
     if not question_class:
         print("configfile: question_class not found!")
         sys.exit(1)
@@ -73,7 +74,7 @@ def main():
 
         if debug:
             print(f"urls: {urls}")
-        parser.getStories(debug, session, folder, imagefolder, urls, question_class, content_class, chapter_htmltag, oneHtmlSite, htmlSiteOverride, recursionlimit )
+        parser.getStories(debug, session, folder, imagefolder, urls, question_class, content_class, chapter_htmltag, oneHtmlSite, htmlSiteOverride, recursionlimit, createEpub)
 
 if __name__ == "__main__":
     main()

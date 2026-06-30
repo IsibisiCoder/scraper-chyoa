@@ -7,6 +7,7 @@
   "oneHtmlSite": false,
   "htmlSiteOverride": true,
   "recursionlimit": 1500,
+  "createEpub": true,
   "login": {
     "login_url": "https://chyoa.com/auth/login",
     "username": "Yourusername",

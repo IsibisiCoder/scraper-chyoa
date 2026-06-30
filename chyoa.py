@@ -6,10 +6,11 @@ from story import Story
 from node import Node
 from util import get_unique_filename, download_image, save, copyCss
 from bs4 import BeautifulSoup
-
-
+import ebooklib
+from ebooklib import epub
+import uuid
 class parser:
-    def getStories(debug, session, folder, imageFolderNameOnly, urls, question_class, chapter_class, htmltag, oneHtmlSite, htmlSiteOverride, recursionlimit):
+    def getStories(debug, session, folder, imageFolderNameOnly, urls, question_class, chapter_class, htmltag, oneHtmlSite, htmlSiteOverride, recursionlimit, createEpub=False):
         for idx, url in enumerate(urls, 1):
             try:
                 print(f"load {url} ...")
@@ -75,6 +76,8 @@ class parser:
                 parser.saveStories(debug, folderPath, root, oneHtmlSite, htmlSiteOverride)
                 if oneHtmlSite == False:
                     parser.createMap(debug, folderPath, filenameMap, root, oneHtmlSite, htmlSiteOverride)
+                if createEpub:
+                    parser.saveEpub(debug, folderPath, story_title, root, imageFolderPath)
 
             except requests.RequestException as e:
                 print(f"Error loading {url}: {e}")
@@ -105,7 +108,12 @@ class parser:
             for a_tag in c.find_all("a"):
                 a_href = a_tag.get("href")
                 a_text = a_tag.get_text(strip=True)
-                if not a_text == "Add a new chapter":
+                
+                # Filter out UI buttons for adding/linking chapters
+                if "/new?type=" in a_href or "Add a new chapter" in a_text or "Write a chapter" in a_text or "Link a chapter" in a_text:
+                    continue
+                
+                if True: # keep existing indentation for the rest of the block
                     if debug:
                         print(f"link {a_href}")
                         print(f"text {a_text}")
@@ -150,6 +158,102 @@ class parser:
         if oneHtmlSite == False and node.value.follow == True:
             for child in node.children:
                 parser.saveStories(debug, foldername, child, oneHtmlSite, htmlSiteOverride)
+
+    def saveEpub(debug, folderPath, story_title, root, imageFolderPath):
+        book = epub.EpubBook()
+        book.set_identifier(str(uuid.uuid4()))
+        book.set_title(story_title)
+        book.set_language('en')
+        if root.value.author:
+            book.add_author(root.value.author)
+
+        # Get all nodes in a flat list
+        all_nodes = []
+        def _flatten(n):
+            all_nodes.append(n)
+            for c in n.children:
+                if c.value.follow:
+                    _flatten(c)
+        _flatten(root)
+
+        # Map node ids to epub chapters
+        epub_chapters = {}
+        for n in all_nodes:
+            # use original HTML creation logic but modified for EPUB formatting
+            c = epub.EpubHtml(title=n.value.chapter_title or story_title, file_name=f'chapter_{n.value.id}.xhtml', lang='en')
+            htmltext = []
+            htmltext.append("<html><head><title>{}</title></head><body>".format(n.value.chapter_title or story_title))
+            if n.value.story_image and n == root:
+                 # It's root, add cover image to book
+                 cover_file = n.value.story_image
+                 if cover_file and os.path.exists(os.path.join(folderPath, cover_file)):
+                     with open(os.path.join(folderPath, cover_file), 'rb') as f:
+                         book.set_cover(cover_file.replace('\\', '/'), f.read())
+            
+            if n.value.chapter_title:
+                htmltext.append(f"<h2>{n.value.chapter_title}")
+                if n.value.author:
+                    htmltext.append(f" by {n.value.author}")
+                htmltext.append("</h2>")
+            
+            if n.value.story_header2:
+                htmltext.append(f"<h2>{n.value.story_header2}</h2>")
+            if n.value.story_header1:
+                htmltext.append(f"<h1>{n.value.story_header1}</h1>")
+            htmltext.append("<hr/>")
+            htmltext.append(n.value.text)
+            htmltext.append("<hr/>")
+            htmltext.append(f"<h3>{n.value.question}</h3>")
+            
+            # Choice Links
+            htmltext.append("<div>")
+            for child in n.children:
+                htmltext.append(f'<div><a href="chapter_{child.value.id}.xhtml">{child.value.linktext}</a></div>')
+            htmltext.append("</div>")
+            
+            htmltext.append("</body></html>")
+            
+            c.content = "".join(htmltext)
+            book.add_item(c)
+            epub_chapters[n.value.id] = c
+
+        # Add images
+        if os.path.exists(imageFolderPath):
+            for img_file in os.listdir(imageFolderPath):
+                img_path = os.path.join(imageFolderPath, img_file)
+                if os.path.isfile(img_path):
+                    with open(img_path, 'rb') as f:
+                        img_item = epub.EpubImage()
+                        rel_path = os.path.relpath(img_path, folderPath).replace('\\', '/')
+                        img_item.file_name = rel_path
+                        img_item.content = f.read()
+                        book.add_item(img_item)
+        
+        # Define Spine and TOC
+        book.spine = ['nav']
+        for n in all_nodes:
+            book.spine.append(epub_chapters[n.value.id])
+
+        def build_toc(node):
+            toc_entry = epub_chapters[node.value.id]
+            children_toc = []
+            for child in node.children:
+                if child.value.follow:
+                    children_toc.append(build_toc(child))
+            
+            if children_toc:
+                return (toc_entry, children_toc)
+            return toc_entry
+            
+        book.toc = [build_toc(root)]
+            
+        book.add_item(epub.EpubNcx())
+        book.add_item(epub.EpubNav())
+        
+        epub_filename = os.path.join(folderPath, f"{root.value.filename}.epub")
+        epub.write_epub(epub_filename, book, {})
+        if debug:
+            print(f"EPUB created: {epub_filename}")
 
     def scrape_storytitle(debug, soup):
         header = soup.find('header', class_='story-header')
@@ -219,9 +323,8 @@ class parser:
             print(f"question: {question}")
         return question
 
-    def scrape_images(debug, soup, imageFolderPath, imageFolderNameOnly, content):
-        contentNew = content
-        for img in soup.find_all("img"):
+    def scrape_images(debug, element, imageFolderPath, imageFolderNameOnly, soup_context):
+        for img in element.find_all("img"):
             img_src = img.get("src")
             if img_src:
                 if debug:
@@ -229,11 +332,15 @@ class parser:
                 filenameImage = download_image(debug, "chapter-image", imageFolderPath, imageFolderNameOnly, img_src)
                 if filenameImage:
                     if debug:
-                        print(f'image-src: {img_src}')
                         print(f'replace with: {filenameImage}')
-                    contentNew = content.replace(f'{img_src}', f'{filenameImage}') 
-        return contentNew
-
+                    img['src'] = filenameImage.replace('\\', '/')
+                    # Apply responsive styling for eReaders
+                    img['style'] = "max-width: 100%; height: auto; display: block;"
+                    # Insert the requested prefix before the image
+                    prefix_span = soup_context.new_tag("div")
+                    prefix_span.string = "illustration-"
+                    img.insert_before(prefix_span)
+        return element
     def scrape_StoryCover(debug, soup, imageFolderPath, imageFolderNameOnly):
         filenameImage = ""
         html = ""
@@ -249,11 +356,15 @@ class parser:
 
     def scrape_content(debug, soup, htmltag, chapter_class, imageFolderPath, imageFolderNameOnly):
         content_navigable_all = soup.find_all(htmltag, class_=chapter_class)
-        content = content_navigable_all[0].prettify() if content_navigable_all else "<!-- no content found -->"
-
-        #save iamges
-        content = parser.scrape_images(debug, content_navigable_all[0], imageFolderPath, imageFolderNameOnly, content)
-        #if debug:
+        if not content_navigable_all:
+            return "<!-- no content found -->"
+        
+        chapter_element = content_navigable_all[0]
+        # Modify images in the tree before prettifying
+        parser.scrape_images(debug, chapter_element, imageFolderPath, imageFolderNameOnly, soup)
+        
+        content = chapter_element.prettify()
+        return content
         #    print(f"Story: {content}")
         return content
 
