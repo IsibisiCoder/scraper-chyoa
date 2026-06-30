@@ -1,5 +1,5 @@
 # scraper-chyoa
-Python script for saving chyoa stories in an interactive HTML webpage or for saving chapters in individual HTML webpages  
+Python script for saving chyoa stories in an interactive HTML webpage, individual HTML webpages, or as a compiled EPUB e-book.  
 This Python script allows you to download interactive stories from the Story website [chyoa](https://chyoa.com/).  
 
 ## features
@@ -12,26 +12,31 @@ This Python script allows you to download interactive stories from the Story web
 * Downloading embedded images
 * Configuration of login data possible (automatic login)
 * Download and storage of multiple stories possible
+* Saving all chapters compiled into a single EPUB e-book (with a hierarchical/nested Table of Contents representing choices and inner-book hyperlinks)
 
 ## install
 
-The Python scripts used several other external Python scripts that must be installed beforehand:  
-* pip install beautifulsoup4
+The Python scripts use external Python libraries that must be installed beforehand. You can install them using the provided `requirements.txt`:
+```bash
+pip install -r requirements.txt
+```
+*(Or manually install: `pip install beautifulsoup4 EbookLib`)*
 
 ## configuration
 
 The Python script is configured in a separate JSON file. The file name can be anything and is specified as a parameter when the script is called.  
-A sample JSON file is included and looks like this:  
+A sample JSON file (`scraper_config_sample.json`) looks like this:  
 ```json
 {
   "question_class": "question-content",
   "chapter_class": "chapter-content",
   "htmltag": "div",
-  "folder": "c:/story",
+  "folder": "story",
   "imagefolder": "image",
   "oneHtmlSite": false,
   "htmlSiteOverride": true,
   "recursionlimit": 1500,
+  "createEpub": true,
   "login": {
     "login_url": "https://chyoa.com/auth/login",
     "username": "Yourusername",
@@ -47,11 +52,12 @@ A sample JSON file is included and looks like this:
 The following values must be adjusted:  
 Value|Example|Meaning
 --|--|--
-folder|c:/story|This is the main folder where all stories are stored. For each story, another folder with the name of the story is created in this folder.
-imagefolder|image|All images are stored in this subfolder. There is a subfolder `image` for each story. It is possible to change the name, but this has not been tested.
+folder|story|This is the main folder where all stories are stored. For each story, another folder with the name of the story is created in this folder.
+imagefolder|image|All images are stored in this subfolder. There is a subfolder `image` for each story.
 oneHtmlSite|false or true|Should one HTML page be created per chapter (`false`) or should all chapters be saved in a shared HTML page (`true`)
-htmlSiteOverride|false or true|If, when saving the HTML page, it is determined that this page already exists, this option determines whether the existing page is overwritten. This can be the case with recursively linked stories (but should not be). However, this is always the case when saving the map file and the start file of the story.
+htmlSiteOverride|false or true|If, when saving the HTML page, it is determined that this page already exists, this option determines whether the existing page is overwritten.
 recursionlimit|1500|The pages at chyoa are recursively structured, and in Python there is a default value for the recursion depth. The default value can be adjusted here if necessary.
+createEpub|true or false|Enable compilation of the downloaded story into a proper EPUB e-book file (complete with nested table of contents and inline images).
 login|user/password|You can store your login information here.
 urls|...|List of URLs of the stories to be saved.
 
@@ -59,12 +65,7 @@ urls|...|List of URLs of the stories to be saved.
 
 You can run this utility from the command line:  
 ```
-python scraper.py <JSON-File>scraper_config.json
-```
-
-e.g.  
-```
-python scraper.py scraper_config_sample.json
+python scraper.py scraper_config.json
 ```
 
 ## development

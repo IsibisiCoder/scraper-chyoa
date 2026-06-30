@@ -2,7 +2,7 @@
   "question_class": "question-content",
   "chapter_class": "chapter-content",
   "htmltag": "div",
-  "folder": "c:/story",
+  "folder": "story",
   "imagefolder": "image",
   "oneHtmlSite": false,
   "htmlSiteOverride": true,
