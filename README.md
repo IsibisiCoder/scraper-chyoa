@@ -6,10 +6,13 @@ This Python script allows you to download interactive stories from the Story web
 - refectoring of code
 - File names begin with a four-digit ID
 - The page title has been updated to include the chapter heading
-- feat.: add description, author, published_time, category, language, tag
-- feat.: foldername contains modified_date
+- feat: add description, author, published_time, category, language, tag
+- feat: foldername contains modified_date
+- feat: configuration to show image load errors or not
 - fix: failure when html-link is 'Add a link chapter'
 - fix: Crash when loading invalid JavaScript
+- fix: New Button Write a chapter were ignored
+- fix: if image could not load, no empty imagefile were saved
 - refac
 
 The configuration has been updated: `oneHtmlSite` has been removed, and two new parameters, `multiple_pages` and `whole_story_one_page`, have been added. Setting `multiple_pages: true` saves the chapters individually, while setting `whole_story_one_page` saves all chapters in a single HTML file. One of these parameters must be set to `true`; however, if neither parameter is set to `true`, a single file with the suffix `-total.html` will be generated in addition to the individual files.
@@ -33,6 +36,14 @@ Install the dependencies:
 ```script
 pip install -r requirements.txt
 ```
+
+or you use a virtual environment:  
+```
+    python3 -m venv path/to/venv
+    source path/to/venv/bin/activate
+    python3 -m pip install -r requirements.txt
+  ```
+
 
 ## configuration
 

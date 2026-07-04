@@ -51,6 +51,8 @@ def main():
     whole_story_one_page = config.get("whole_story_one_page")
     override_html_sites = config.get("override_html_sites")
     storyname_with_id = config.get("storyname_with_id")
+    show_error_loading_image = config.get("show_error_loading_image")
+    show_chapter_name_loading_story = config.get("show_chapter_name_loading_story")
 
     if not multiple_pages and not whole_story_one_page:
         print("Configuration error: Please set either `multiplepages` or `wholeStoryOnePage` to True")
@@ -69,7 +71,7 @@ def main():
     if not foldername_image:
         foldername_image = "image"
 
-    configuration = Config(login_data, question_class, content_class, chapter_htmltag, recursion_limit, storyname_with_id, multiple_pages, whole_story_one_page, override_html_sites, folderpath_stories, foldername_image)
+    configuration = Config(login_data, question_class, content_class, chapter_htmltag, recursion_limit, storyname_with_id, multiple_pages, whole_story_one_page, override_html_sites, folderpath_stories, foldername_image, show_error_loading_image, show_chapter_name_loading_story)
 
     if debug:
         print(f"download-folder is: '{folderpath_stories}'")

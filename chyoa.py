@@ -64,7 +64,7 @@ class Chyoa:
                 filename = self.create_filename(debug, story_header2, story_title, config.folderpathStories).lstrip("-")
                 question = self.scrape_question(debug, soup)
                 story = self.scrape_content(debug, soup, root_story.image_folderpath, config)
-                image_filename = self.scrape_story_cover(debug, soup, root_story.image_folderpath, config.foldernameImage)
+                image_filename = self.scrape_story_cover(debug, config, soup, root_story.image_folderpath, config.foldernameImage)
 
                 startsite = f"{story_id:04d}"+"-"+filename
 
@@ -130,7 +130,9 @@ class Chyoa:
             for a_tag in c.find_all("a"):
                 a_href = a_tag.get("href")
                 a_text = a_tag.get_text(strip=True)
-                if not a_text == "Add a new chapter" and not a_text == "Add a link chapter":
+                not_continue_link_text = ["Add a new chapter", "Link a chapter", "Write a chapter"]
+                check_link_text = any(link_text in a_text for link_text in not_continue_link_text)
+                if not check_link_text:
                     if debug:
                         print(f"link {a_href}")
                         print(f"text {a_text}")
@@ -179,6 +181,8 @@ class Chyoa:
                         story = ""
                         follow = True
                         story = self.scrape_content(debug, soup_current_site, root.value.image_folderpath, config)
+                        if config.show_chapter_name_loading_story:
+                            print(f"Chapter {story_header1}")
                         current_link = Story(
                             config,
                             story_id,
@@ -296,15 +300,15 @@ class Chyoa:
             if img_src:
                 if debug:
                     print(f'image-src: {img_src}')
-                filename_image = download_image(debug, "chapter-image", image_folderpath, config.foldernameImage, img_src)
-                if filename_image:
+                filename_image = download_image(debug, config, "chapter-image", image_folderpath, config.foldernameImage, img_src)
+                if filename_image != "":
+                    content_new = content.replace(f'{img_src}', f'{filename_image}')
                     if debug:
                         print(f'image-src: {img_src}')
                         print(f'replace with: {filename_image}')
-                    content_new = content.replace(f'{img_src}', f'{filename_image}')
         return content_new
 
-    def scrape_story_cover(self, debug, soup, image_folderpath, foldername_image):
+    def scrape_story_cover(self, debug, config, soup, image_folderpath, foldername_image):
         """scrape cover"""
         filename_image = ""
         filename_image = ""
@@ -315,7 +319,7 @@ class Chyoa:
             if img_src:
                 if debug:
                     print(f'cover image-src: {img_src}')
-                filename_image = download_image(debug, "story", image_folderpath, foldername_image, img_src)
+                filename_image = download_image(debug, config, "story", image_folderpath, foldername_image, img_src)
         return filename_image
 
     def scrape_content(self, debug, soup, image_folderpath, config):
