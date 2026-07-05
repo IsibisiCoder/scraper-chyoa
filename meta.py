@@ -18,7 +18,8 @@ class Meta:
         self.author = ""
         self.pov = ""
         self.category = ""
-        self.speech = ""
+        self.language = ""
+        self.language_alternate_name = "en"
         self.published_time = ""
         self.published_time_short = ""
         self.modified_time = ""
@@ -91,10 +92,13 @@ class Meta:
             try:
                 data = json.loads(script.string, strict=False)
 
-                if "inLanguage" in data and "name" in data["inLanguage"]:
-                    self.speech = data["inLanguage"]["name"]
-                else:
-                    self.speech = ""
+                self.language = ""
+                self.language_alternate_name = "en"
+                if "inLanguage" in data:
+                    if "name" in data["inLanguage"]:
+                        self.language = data["inLanguage"]["name"]
+                    if "alternateName" in data["inLanguage"]:
+                        self.language_alternate_name = data["inLanguage"]["alternateName"]
 
                 if "keywords" in data:
                     self.tag = data["keywords"]
@@ -110,7 +114,7 @@ class Meta:
 
                 if self.debug:
                     print(f"tag: {self.tag}")
-                    print(f"speech: {self.speech}")
+                    print(f"language: {self.language}")
                     print(f"likes: {self.likes}")
                     print(f"views: {self.views}")
             except Exception as e:
