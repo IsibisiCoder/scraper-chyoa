@@ -1,157 +1,240 @@
+"""read stories and save them"""
+#(c) 2025-2026 by IsibisiCoder, MIT-License, https://github.com/IsibisiCoder
 import sys
-import os
-import requests
 import re
-from story import Story
-from node import Node
-from util import get_unique_filename, download_image, save, copyCss
+from datetime import datetime
+import requests
 from bs4 import BeautifulSoup
+#from config import Config
+from story import Story
+from meta import Meta
+from node import Node
+from util import get_unique_filename, download_image, save, copy_css
 
-
-class parser:
-    def getStories(debug, session, folder, imageFolderNameOnly, urls, question_class, chapter_class, htmltag, oneHtmlSite, htmlSiteOverride, recursionlimit):
+class Chyoa:
+    """class chyoa"""
+    def get_stories(self, debug, session, config, urls):
+        """get all stories defined in urls"""
+        print()
+        # pylint: disable=W0612
         for idx, url in enumerate(urls, 1):
             try:
-                print(f"load {url} ...")
+                soup = self.get_soup(session, url)
+                if not soup:
+                    continue
 
-                soup = parser.getSoup(debug, session, url)
-                story_header1, story_header2, foldername = parser.scrape_storytitle(debug, soup)
-                if len(foldername) > 100:
-                    foldername = foldername[0:100]
+                story_header1, story_header2, foldername_story = self.scrape_story_title(debug, soup)
+                if len(foldername_story) > 100:
+                    foldername_story = foldername_story[0:100]
                 story_title = story_header2
-                filenameMap = foldername+"-map.html"
-                
-                # create folder
-                folderPath = os.path.join(folder, foldername)
-                counter = 1
-                while os.path.exists(folderPath):
-                    folderPath = f"{folderPath}_{counter}"
-                    if debug:
-                        print(f"folderPath: {folderPath}")
-                    counter += 1
-                os.makedirs(folderPath, exist_ok=True)
 
-                imageFolderPath = os.path.join(folderPath, imageFolderNameOnly)
-                os.makedirs(imageFolderPath, exist_ok=True)
+                meta = Meta(debug)
+                meta.scrape_meta_properties(soup)
+                meta.scrape_json(soup)
 
-                id = 1
+                foldername_story = foldername_story.strip("-")
 
-                chapter_title, ignore1, ignore2, author = parser.scrape_title_author(debug, soup)
-                filename = parser.createFilename(debug, story_header2, story_title, folder)
-                question = parser.scrape_question(debug, soup)
-                story = parser.scrape_content(debug, soup, htmltag, chapter_class, imageFolderPath, imageFolderNameOnly)
-                imageFilename = parser.scrape_StoryCover(debug, soup, imageFolderPath, imageFolderNameOnly)
-                
-                startsite = filename;
+                story_id = 1
 
-                root_link = Story(
-                    id="1",
-                    url=url,
-                    linktext="",
-                    follow=True,
-                    story_title=story_title,
-                    story_image=imageFilename,
-                    chapter_title=chapter_title,
-                    story_header1=story_header1,
-                    story_header2=story_header2,
-                    question=question,
-                    filename=filename,
-                    parentFilename="",
-                    parentId="",
-                    startsite=startsite,
-                    mapFilename=filenameMap,
-                    author=author,
-                    text=story
+                root_story = Story(
+                    config = config,
+                    story_id = story_id,
+                    url = url,
+                    meta = meta,
+                    linktext = "",
+                    follow = True,
+                    story_title = story_title,
+                    story_header1 = story_header1,
+                    story_header2 = story_header2,
+                    filename_map = foldername_story + "-map.html",
+                    filename_total = foldername_story + "-total.html"
                 )
-                root = Node(root_link)
 
-                sys.setrecursionlimit(recursionlimit)
-                id = parser.getlinksfromsite(debug, root, root, session, folder, url, question_class, chapter_class, htmltag, id, filename, id, story_title, filename, imageFolderPath, imageFolderNameOnly)
-
+                # create folder with modified_time
+                folder = foldername_story
+                if meta.modified_time_short != '':
+                    folder = folder + f' ({meta.modified_time_short})'
+                root_story.create_folder(folder)
+                root_story.create_folder_image()
                 if debug:
-                    print(f"Count: {id}")
-                    parser.getAllLinks(debug, root)
-                copyCss(debug, folderPath)
-                parser.saveStories(debug, folderPath, root, oneHtmlSite, htmlSiteOverride)
-                if oneHtmlSite == False:
-                    parser.createMap(debug, folderPath, filenameMap, root, oneHtmlSite, htmlSiteOverride)
+                    print(f"root.storyFolderpath: {root_story.folderpath_story}")
+                    print(f"root.imageFolderPath: {root_story.image_folderpath}")
+
+                print(f"downloading {url} -> title: {story_title}, folder: {root_story.folderpath_story}")
+
+                chapter_title, author,  _, _ = self.scrape_chapter_title_story_header(debug, soup)
+                root_story.meta.author = author
+                filename = self.create_filename(debug, story_header2, story_title, config.folderpathStories).lstrip("-")
+                question = self.scrape_question(debug, soup)
+                story = self.scrape_content(debug, soup, root_story.image_folderpath, config)
+                image_filename = self.scrape_story_cover(debug, config, soup, root_story.image_folderpath, config.foldernameImage)
+
+                startsite = f"{story_id:04d}"+"-"+filename
+
+                root_story.set(
+                    story_image = image_filename,
+                    chapter_title = chapter_title,
+                    question = question,
+                    filename = f"{story_id:04d}"+"-"+filename,
+                    parent_filename = "",
+                    parent_id = "",
+                    startsite = startsite,
+                    text = story
+                )
+                root = Node(root_story)
+
+                sys.setrecursionlimit(config.recursionLimit)
+                story_id = self.get_links_from_site(debug, config, root, root, session, url, story_id, startsite, story_id)
+                if not story_id:
+                    return
+                if debug:
+                    print(f"Count: {story_id}")
+                    #self.getAllLinks(debug, root)
+
+                copy_css(debug, root.value.folderpath_story)
+                print("save...")
+
+                if config.multiple_pages:
+                    self.save_stories(debug, root_story.folderpath_story, root, config)
+                if config.whole_story_one_page:
+                    self.save_stories_to_one_file(debug, root_story.folderpath_story, root, config)
+
+                if config.multiple_pages:
+                    self.create_map(debug, root_story.folderpath_story, root_story.filename_map, root, config.multiple_pages, config.overrideHtmlSites)
+
+                print("finished download story")
 
             except requests.RequestException as e:
                 print(f"Error loading {url}: {e}")
 
-    def getSoup(debug, session, url):
-        response = session.get(url)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.text, 'html.parser')
-        return soup
+    def get_soup(self, session, url):
+        try:
+            response = session.get(url)
+            response.raise_for_status()
+            soup = BeautifulSoup(response.text, 'html.parser')
+            return soup
+        except requests.exceptions.HTTPError as err_http:
+            print(f"HTTP-Error story link: {url}: {err_http}")
+        return None
 
-    def getlinksfromsite(debug, root, node, session, folder, url, question_class, chapter_class, htmltag, id, parentFilename, parentId, story_title, startsite, imageFolderPath, imageFolderNameOnly):
-        soup = parser.getSoup(debug, session, url)
-        linksfromsite, id = parser.scrape_links(debug, session, soup, root, question_class, chapter_class, htmltag, id, parentFilename, parentId, story_title, startsite, folder, imageFolderPath, imageFolderNameOnly)
+    def get_links_from_site(self, debug, config, root, node, session, url, story_id, parent_filename, parent_id):
+        soup = self.get_soup(session, url)
+        if not soup:
+            return None
+
+        linksfromsite, story_id = self.scrape_links(debug, config, session, soup, root, story_id, parent_filename, parent_id)
         for link in linksfromsite:
-            currentNode = Node(link)
-            node.add_child(currentNode)
-            if link.follow == True:
-                id = parser.getlinksfromsite(debug, root, currentNode, session, folder, link.url, question_class, chapter_class, htmltag, id, currentNode.value.filename, currentNode.value.id, story_title, startsite, imageFolderPath, imageFolderNameOnly)
+            current_node = Node(link)
+            node.add_child(current_node)
+            if link.follow:
+                story_id = self.get_links_from_site(debug, config, root, current_node, session, link.url, story_id, current_node.value.filename, current_node.value.id)
             else:
-                print(f"Url: {link.url} / Parent {parentFilename} exists and links from url do not follow!")
-        return id
+                if debug:
+                    print(f"Url: {link.url} / Parent {parent_filename} exists and links from url do not follow!")
+        return story_id
 
-    def scrape_links(debug, session, soup, root, question_class, chapter_class, htmltag, id, parentFilename, parentId, story_title, startsite, folderPath, imageFolderPath, imageFolderNameOnly):
+    def scrape_links(self, debug, config, session, soup, root, story_id, parent_filename, parent_id):
         all_links = []
-        content_navigable_all = soup.find_all(htmltag, class_=question_class)
+        content_navigable_all = soup.find_all(config.chapterHtmltag, class_=config.questionClass)
+
         # anker-tags
         for c in content_navigable_all:
             for a_tag in c.find_all("a"):
                 a_href = a_tag.get("href")
                 a_text = a_tag.get_text(strip=True)
-                if not a_text == "Add a new chapter":
+                not_continue_link_text = ["Add a new chapter", "Link a chapter", "Write a chapter"]
+                check_link_text = any(link_text in a_text for link_text in not_continue_link_text)
+                if not check_link_text:
                     if debug:
                         print(f"link {a_href}")
                         print(f"text {a_text}")
-                        print(f"parent {parentFilename}")
-                    #    print(f"story_title {story_title}")
-                    id = id + 1
-                    soup_current_site = parser.getSoup(debug, session, a_href)
-                    chapter_title, story_header1, story_header2, author = parser.scrape_title_author(debug, soup_current_site)
-                    filename = str(id)+"-"+chapter_title.strip()+"-"+parser.createFilename(debug, story_header1, story_title, folderPath).strip()
-                    question = parser.scrape_question(debug, soup_current_site)
-                    containsUrl, containsNode = Node.contains(root, a_href)
-                    if containsUrl == True:
+                        print(f"parent {parent_filename}")
+
+                    story_id = story_id + 1
+                    soup_current_site = self.get_soup(session, a_href)
+                    if not soup_current_site:
+                        continue
+
+                    meta = Meta(debug)
+                    meta.scrape_meta_properties(soup_current_site)
+                    meta.scrape_json(soup_current_site)
+
+                    chapter_title, author, story_header1, story_header2 = self.scrape_chapter_title_story_header(debug, soup_current_site)
+                    meta.author = author
+                    filename = f"{story_id:04d}"+"-"+chapter_title.strip()+"-"+self.create_filename(debug, story_header1, root.value.story_title, config.folderpathStories).strip()
+
+                    question = self.scrape_question(debug, soup_current_site)
+                    contains_url, contains_node = Node.contains(root, a_href)
+                    if contains_url:
                         follow = False
-                        current_link = Story(containsNode.value.id, containsNode.value.url, containsNode.value.linktext, follow, containsNode.value.story_title, "", containsNode.value.chapter_title, containsNode.value.story_header1, containsNode.value.story_header2, containsNode.value.question, containsNode.value.filename, containsNode.value.parentFilename, containsNode.value.parentId, startsite, root.value.mapFilename, containsNode.value.author, containsNode.value.text)
+                        current_link = Story(
+                            config,
+                            contains_node.value.id,
+                            contains_node.value.url,
+                            meta,
+                            contains_node.value.linktext,
+                            follow,
+                            root.value.story_title,
+                            contains_node.value.story_header1,
+                            contains_node.value.story_header2,
+                            root.value.filename_map,
+                            root.value.filename_total
+                        )
+                        current_link.set(
+                            "", 
+                            chapter_title,
+                            contains_node.value.question,
+                            contains_node.value.filename,
+                            contains_node.value.parent_filename,
+                            contains_node.value.parent_id,
+                            root.value.start_site,
+                            contains_node.value.text
+                        )
                         all_links.append(current_link)
-                    if containsUrl == False:
+                    if not contains_url:
                         story = ""
                         follow = True
-                        story = parser.scrape_content(debug, soup_current_site, htmltag, chapter_class, imageFolderPath, imageFolderNameOnly)
-                        current_link = Story(id, a_href, a_text, follow, story_title, "", chapter_title, story_header1, story_header2, question, filename, parentFilename, parentId, startsite, root.value.mapFilename, author, story)
+                        story = self.scrape_content(debug, soup_current_site, root.value.image_folderpath, config)
+                        if config.show_chapter_name_loading_story:
+                            print(f"Chapter {story_header1}")
+                        current_link = Story(
+                            config,
+                            story_id,
+                            a_href,
+                            meta,
+                            a_text,
+                            follow,
+                            root.value.story_title,
+                            story_header1,
+                            story_header2,
+                            root.value.filename_map,
+                            root.value.filename_total
+                        )
+                        current_link.set(
+                            "", 
+                            chapter_title,
+                            question,
+                            filename,
+                            parent_filename,
+                            parent_id,
+                            root.value.start_site,
+                            story)
                         all_links.append(current_link)
-        return all_links, id
+        return all_links, story_id
 
-    def getAllLinks(debug, node, level=0):
+    def get_all_links(self, debug, node, level=0):
         if debug:
             print("  " * level + str(node.value.linktext))
             print("  " * level + str(node.value.url))
-            print("  " * level + str(node.value.story_title))
+            print("  " * level + str(node.value.storyTitle))
             print("  " * level + str(node.value.chapter_title))
             print("  " * level + str(node.value.filename))
             #print("  " * level + str(node.value.text))
         for child in node.children:
-            if child.value.follow == True:
-                parser.getAllLinks(debug, child, level + 1)
+            if child.value.follow:
+                self.get_all_links(debug, child, level + 1)
 
-    def saveStories(debug, foldername, node, oneHtmlSite, htmlSiteOverride):
-        html = parser.createHtml(debug, node, oneHtmlSite)
-        if debug:
-            print(f"save Filename {node.value.filename} - {node.value.follow}")
-        if oneHtmlSite == True or node.value.follow == True:
-            save(debug, foldername, node.value.filename, node, html, htmlSiteOverride)
-        if oneHtmlSite == False and node.value.follow == True:
-            for child in node.children:
-                parser.saveStories(debug, foldername, child, oneHtmlSite, htmlSiteOverride)
-
-    def scrape_storytitle(debug, soup):
+    def scrape_story_title(self, debug, soup):
         header = soup.find('header', class_='story-header')
         story_header1 = ""
         story_header2 = ""
@@ -169,7 +252,8 @@ class parser:
             print(f"Folder: {foldername}")
         return story_header1, story_header2, foldername
 
-    def scrape_title_author(debug, soup):
+    def scrape_chapter_title_story_header(self, debug, soup):
+        """scrape chapter_title_story_header"""
         header = soup.find('header', class_='chapter-header')
         if header:
             h2 = header.find('h2')
@@ -184,6 +268,9 @@ class parser:
             story_header2 = ""
 
         meta = soup.find('p', class_='meta')
+        if not meta:
+            return "", "", "", ""
+
         #search by author
         meta_complete = meta.get_text()
         index = meta_complete.find("by ")
@@ -192,13 +279,14 @@ class parser:
         a_tag = meta.find('a')
         if a_tag:
             author = a_tag.get_text(strip=True)
-        if not a_tag:
+        else:
             author = ""
         if debug:
             print(f"author: {author}")
-        return chapter_title, story_header1, story_header2, author
 
-    def createFilename(debug, title, story_title, folder):
+        return chapter_title, author, story_header1, story_header2
+
+    def create_filename(self, debug, title, story_title, folder):
         filename = title
         if not filename:
             filename = story_title
@@ -207,36 +295,37 @@ class parser:
             print(f"filename: {filename}")
         return filename
 
-    def scrape_question(debug, soup):
+    def scrape_question(self, debug, soup):
+        """read the question"""
         header = soup.find('header', class_='question-header')
+        question = ""
         if header:
             h2 = header.find('h2')
             if h2:
                 question = h2.get_text(strip=True)
-            if not h2:
-                question = ""
         if debug:
             print(f"question: {question}")
         return question
 
-    def scrape_images(debug, soup, imageFolderPath, imageFolderNameOnly, content):
-        contentNew = content
+    def scrape_images(self, debug, soup, config, image_folderpath, content):
+        content_new = content
         for img in soup.find_all("img"):
             img_src = img.get("src")
             if img_src:
                 if debug:
                     print(f'image-src: {img_src}')
-                filenameImage = download_image(debug, "chapter-image", imageFolderPath, imageFolderNameOnly, img_src)
-                if filenameImage:
+                filename_image = download_image(debug, config, "chapter-image", image_folderpath, config.foldernameImage, img_src)
+                if filename_image != "":
+                    content_new = content.replace(f'{img_src}', f'{filename_image}')
                     if debug:
                         print(f'image-src: {img_src}')
-                        print(f'replace with: {filenameImage}')
-                    contentNew = content.replace(f'{img_src}', f'{filenameImage}') 
-        return contentNew
+                        print(f'replace with: {filename_image}')
+        return content_new
 
-    def scrape_StoryCover(debug, soup, imageFolderPath, imageFolderNameOnly):
-        filenameImage = ""
-        html = ""
+    def scrape_story_cover(self, debug, config, soup, image_folderpath, foldername_image):
+        """scrape cover"""
+        filename_image = ""
+        filename_image = ""
         cover = soup.find('div', class_='cover')
         if cover:
             img = cover.find('img')
@@ -244,124 +333,202 @@ class parser:
             if img_src:
                 if debug:
                     print(f'cover image-src: {img_src}')
-                filenameImage = download_image(debug, "story", imageFolderPath, imageFolderNameOnly, img_src)
-        return filenameImage
+                filename_image = download_image(debug, config, "story", image_folderpath, foldername_image, img_src)
+        return filename_image
 
-    def scrape_content(debug, soup, htmltag, chapter_class, imageFolderPath, imageFolderNameOnly):
-        content_navigable_all = soup.find_all(htmltag, class_=chapter_class)
+    def scrape_content(self, debug, soup, image_folderpath, config):
+        """scrape the content"""
+        content_navigable_all = soup.find_all(config.chapterHtmltag, class_=config.contentClass)
+        if not content_navigable_all:
+            return "<!-- no content found -->"
         content = content_navigable_all[0].prettify() if content_navigable_all else "<!-- no content found -->"
 
-        #save iamges
-        content = parser.scrape_images(debug, content_navigable_all[0], imageFolderPath, imageFolderNameOnly, content)
-        #if debug:
-        #    print(f"Story: {content}")
+        #save images and convert image name in html
+        content = self.scrape_images(debug, content_navigable_all[0], config, image_folderpath, content)
+        if debug:
+            print(f"Story: {content[1:50]}")
         return content
 
-    def createHtml(debug, node, oneHtmlSite):
+    def save_stories(self, debug, foldername, node, config):
+        """save stories"""
+        if not node.value.follow:
+            return
+        if debug:
+            print(f"save Filename {node.value.filename} - {node.value.follow}")
+        html = self.create_html(debug, node, config.multiple_pages)
+        save(foldername, node.value.filename, node, html, config.overrideHtmlSites)
+
+        if config.multiple_pages:
+            for child in node.children:
+                self.save_stories(debug, foldername, child, config)
+
+    def save_stories_to_one_file(self, debug, foldername, node, config):
+        if debug:
+            print(f"save to one filen {node.value.filename} - {node.value.follow}")
+        if config.whole_story_one_page:
+            html = self.create_html(debug, node, False)
+            save(foldername, node.value.filename_total, node, html, config.overrideHtmlSites)
+
+    def create_html(self, debug, node, multiple_pages):
         htmltext = []
-        htmltext = parser.createHtmlHead(htmltext, node, oneHtmlSite)
-        htmltext = parser.createJavascript(htmltext)
-        if oneHtmlSite == True:
-            htmltext = parser.createMapBody(debug, htmltext, node, oneHtmlSite)
-            htmltext = parser.createHtmlRecursive(debug, htmltext, node, oneHtmlSite)
+        htmltext = self.create_html_head(htmltext, node, multiple_pages)
+        htmltext = self.create_javascript(htmltext)
+        if not multiple_pages:
+            htmltext = self.create_map_body(debug, htmltext, node, multiple_pages)
+            htmltext = self.create_html_recursive(debug, htmltext, node, multiple_pages)
         else:
-            htmltext = parser.createHtmlBody(htmltext, node, oneHtmlSite)
+            htmltext = self.create_html_body(htmltext, node, multiple_pages)
         htmltext.append("</body></html>")
         return htmltext
 
-    def createHtmlRecursive(debug, htmltext, node, oneHtmlSite):
-        htmltext = parser.createHtmlBody(htmltext, node, oneHtmlSite)
-        if node.value.follow == True:
+    def create_html_recursive(self, debug, htmltext, node, multiple_pages):
+        """get html content of all chapters"""
+        htmltext = self.create_html_body(htmltext, node, multiple_pages)
+        if node.value.follow:
             htmltext.append('<hr>')
             for child in node.children:
-                htmltext = parser.createHtmlRecursive(debug, htmltext, child, oneHtmlSite)
+                htmltext = self.create_html_recursive(debug, htmltext, child, multiple_pages)
         return htmltext
 
-    def createHtmlBody(htmltext, node, oneHtmlSite):
-        if node.value.chapter_title:
+    def create_html_body(self, htmltext, node, multiple_pages):
+        """get html content of one chapter"""
+        htmltext = self.create_meta(htmltext, node)
+        if node.value.chapter_title.strip():
             htmltext.append(f'<h2 id={str(node.value.id)} class="chapterheader">{node.value.chapter_title}')
-        if node.value.author:
-            htmltext.append(f" by {node.value.author}")
-        htmltext.append(f"</h2><br>")
-        if node.value.story_header2:
+        if node.value.meta.author.strip():
+            htmltext.append(f" by {node.value.meta.author}")
+            if node.value.meta.published_time_short != "" or node.value.meta.modified_time_short != "":
+                htmltext.append('<span class="publisheddate">')
+                time = ""
+                if node.value.meta.published_time_short != "":
+                    time = f" created on {node.value.meta.published_time_short}"
+                if node.value.meta.published_time_short != "" and node.value.meta.modified_time_short != "":
+                    time = f"{time}, "
+                if node.value.meta.modified_time_short != "":
+                    time = f"{time}updated on {node.value.meta.modified_time_short}"
+                htmltext.append(time)
+                htmltext.append('</span>')
+        htmltext.append("</h2><br>")
+
+        htmltext = self.create_description_body(htmltext, node)
+
+        if node.value.story_header2.strip():
             htmltext.append(f'<h2 class="storyheader2">{node.value.story_header2}</h2>')
-        if node.value.story_header1:
+        if node.value.story_header1.strip():
             htmltext.append(f'<h1 class="storyheader1">{node.value.story_header1}</h1>')
         htmltext.append('<hr>')
         htmltext.append(node.value.text)
-        htmltext.append(f'<hr>')
+        htmltext.append('<hr>')
         htmltext.append(f'<div class="question-header"><h2>{node.value.question}</h2></div>')
         htmltext.append('<div class="question-content">')
         if node.children:
             for child in node.children:
-                if oneHtmlSite == False:
+                if multiple_pages:
                     htmltext.append(f'<div class="list-item"><a href="{child.value.filename}" class="anker-text">{child.value.linktext}</a></div>')
                 else:
                     htmltext.append(f'<div class="list-item"><a href="#{child.value.id}" class="anker-text">{child.value.linktext}</a></div>')
-        htmltext.append(f'<hr>')
-        if node.value.parentFilename:
-            if oneHtmlSite == False:
-                htmltext.append(f'<div class="list-item-previous"><a href="{node.value.parentFilename}" class="anker-text">Previous Chapter</a></div>')
+        htmltext.append('<hr>')
+        if node.value.parent_filename:
+            if multiple_pages:
+                htmltext.append(f'<div class="list-item-previous"><a href="{node.value.parent_filename}" class="anker-text">Previous Chapter</a></div>')
             else:
-                htmltext.append(f'<div class="list-item-previous"><a href="#{node.value.parentId}" class="anker-text">Previous Chapter</a></div>')
-        if node.value.startsite:
-            if oneHtmlSite == False:
-                htmltext.append(f'<div class="list-item-previous"><a href="{node.value.startsite}" class="anker-text">Start Over</a></div>')
+                htmltext.append(f'<div class="list-item-previous"><a href="#{node.value.parent_id}" class="anker-text">Previous Chapter</a></div>')
+        if node.value.start_site:
+            if multiple_pages:
+                htmltext.append(f'<div class="list-item-previous"><a href="{node.value.start_site}" class="anker-text">Start Over</a></div>')
             else:
-                htmltext.append(f'<div class="list-item-previous"><a href="#" class="anker-text">Start Over</a></div>')
-        if node.value.mapFilename and oneHtmlSite == False:
-            htmltext.append(f'<div class="list-item-previous"><a href="{node.value.mapFilename}" class="anker-text">Map</a></div>')
-        htmltext.append("</div>")
+                htmltext.append('<div class="list-item-previous"><a href="#" class="anker-text">Start Over</a></div>')
+        if node.value.filename_map and multiple_pages:
+            htmltext.append(f'<div class="list-item-previous"><a href="{node.value.filename_map}" class="anker-text">Map</a></div>')
+        htmltext.append("</div>\n")
         return htmltext
 
-    def createHtmlHead(htmltext, node, oneHtmlSite):
-        htmltext.append("<!DOCTYPE html>")
-        htmltext.append("<html><head><meta charset='utf-8'>")
-        if oneHtmlSite:
-            htmltext.append(f"<title>{node.value.story_title}</title>")
+    def create_meta(self, htmltext, node):
+        """create meta-tags of one chapter"""
+        htmltext.append(f'\n<meta name="story" content="{node.value.story_title}">\n')
+        htmltext.append(f'<meta name="title" content="{node.value.chapter_title}">\n')
+        htmltext.append(f'<meta name="author" content="{node.value.meta.author}">\n')
+        htmltext.append(f'<meta name="speech" content="{node.value.meta.speech}">\n')
+        if node.value.meta.tag.strip():
+            htmltext.append(f'<meta name="tag" content="{node.value.meta.tag}">\n')
+        if node.value.meta.category.strip():
+            htmltext.append(f'<meta name="category" content="{node.value.meta.category}">\n')
+        if node.value.meta.published_time_short.strip():
+            htmltext.append(f'<meta name="published_time" content="{node.value.meta.published_time_short}">\n')
+        if node.value.meta.modified_time_short.strip():
+            htmltext.append(f'<meta name="modified_time" content="{node.value.meta.modified_time_short}">\n')
+        htmltext.append(f'<meta name="likes" content="{node.value.meta.likes}">\n')
+        htmltext.append(f'<meta name="views" content="{node.value.meta.views}">\n')
+        htmltext.append(f'<meta name="scraper_date" content="{datetime.now().strftime('%Y-%m-%d')}">\n')
+        return htmltext
+
+    def create_html_head(self, htmltext, node, multiple_pages):
+        """create html body"""
+        htmltext.append("<!DOCTYPE html>\n")
+        htmltext.append("<html><head><meta charset='utf-8'>\n")
+        if multiple_pages:
+            htmltext.append(f"<title>{node.value.chapter_title} - {node.value.story_header2}</title>\n")
         else:
-            htmltext.append(f"<title>{node.value.chapter_title}</title>")
-        htmltext.append('<link rel="stylesheet" href="style.css">')
-        htmltext.append("</head><body>")
+            htmltext.append(f"<title>{node.value.story_title}</title>\n")
+        htmltext.append('<link rel="stylesheet" href="style.css">\n')
+        htmltext.append("</head><body>\n")
         if node.value.story_image:
-            htmltext.append(f'<div class="cover"><img src="{node.value.story_image}" alt="{node.value.story_title}" /></div>')
+            htmltext.append(f'<div class="cover"><img src="{node.value.story_image}" alt="{node.value.story_title}" /></div>\n')
         if node.value.story_title:
-            htmltext.append(f'<h1 class="storytitle">Story: {node.value.story_title}</h1>')
+            htmltext.append(f'<h1 class="storytitle">Story: {node.value.story_title}</h1>\n')
         return htmltext
 
-    def createMapLinks(debug, node, htmltext, oneHtmlSite, follow, level=0):
+    def create_map_links(self, debug, node, htmltext, multiple_pages, follow, level=0):
+        """create links"""
         linktext = node.value.linktext
+
         if not linktext:
             linktext = node.value.story_title
+
+        additional_text = ""
+        if node.value.meta.author != "":
+            additional_text = additional_text + f'<span class="author-link">by {node.value.meta.author}</span>'
+        if node.value.meta.published_time_short != "" or node.value.meta.modified_time_short != "":
+            time = '<span class="publisheddate-link">'
+            if node.value.meta.published_time_short != "":
+                time = f"{time} (created on {node.value.meta.published_time_short}"
+            if node.value.meta.published_time_short != "" and node.value.meta.modified_time_short != "":
+                time = f"{time},   "
+            if node.value.meta.modified_time_short != "":
+                time = f"{time}updated on {node.value.meta.published_time_short}"
+            time = time + '</span>'
+
         style = "margin-left: 30px;"
-        display = "display: block;"
+        #display = "display: block;"
         htmltext.append('<div class="node">')
-        if follow == True:
+        if follow:
             childrenlen = len(node.children)
-            htmltext = parser.createButton(htmltext, node.value.filename, node.value.id, node.value.chapter_title + " - " + linktext, oneHtmlSite, (childrenlen>0))
+            htmltext = self.create_button(htmltext, node.value.filename, node.value.id, node.value.chapter_title + " - " + linktext, additional_text, multiple_pages, (childrenlen>0))
             if childrenlen > 0:
                 htmltext.append(f'<div class="children" style="{style}">')
             for child in node.children:
-                htmltext = parser.createMapLinks(debug, child, htmltext, oneHtmlSite, node.value.follow, level + 1)
+                htmltext = self.create_map_links(debug, child, htmltext, multiple_pages, node.value.follow, level + 1)
             if childrenlen > 0:
-                htmltext.append('</div>')    
+                htmltext.append('</div>')
         htmltext.append('</div>')
         return htmltext
 
-    def createButton(htmltext, url, id, linktext, oneHtmlSite, showButton):
-        htmltext.append(f'<div class="item">')
-        if showButton:
-            htmltext.append(f'<button class="toggle"> ▶ </button>')
+    def create_button(self, htmltext, url, story_id, linktext, additional_text, multiple_pages, show_button):
+        """create toogle button"""
+        htmltext.append('<div class="item">')
+        if show_button:
+            htmltext.append('<button class="toggle"> ▶ </button>')
             #htmltext.append(f'<button class="toggle"> ▼ </button>')
-        if oneHtmlSite == True:
-            htmltext.append(f'<a href="#{id}">{linktext}</a>')
+        if multiple_pages:
+            htmltext.append(f'<a href="{url}">{linktext}</a> {additional_text}')
         else:
-            htmltext.append(f'<a href="{url}">{linktext}</a>')
-        htmltext.append(f'</div>')
+            htmltext.append(f'<a href="#{story_id}">{linktext}</a> {additional_text}')
+        htmltext.append('</div>')
         return htmltext
 
-    def createJavascript(htmltext):
-        htmltext.append('<script>')
+    def create_javascript(self, htmltext):
+        """create the javascript"""
+        htmltext.append('\n<script>')
         htmltext.append('document.addEventListener("DOMContentLoaded", function () {')
         htmltext.append('    const toggles = document.querySelectorAll(".toggle");')
         htmltext.append('    const toggleAllBtn = document.getElementById("toggleAll");')
@@ -393,38 +560,65 @@ class parser:
         htmltext.append('    }')
         htmltext.append('    toggleAllBtn.click(); ')
         htmltext.append('});')
-        htmltext.append('</script>')
+        htmltext.append('</script>\n\n')
         return htmltext
 
-    def createMap(debug, foldername, filename, node, oneHtmlSite, htmlSiteOverride):
+    def create_map(self, debug, foldername, filename, node, multiple_pages, html_site_override):
         htmltext = []
         if debug:
             print(f"Map-filename: {filename}")
             print(f"Map-foldername: {foldername}")
-        htmltext = parser.createMapHead(htmltext, node)
-        if node.value.story_title and oneHtmlSite == False:
+        htmltext = self.create_map_head(htmltext, node)
+        if node.value.story_title and multiple_pages:
             htmltext.append(f'<h1 class="storytitle">Story: {node.value.story_title}</h1>')
-        htmltext = parser.createMapBody(debug, htmltext, node, oneHtmlSite)
+        htmltext = self.create_description_body(htmltext, node)
+        htmltext = self.create_map_body(debug, htmltext, node, multiple_pages)
         htmltext.append("</body></html>")
-        save(debug, foldername, filename, node, htmltext, htmlSiteOverride)
+        save(foldername, filename, node, htmltext, html_site_override)
 
-    def createMapBody(debug, htmltext, node, oneHtmlSite):
-        htmltext.append(f'<div class="storyurl"><a href="{node.value.url}">Original Url: {node.value.url}</a></div>')
-        htmltext.append(f'<hr>')
-        htmltext.append(f'<h2>Content</h2>')
-        htmltext.append(f'<hr>')
+    def create_description_body(self, htmltext, node):
+        htmltext.append('\n<div class="description">')
+
+        if node.value.meta.description:
+            htmltext.append(f'<div>| Description: {node.value.meta.description}</div>')
+        if node.value.meta.published_time_short:
+            htmltext.append(f'| Created:{node.value.meta.published_time_short} | Modified:{node.value.meta.modified_time_short} ')
+
+        properties = "<div>"
+        if node.value.meta.category:
+            properties = properties + f'| Category:{node.value.meta.category} '
+        if node.value.meta.pov:
+            properties = properties + f'| Pov:{node.value.meta.pov} '
+        if node.value.meta.speech:
+            properties = properties + f'| Language:{node.value.meta.speech} '
+        if node.value.meta.likes:
+            properties = properties + f'| Likes:{node.value.meta.likes} '
+        if node.value.meta.views:
+            properties = properties + f'| Views:{node.value.meta.views} '
+        htmltext.append(properties)
+        if node.value.meta.tag:
+            htmltext.append(f'<div>| Tags: {node.value.meta.tag}</div>')
+        htmltext.append('</div>\n')
+
+        return htmltext
+
+    def create_map_body(self, debug, htmltext, node, multiple_pages):
+        htmltext.append(f'<div class="storyurl">| Original Url: <a href="{node.value.url}">{node.value.url}</a></div>')
+        htmltext.append('<hr>')
+        htmltext.append('<h2>Content</h2>')
+        htmltext.append('<hr>')
         htmltext.append('<div class="toggleButton"><button id="toggleAll">Expand all</button></div>')
         style = "margin-left: 30px;"
         htmltext.append(f'<div class="map" style="{style}">')
-        htmltext = parser.createMapLinks(debug, node, htmltext, oneHtmlSite, True)
+        htmltext = self.create_map_links(debug, node, htmltext, multiple_pages, True)
         htmltext.append('</div>')
         return htmltext
 
-    def createMapHead(htmltext, node):
+    def create_map_head(self, htmltext, node):
         htmltext.append("<!DOCTYPE html>")
         htmltext.append("<html><head><meta charset='utf-8'>")
         htmltext.append(f"<title>{node.value.story_title}</title>")
         htmltext.append('<link rel="stylesheet" href="style.css">')
-        htmltext = parser.createJavascript(htmltext)
+        htmltext = self.create_javascript(htmltext)
         htmltext.append('</head><body>')
         return htmltext

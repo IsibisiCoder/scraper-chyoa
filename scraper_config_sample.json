@@ -4,9 +4,12 @@
   "htmltag": "div",
   "folder": "c:/story",
   "imagefolder": "image",
-  "oneHtmlSite": false,
+  "multiple_pages": true,
+  "whole_story_one_page": false,
   "htmlSiteOverride": true,
   "recursionlimit": 1500,
+  "show_error_loading_image": false,
+  "show_chapter_name_loading_story": false,
   "login": {
     "login_url": "https://chyoa.com/auth/login",
     "username": "Yourusername",
