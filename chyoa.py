@@ -640,9 +640,9 @@ class Chyoa:
     def save_epub(self, debug, folderpath, root, config):
         print(f"Generate EPUB {folderpath} ...")
         book = epub.EpubBook()
-        book.set_identifier(f"chyoa-{root.value.story_id}")
+        book.set_identifier(f"chyoa-{root.value.id}")
         book.set_title(root.value.story_title)
-        book.set_language(root.value.meta.speech if root.value.meta.speech else 'en')
+        book.set_language(root.value.meta.language_alternate_name if root.value.meta.language_alternate_name else 'en')
         if root.value.meta.author:
             book.add_author(root.value.meta.author)
 
@@ -666,7 +666,9 @@ class Chyoa:
 
         chapters = []
         toc_tree = []
-        self._add_epub_chapter(debug, root, book, chapters, toc_tree, set())
+        root_toc = self._add_epub_chapter(debug, root, book, chapters, set())
+        if root_toc:
+            toc_tree.append(root_toc)
         
         for c in chapters:
             book.add_item(c)
@@ -680,10 +682,10 @@ class Chyoa:
         epub.write_epub(epub_filename, book, {})
         print(f"EPUB saved: {epub_filename}")
 
-    def _add_epub_chapter(self, debug, node, book, chapters, toc_tree, visited):
-        if node.value.story_id in visited:
+    def _add_epub_chapter(self, debug, node, book, chapters, visited):
+        if node.value.id in visited:
             return None
-        visited.add(node.value.story_id)
+        visited.add(node.value.id)
 
         chapter_html = f"<h1>{node.value.chapter_title}</h1>\n{node.value.text}"
         
@@ -691,16 +693,16 @@ class Chyoa:
         if len(node.children) > 0:
             chapter_html += "<hr><h2>What's next?</h2><ul>"
             for child in node.children:
-                chapter_html += f'<li><a href="{child.value.startsite}.xhtml">{child.value.chapter_title}</a></li>'
+                chapter_html += f'<li><a href="{child.value.filename}.xhtml">{child.value.chapter_title}</a></li>'
             chapter_html += "</ul>"
 
-        c = epub.EpubHtml(title=node.value.chapter_title, file_name=f"{node.value.startsite}.xhtml", lang='en')
+        c = epub.EpubHtml(title=node.value.chapter_title, file_name=f"{node.value.filename}.xhtml", lang='en')
         c.content = chapter_html
         chapters.append(c)
 
         child_tocs = []
         for child in node.children:
-            child_toc = self._add_epub_chapter(debug, child, book, chapters, toc_tree, visited)
+            child_toc = self._add_epub_chapter(debug, child, book, chapters, visited)
             if child_toc:
                 child_tocs.append(child_toc)
                 
@@ -709,6 +711,5 @@ class Chyoa:
         else:
             current_toc = c
             
-        toc_tree.append(current_toc)
         return current_toc
 
