@@ -104,82 +104,6 @@ class Chyoa:
                 if config.create_epub:
                     self.save_epub(debug, root_story.folderpath_story, root, config)
 
-    def save_epub(self, debug, folderpath, root, config):
-        print(f"Generate EPUB {folderpath} ...")
-        book = epub.EpubBook()
-        book.set_identifier(f"chyoa-{root.value.story_id}")
-        book.set_title(root.value.story_title)
-        book.set_language(root.value.meta.speech if root.value.meta.speech else 'en')
-        if root.value.meta.author:
-            book.add_author(root.value.meta.author)
-
-        # Create CSS
-        style = 'body { font-family: Times, Times New Roman, serif; } h1 { text-align: center; } h2 { text-align: center; font-style: italic; } .storytitle { color: #333; } .description { background-color: #f9f9f9; padding: 10px; margin-bottom: 20px; } img { max-width: 100%; height: auto; display: block; margin: 0 auto; }'
-        nav_css = epub.EpubItem(uid="style_nav", file_name="style/nav.css", media_type="text/css", content=style)
-        book.add_item(nav_css)
-
-        # Add images
-        imageFolderPath = root.value.image_folderpath
-        if os.path.exists(imageFolderPath):
-            for img_file in os.listdir(imageFolderPath):
-                img_path = os.path.join(imageFolderPath, img_file)
-                if os.path.isfile(img_path):
-                    with open(img_path, 'rb') as f:
-                        img_item = epub.EpubImage()
-                        rel_path = os.path.relpath(img_path, folderpath).replace('\\', '/')
-                        img_item.file_name = rel_path
-                        img_item.content = f.read()
-                        book.add_item(img_item)
-
-        chapters = []
-        toc_tree = []
-        self._add_epub_chapter(debug, root, book, chapters, toc_tree, set())
-        
-        for c in chapters:
-            book.add_item(c)
-        book.toc = tuple(toc_tree)
-        book.add_item(epub.EpubNcx())
-        book.add_item(epub.EpubNav())
-
-        book.spine = ['nav'] + chapters
-
-        epub_filename = os.path.join(folderpath, f"{root.value.filename}.epub")
-        epub.write_epub(epub_filename, book, {})
-        print(f"EPUB saved: {epub_filename}")
-
-    def _add_epub_chapter(self, debug, node, book, chapters, toc_tree, visited):
-        if node.value.story_id in visited:
-            return None
-        visited.add(node.value.story_id)
-
-        chapter_html = f"<h1>{node.value.chapter_title}</h1>\n{node.value.text}"
-        
-        # Rewrite links to other epub chapters
-        if len(node.children) > 0:
-            chapter_html += "<hr><h2>What's next?</h2><ul>"
-            for child in node.children:
-                chapter_html += f'<li><a href="{child.value.startsite}.xhtml">{child.value.chapter_title}</a></li>'
-            chapter_html += "</ul>"
-
-        c = epub.EpubHtml(title=node.value.chapter_title, file_name=f"{node.value.startsite}.xhtml", lang='en')
-        c.content = chapter_html
-        chapters.append(c)
-
-        child_tocs = []
-        for child in node.children:
-            child_toc = self._add_epub_chapter(debug, child, book, chapters, toc_tree, visited)
-            if child_toc:
-                child_tocs.append(child_toc)
-                
-        if len(child_tocs) > 0:
-            current_toc = (c, tuple(child_tocs))
-        else:
-            current_toc = c
-            
-        toc_tree.append(current_toc)
-        return current_toc
-
-
                 if config.multiple_pages:
                     self.create_map(debug, root_story.folderpath_story, root_story.filename_map, root, config.multiple_pages, config.overrideHtmlSites)
 
@@ -548,7 +472,8 @@ class Chyoa:
             htmltext.append(f'<meta name="modified_time" content="{node.value.meta.modified_time_short}">\n')
         htmltext.append(f'<meta name="likes" content="{node.value.meta.likes}">\n')
         htmltext.append(f'<meta name="views" content="{node.value.meta.views}">\n')
-        htmltext.append(f'<meta name="scraper_date" content="{datetime.now().strftime('%Y-%m-%d')}">\n')
+        date_str = datetime.now().strftime('%Y-%m-%d')
+        htmltext.append(f'<meta name="scraper_date" content="{date_str}">\n')
         return htmltext
 
     def create_html_head(self, htmltext, node, multiple_pages):
@@ -711,4 +636,79 @@ class Chyoa:
         htmltext = self.create_javascript(htmltext)
         htmltext.append('</head><body>')
         return htmltext
+
+    def save_epub(self, debug, folderpath, root, config):
+        print(f"Generate EPUB {folderpath} ...")
+        book = epub.EpubBook()
+        book.set_identifier(f"chyoa-{root.value.story_id}")
+        book.set_title(root.value.story_title)
+        book.set_language(root.value.meta.speech if root.value.meta.speech else 'en')
+        if root.value.meta.author:
+            book.add_author(root.value.meta.author)
+
+        # Create CSS
+        style = 'body { font-family: Times, Times New Roman, serif; } h1 { text-align: center; } h2 { text-align: center; font-style: italic; } .storytitle { color: #333; } .description { background-color: #f9f9f9; padding: 10px; margin-bottom: 20px; } img { max-width: 100%; height: auto; display: block; margin: 0 auto; }'
+        nav_css = epub.EpubItem(uid="style_nav", file_name="style/nav.css", media_type="text/css", content=style)
+        book.add_item(nav_css)
+
+        # Add images
+        imageFolderPath = root.value.image_folderpath
+        if os.path.exists(imageFolderPath):
+            for img_file in os.listdir(imageFolderPath):
+                img_path = os.path.join(imageFolderPath, img_file)
+                if os.path.isfile(img_path):
+                    with open(img_path, 'rb') as f:
+                        img_item = epub.EpubImage()
+                        rel_path = os.path.relpath(img_path, folderpath).replace('\\', '/')
+                        img_item.file_name = rel_path
+                        img_item.content = f.read()
+                        book.add_item(img_item)
+
+        chapters = []
+        toc_tree = []
+        self._add_epub_chapter(debug, root, book, chapters, toc_tree, set())
+        
+        for c in chapters:
+            book.add_item(c)
+        book.toc = tuple(toc_tree)
+        book.add_item(epub.EpubNcx())
+        book.add_item(epub.EpubNav())
+
+        book.spine = ['nav'] + chapters
+
+        epub_filename = os.path.join(folderpath, f"{root.value.filename}.epub")
+        epub.write_epub(epub_filename, book, {})
+        print(f"EPUB saved: {epub_filename}")
+
+    def _add_epub_chapter(self, debug, node, book, chapters, toc_tree, visited):
+        if node.value.story_id in visited:
+            return None
+        visited.add(node.value.story_id)
+
+        chapter_html = f"<h1>{node.value.chapter_title}</h1>\n{node.value.text}"
+        
+        # Rewrite links to other epub chapters
+        if len(node.children) > 0:
+            chapter_html += "<hr><h2>What's next?</h2><ul>"
+            for child in node.children:
+                chapter_html += f'<li><a href="{child.value.startsite}.xhtml">{child.value.chapter_title}</a></li>'
+            chapter_html += "</ul>"
+
+        c = epub.EpubHtml(title=node.value.chapter_title, file_name=f"{node.value.startsite}.xhtml", lang='en')
+        c.content = chapter_html
+        chapters.append(c)
+
+        child_tocs = []
+        for child in node.children:
+            child_toc = self._add_epub_chapter(debug, child, book, chapters, toc_tree, visited)
+            if child_toc:
+                child_tocs.append(child_toc)
+                
+        if len(child_tocs) > 0:
+            current_toc = (c, tuple(child_tocs))
+        else:
+            current_toc = c
+            
+        toc_tree.append(current_toc)
+        return current_toc
 
