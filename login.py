@@ -1,17 +1,18 @@
+# (c) 2025-2026 by IsibisiCoder, MIT-License, https://github.com/IsibisiCoder
 import sys
 
 # load login from configfile and login in chyoa-site
 def login(debug, session, config):
-    login = config.get("login")
+    login = config.login
     if not login:
-        print(f"No login defined.")
+        print(f"no login defined.")
 
     loginWithUsernameAndPassword = False
 
     if login:
         login_url = login.get("login_url")
         if not login_url:
-            print(f"No login URL defined.")
+            print(f"no login-url defined.")
 
         if login_url:
             username = login.get("username")
@@ -28,7 +29,7 @@ def login(debug, session, config):
                 'password': password
             }
 
-            print(f"Logging in to {login_url} ...")
+            print(f"Sign up at {login_url} ...")
             login_response = session.post(login_url, data=login_payload)
 
             if login_response.status_code != 200:

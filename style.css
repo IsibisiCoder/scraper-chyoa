@@ -44,6 +44,28 @@ img {
     font-size: 20px
 }
 
+.publisheddate {
+    font-size: 16px
+}
+
+.publisheddate-link {
+    font-size: 12px;
+    margin-left: 30px;
+}
+
+.description {
+    font-size: 14px
+}
+
+.author {
+    font-size: 14px
+}
+
+.author-link {
+    font-size: 14px;
+    margin-left: 100px;
+}
+
 .list-item {
     padding-left: 10px;
     padding-top: 10px;
