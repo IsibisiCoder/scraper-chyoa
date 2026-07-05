@@ -20,6 +20,9 @@ class Chyoa:
         for idx, url in enumerate(urls, 1):
             try:
                 soup = self.get_soup(session, url)
+                if not soup:
+                    continue
+
                 story_header1, story_header2, foldername_story = self.scrape_story_title(debug, soup)
                 if len(foldername_story) > 100:
                     foldername_story = foldername_story[0:100]
@@ -82,6 +85,8 @@ class Chyoa:
 
                 sys.setrecursionlimit(config.recursionLimit)
                 story_id = self.get_links_from_site(debug, config, root, root, session, url, story_id, startsite, story_id)
+                if not story_id:
+                    return
                 if debug:
                     print(f"Count: {story_id}")
                     #self.getAllLinks(debug, root)
@@ -103,13 +108,20 @@ class Chyoa:
                 print(f"Error loading {url}: {e}")
 
     def get_soup(self, session, url):
-        response = session.get(url)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.text, 'html.parser')
-        return soup
+        try:
+            response = session.get(url)
+            response.raise_for_status()
+            soup = BeautifulSoup(response.text, 'html.parser')
+            return soup
+        except requests.exceptions.HTTPError as err_http:
+            print(f"HTTP-Error story link: {url}: {err_http}")
+        return None
 
     def get_links_from_site(self, debug, config, root, node, session, url, story_id, parent_filename, parent_id):
         soup = self.get_soup(session, url)
+        if not soup:
+            return None
+
         linksfromsite, story_id = self.scrape_links(debug, config, session, soup, root, story_id, parent_filename, parent_id)
         for link in linksfromsite:
             current_node = Node(link)
@@ -140,6 +152,8 @@ class Chyoa:
 
                     story_id = story_id + 1
                     soup_current_site = self.get_soup(session, a_href)
+                    if not soup_current_site:
+                        continue
 
                     meta = Meta(debug)
                     meta.scrape_meta_properties(soup_current_site)

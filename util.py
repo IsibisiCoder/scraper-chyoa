@@ -71,7 +71,7 @@ def download_image(debug, config, filename_base_name, image_folderpath, image_fo
             print(f"image saved: {filepath}")
     except requests.exceptions.HTTPError as err_http:
         if config.show_error_loading_image:
-            print(f"HTTP-Fehler image: {img_url}: {err_http}")
+            print(f"HTTP-Error image: {img_url}: {err_http}")
         filepath_relativ = ""
     except requests.exceptions.ConnectionError:
         if config.show_error_loading_image:
