@@ -13,6 +13,7 @@
   "show_chapter_name_loading_story": false,
   "create_epub": true,
   "ignore_links": ["/new?type=", "Add a new chapter", "Write a chapter", "Link a chapter"],
+  "image_prefix": false,
   "login": {
     "login_url": "https://chyoa.com/auth/login",
     "username": "Yourusername",

@@ -49,6 +49,7 @@ A sample JSON file is included and looks like this:
   "show_chapter_name_loading_story": false,
   "create_epub": true,
   "ignore_links": ["/new?type=", "Add a new chapter", "Write a chapter", "Link a chapter"],
+  "image_prefix": false,
   "login": {
     "login_url": "https://chyoa.com/auth/login",
     "username": "Yourusername",
@@ -74,6 +75,7 @@ recursionlimit|1500|The pages at chyoa are recursively structured, and in Python
 show_error_loading_image|false or true|If an embedded image cannot be loaded, the error should be displayed
 create_epub|false or true|If true, the story is exported as an EPUB e-book in addition to HTML. The EPUB includes all chapters, images, a Table of Contents, and story metadata.
 ignore_links|["..."]|A list of link texts or URL fragments to skip while scraping. Use this to filter out website UI buttons like "Write a chapter" that would otherwise cause the scraper to follow edit forms.
+image_prefix|false or true|If true, the text `illustration-` is added directly before each embedded image in the output.
 login|user/password|You can store your login information here.
 urls|...|List of URLs of the stories to be saved.
 

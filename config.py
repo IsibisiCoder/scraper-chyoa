@@ -1,6 +1,6 @@
 # (c) 2025-2026 by IsibisiCoder, MIT-License, https://github.com/IsibisiCoder
 class Config:
-    def __init__(self, login, questionClass, contentClass, chapterHtmltag, recursionLimit, storyNameWithId, multiplePages, wholeStoryOnePage, overrideHtmlSites, folderpathStories, foldernameImage, show_error_loading_image, show_chapter_name_loading_story, create_epub=False, ignore_links=None):
+    def __init__(self, login, questionClass, contentClass, chapterHtmltag, recursionLimit, storyNameWithId, multiplePages, wholeStoryOnePage, overrideHtmlSites, folderpathStories, foldernameImage, show_error_loading_image, show_chapter_name_loading_story, create_epub=False, ignore_links=None, image_prefix=False):
         self.login = login
         self.questionClass = questionClass
         self.contentClass = contentClass
@@ -20,3 +20,4 @@ class Config:
         
         self.create_epub = create_epub
         self.ignore_links = ignore_links if ignore_links is not None else []
+        self.image_prefix = image_prefix

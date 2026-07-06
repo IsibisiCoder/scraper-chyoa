@@ -327,10 +327,11 @@ class Chyoa:
                     filename_image = filename_image.replace('\\', '/')
                     # Styling is handled by CSS - no inline style needed
                     img['src'] = filename_image
-                    # Insert the requested prefix before the image
-                    prefix_tag = soup.new_tag("div")
-                    prefix_tag.string = "illustration-"
-                    img.insert_before(prefix_tag)
+                    # Optionally insert the "illustration-" prefix before the image
+                    if config.image_prefix:
+                        prefix_tag = soup.new_tag("div")
+                        prefix_tag.string = "illustration-"
+                        img.insert_before(prefix_tag)
         # return the updated prettified html directly
         return soup.prettify()
 
