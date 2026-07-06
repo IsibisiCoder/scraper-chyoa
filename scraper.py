@@ -49,7 +49,7 @@ def main():
     recursion_limit = config.get("recursionlimit")
     multiple_pages = config.get("multiple_pages")
     whole_story_one_page = config.get("whole_story_one_page")
-    override_html_sites = config.get("override_html_sites")
+    override_html_sites = config.get("htmlSiteOverride")
     storyname_with_id = config.get("storyname_with_id")
     show_error_loading_image = config.get("show_error_loading_image")
     show_chapter_name_loading_story = config.get("show_chapter_name_loading_story")

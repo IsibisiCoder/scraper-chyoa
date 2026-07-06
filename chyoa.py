@@ -1,8 +1,10 @@
 """read stories and save them"""
 #(c) 2025-2026 by IsibisiCoder, MIT-License, https://github.com/IsibisiCoder
+import os
 import sys
 import re
 from datetime import datetime
+from ebooklib import epub
 import requests
 from bs4 import BeautifulSoup
 #from config import Config
@@ -10,9 +12,6 @@ from story import Story
 from meta import Meta
 from node import Node
 from util import get_unique_filename, download_image, save, copy_css
-import os
-import ebooklib
-from ebooklib import epub
 
 class Chyoa:
     """class chyoa"""
@@ -326,9 +325,8 @@ class Chyoa:
                 if filename_image != "":
                     # Fix windows backslashes for epub/html
                     filename_image = filename_image.replace('\\', '/')
-                    # Apply responsive styling for eReaders
+                    # Styling is handled by CSS - no inline style needed
                     img['src'] = filename_image
-                    img['style'] = "max-width: 100%; height: auto; display: block;"
                     # Insert the requested prefix before the image
                     prefix_tag = soup.new_tag("div")
                     prefix_tag.string = "illustration-"
@@ -645,10 +643,17 @@ class Chyoa:
         book.set_language(root.value.meta.language_alternate_name if root.value.meta.language_alternate_name else 'en')
         if root.value.meta.author:
             book.add_author(root.value.meta.author)
+        # Add description and creation date metadata
+        if root.value.meta.description:
+            book.add_metadata('DC', 'description', root.value.meta.description)
+        if root.value.meta.published_time:
+            book.add_metadata('DC', 'date', root.value.meta.published_time)
 
-        # Create CSS
-        style = 'body { font-family: Times, Times New Roman, serif; } h1 { text-align: center; } h2 { text-align: center; font-style: italic; } .storytitle { color: #333; } .description { background-color: #f9f9f9; padding: 10px; margin-bottom: 20px; } img { max-width: 100%; height: auto; display: block; margin: 0 auto; }'
-        nav_css = epub.EpubItem(uid="style_nav", file_name="style/nav.css", media_type="text/css", content=style)
+        # Load and embed EPUB-specific CSS from style-epub.css
+        epub_css_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'style-epub.css')
+        with open(epub_css_path, 'r', encoding='utf-8') as f:
+            epub_style_content = f.read()
+        nav_css = epub.EpubItem(uid="style_epub", file_name="style/epub.css", media_type="text/css", content=epub_style_content)
         book.add_item(nav_css)
 
         # Add images
@@ -666,7 +671,7 @@ class Chyoa:
 
         chapters = []
         toc_tree = []
-        root_toc = self._add_epub_chapter(debug, root, book, chapters, set())
+        root_toc = self._add_epub_chapter(debug, root, book, chapters, nav_css, set())
         if root_toc:
             toc_tree.append(root_toc)
         
@@ -678,31 +683,39 @@ class Chyoa:
 
         book.spine = ['nav'] + chapters
 
-        epub_filename = os.path.join(folderpath, f"{root.value.filename}.epub")
+        # Use a clean story title for the epub filename
+        safe_title = re.sub(r'[^a-zA-Z0-9\s]', "-", root.value.story_title).replace(" ", "_")
+        epub_filename = os.path.join(folderpath, f"{safe_title}.epub")
         epub.write_epub(epub_filename, book, {})
         print(f"EPUB saved: {epub_filename}")
 
-    def _add_epub_chapter(self, debug, node, book, chapters, visited):
+    def _add_epub_chapter(self, debug, node, book, chapters, nav_css, visited):
         if node.value.id in visited:
             return None
         visited.add(node.value.id)
 
-        chapter_html = f"<h1>{node.value.chapter_title}</h1>\n{node.value.text}"
+        # Show both chapter number label and actual chapter heading
+        chapter_html = f"<h1>{node.value.story_header1}</h1>\n"
+        if node.value.chapter_title.strip():
+            chapter_html += f"<h2>{node.value.chapter_title}</h2>\n"
+        chapter_html += node.value.text
         
-        # Rewrite links to other epub chapters
+        # Rewrite links to other epub chapters using the actual chapter heading
         if len(node.children) > 0:
             chapter_html += "<hr><h2>What's next?</h2><ul>"
             for child in node.children:
-                chapter_html += f'<li><a href="{child.value.filename}.xhtml">{child.value.chapter_title}</a></li>'
+                link_label = child.value.story_header1 if child.value.story_header1.strip() else child.value.chapter_title
+                chapter_html += f'<li><a href="{child.value.filename}.xhtml">{link_label}</a></li>'
             chapter_html += "</ul>"
 
-        c = epub.EpubHtml(title=node.value.chapter_title, file_name=f"{node.value.filename}.xhtml", lang='en')
+        c = epub.EpubHtml(title=node.value.story_header1 or node.value.chapter_title, file_name=f"{node.value.filename}.xhtml", lang='en')
         c.content = chapter_html
+        c.add_item(nav_css)
         chapters.append(c)
 
         child_tocs = []
         for child in node.children:
-            child_toc = self._add_epub_chapter(debug, child, book, chapters, visited)
+            child_toc = self._add_epub_chapter(debug, child, book, chapters, nav_css, visited)
             if child_toc:
                 child_tocs.append(child_toc)
                 

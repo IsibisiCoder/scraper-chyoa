@@ -7,6 +7,7 @@
   "multiple_pages": true,
   "whole_story_one_page": false,
   "htmlSiteOverride": true,
+  "storyname_with_id": false,
   "recursionlimit": 1500,
   "show_error_loading_image": false,
   "show_chapter_name_loading_story": false,
