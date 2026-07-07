@@ -46,6 +46,7 @@ A sample JSON file is included and looks like this:
   "recursionlimit": 1500,
   "show_error_loading_image": false,
   "show_chapter_name_loading_story": false,
+  "directory_exists_skip_download": true,
   "login": {
     "login_url": "https://chyoa.com/auth/login",
     "username": "Yourusername",
@@ -68,6 +69,7 @@ whole_story_one_page|false or true|All chapters be saved in a shared HTML page
 htmlSiteOverride|false or true|If, when saving the HTML page, it is determined that this page already exists, this option determines whether the existing page is overwritten. This can be the case with recursively linked stories (but should not be). However, this is always the case when saving the map file and the start file of the story.
 recursionlimit|1500|The pages at chyoa are recursively structured, and in Python there is a default value for the recursion depth. The default value can be adjusted here if necessary.
 show_error_loading_image|false or true|If an embedded image cannot be loaded, the error should be displayed
+directory_exists_skip_download|false or true|if the story directory exists, skip the download
 login|user/password|You can store your login information here.
 urls|...|List of URLs of the stories to be saved.
 
@@ -155,6 +157,7 @@ Eine Beispiel json-Datei ist enthalten und sieht wie folgt aus:
   "recursionlimit": 1500,
   "show_error_loading_image": false,
   "show_chapter_name_loading_story": false,
+  "directory_exists_skip_download": true,
   "login": {
     "login_url": "https://chyoa.com/auth/login",
     "username": "Yourusername",
@@ -177,6 +180,7 @@ whole_story_one_page|false or true|alle Kapitel werden in einer gemeinsame html-
 htmlSiteOverride|false oder true|falls beim Speichern der html-Seite festgestellt wird, dass es diese Seite schon gibt, entscheidet diese Option darüber, ob die bestehende Seite überschrieben wird. Dieses kann bei rekursiv verlinkten Geschichten der Fall sein (sollte aber nicht). Bei der Speicherung der Map-Datei und der Startdatei der Geschichte ist das aber immer das Fall.
 recursionlimit|1500|Die Seiten bei chyoa sind rekursiv aufgebaut und in python gibt es ein default-Wert für die Rekursionstiefe. Der default-Wert kann hiermit bei Bedarf angepasst werden
 show_error_loading_image|false or true|Wenn ein eingebundenes Bild nicht geladen werden kann, soll der Fehler angezeigt werden
+directory_exists_skip_download|false or true|wenn das Story-Verzeichnis bereits existiert, überspringe den download
 login|user/password|Hier kann man die Anmeldeinformationen hinterlegen
 urls|["..."]|Liste der Urls der zu speichernden Stories.
 

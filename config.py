@@ -1,6 +1,6 @@
 # (c) 2025-2026 by IsibisiCoder, MIT-License, https://github.com/IsibisiCoder
 class Config:
-    def __init__(self, login, questionClass, contentClass, chapterHtmltag, recursionLimit, storyNameWithId, multiplePages, wholeStoryOnePage, overrideHtmlSites, folderpathStories, foldernameImage, show_error_loading_image, show_chapter_name_loading_story):
+    def __init__(self, login, questionClass, contentClass, chapterHtmltag, recursionLimit, storyNameWithId, multiplePages, wholeStoryOnePage, overrideHtmlSites, folderpathStories, foldernameImage, show_error_loading_image, show_chapter_name_loading_story, directory_exists_skip_download):
         self.login = login
         self.questionClass = questionClass
         self.contentClass = contentClass
@@ -17,4 +17,5 @@ class Config:
 
         self.show_error_loading_image = show_error_loading_image
         self.show_chapter_name_loading_story = show_chapter_name_loading_story
+        self.directory_exists_skip_download = directory_exists_skip_download
 

@@ -54,6 +54,9 @@ class Chyoa:
                 folder = foldername_story
                 if meta.modified_time_short != '':
                     folder = folder + f' ({meta.modified_time_short})'
+                if config.directory_exists_skip_download and root_story.check_folder_if_exists:
+                    print(f"skip story: {story_title}")
+                    continue
                 root_story.create_folder(folder)
                 root_story.create_folder_image()
                 if debug:

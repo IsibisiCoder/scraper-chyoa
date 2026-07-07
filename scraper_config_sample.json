@@ -10,6 +10,7 @@
   "recursionlimit": 1500,
   "show_error_loading_image": false,
   "show_chapter_name_loading_story": false,
+  "directory_exists_skip_download": true,
   "login": {
     "login_url": "https://chyoa.com/auth/login",
     "username": "Yourusername",

@@ -34,7 +34,7 @@ def main():
         sys.exit(1)
 
     try:
-        with open(config_json_file, 'r', encoding='utf-8') as f:
+        with open(config_json_file, 'r', encoding='utf-8-sig') as f:
             config = json.load(f)
     except Exception as e:
         print(f"config '{config_json_file}' can not loaded '{e}'")
@@ -53,6 +53,7 @@ def main():
     storyname_with_id = config.get("storyname_with_id")
     show_error_loading_image = config.get("show_error_loading_image")
     show_chapter_name_loading_story = config.get("show_chapter_name_loading_story")
+    directory_exists_skip_download = config.get("directory_exists_skip_download")
 
     if not multiple_pages and not whole_story_one_page:
         print("Configuration error: Please set either `multiplepages` or `wholeStoryOnePage` to True")
@@ -71,7 +72,7 @@ def main():
     if not foldername_image:
         foldername_image = "image"
 
-    configuration = Config(login_data, question_class, content_class, chapter_htmltag, recursion_limit, storyname_with_id, multiple_pages, whole_story_one_page, override_html_sites, folderpath_stories, foldername_image, show_error_loading_image, show_chapter_name_loading_story)
+    configuration = Config(login_data, question_class, content_class, chapter_htmltag, recursion_limit, storyname_with_id, multiple_pages, whole_story_one_page, override_html_sites, folderpath_stories, foldername_image, show_error_loading_image, show_chapter_name_loading_story, directory_exists_skip_download)
 
     if debug:
         print(f"download-folder is: '{folderpath_stories}'")
