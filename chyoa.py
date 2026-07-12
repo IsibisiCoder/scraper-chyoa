@@ -451,7 +451,7 @@ class Chyoa:
         htmltext.append(f'\n<meta name="story" content="{node.value.story_title}">\n')
         htmltext.append(f'<meta name="title" content="{node.value.chapter_title}">\n')
         htmltext.append(f'<meta name="author" content="{node.value.meta.author}">\n')
-        htmltext.append(f'<meta name="speech" content="{node.value.meta.speech}">\n')
+        htmltext.append(f'<meta name="language" content="{node.value.meta.language}">\n')
         if node.value.meta.tag.strip():
             htmltext.append(f'<meta name="tag" content="{node.value.meta.tag}">\n')
         if node.value.meta.category.strip():
@@ -592,8 +592,8 @@ class Chyoa:
             properties = properties + f'| Category:{node.value.meta.category} '
         if node.value.meta.pov:
             properties = properties + f'| Pov:{node.value.meta.pov} '
-        if node.value.meta.speech:
-            properties = properties + f'| Language:{node.value.meta.speech} '
+        if node.value.meta.language:
+            properties = properties + f'| Language:{node.value.meta.language} '
         if node.value.meta.likes:
             properties = properties + f'| Likes:{node.value.meta.likes} '
         if node.value.meta.views:
@@ -625,3 +625,4 @@ class Chyoa:
         htmltext = self.create_javascript(htmltext)
         htmltext.append('</head><body>')
         return htmltext
+
