@@ -17,11 +17,6 @@ p {
     font-size: 18px;
 }
 
-img {
-    vertical-align: middle;
-    border-radius: 8px;
-}
-
 ul {
     font-size: 18px;
  }
@@ -41,7 +36,26 @@ ul {
 }
 
 .cover {
-    text-align: center;
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
+    height: 530px;
+    width: 100%;
+}
+
+.rd-story-media {
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
+    height: 100%;
+    width: 100%;
+}
+
+img {
+    vertical-align: middle;
+    border-radius: 8px;
+    max-width: 100%;
+    max-height: 100%;
 }
 
 .chapterheader {
@@ -78,8 +92,6 @@ ul {
 
 .chapter-content {
     font-size: 18px;
-    max-height: 520px !important;
-    margin: 0 !important;
 }
 
 .publisheddate {

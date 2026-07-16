@@ -67,7 +67,7 @@ class Chyoa:
 
                 chapter_title, author,  _, _ = self.scrape_chapter_title_story_header(debug, soup)
                 root_story.meta.author = author
-                filename = self.create_filename(debug, story_header2, story_title, config.folderpathStories).lstrip("-")
+                filename = self.create_filename(debug, story_header2, story_title, config.folderpathStories).strip("-")
                 question = self.scrape_question(debug, soup)
                 story = self.scrape_content(debug, soup, root_story.image_folderpath, config)
                 image_filename = self.scrape_story_cover(debug, config, soup, root_story.image_folderpath, config.foldernameImage)
