@@ -26,7 +26,7 @@ class Meta:
         self.modified_time_short = ""
         self.likes = ""
         self.views = ""
-
+        self.url = ""
 
     def scrape_meta_properties(self, soup):
         """scrape all properties"""
@@ -101,7 +101,7 @@ class Meta:
                         self.language_alternate_name = data["inLanguage"]["alternateName"]
 
                 if "keywords" in data:
-                    self.tag = data["keywords"]
+                    self.tag = data["keywords"].replace(",", ", ")
                 else:
                     self.tag = ""
 

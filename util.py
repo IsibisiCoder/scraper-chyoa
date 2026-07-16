@@ -66,7 +66,7 @@ def download_image(debug, config, filename_base_name, image_folderpath, image_fo
         img_data.raise_for_status()
         with open(filepath, "wb") as f:
             for chunk in img_data.iter_content(chunk_size=8192):
-                f.write(chunk)  
+                f.write(chunk)
         if debug:
             print(f"image saved: {filepath}")
     except requests.exceptions.HTTPError as err_http:
