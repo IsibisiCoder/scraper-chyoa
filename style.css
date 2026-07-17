@@ -35,12 +35,28 @@ ul {
     font-size: 14px;
 }
 
+img {
+    vertical-align: middle;
+    border-radius: 8px;
+    max-width: 100%;
+    max-height: 100%;
+}
+
 .cover {
     display: flex; 
     justify-content: center; 
     align-items: center;
-    height: 530px;
+    height: 100%;
     width: 100%;
+    overflow: hidden;
+}
+
+.cover img {
+    display: block;
+    max-height: 530px;
+    height: auto;
+    width: auto;
+    max-width: 100%;
 }
 
 .rd-story-media {
@@ -49,13 +65,15 @@ ul {
     align-items: center;
     height: 100%;
     width: 100%;
+    overflow: hidden;
 }
 
-img {
-    vertical-align: middle;
-    border-radius: 8px;
+.rd-story-media img {
+    display: block;
+    max-height: 1280px;
+    height: auto;
+    width: auto;
     max-width: 100%;
-    max-height: 100%;
 }
 
 .chapterheader {
