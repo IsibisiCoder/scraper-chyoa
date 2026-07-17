@@ -547,10 +547,11 @@ class Chyoa:
         """create the javascript"""
         htmltext.append('\n<script>')
         htmltext.append('document.addEventListener("DOMContentLoaded", function () {')
+        htmltext.append('    const storageKey = "chyoa-scraper-" + document.title;')
         htmltext.append('    const toggles = document.querySelectorAll(".toggle");')
         htmltext.append('    const toggleAllBtn = document.getElementById("toggleAll");')
         htmltext.append('    const childrenLists = document.querySelectorAll(".children");')
-        htmltext.append("    let allOpen = sessionStorage.getItem('chyoa-scraper-document.title');")
+        htmltext.append('    let allOpen = sessionStorage.getItem(storageKey) === true;')
         htmltext.append('    toggles.forEach(btn => {')
         htmltext.append('        btn.addEventListener("click", function () {')
         htmltext.append('            const children = this.closest(".node").querySelector(":scope > .children");')
@@ -568,7 +569,7 @@ class Chyoa:
         htmltext.append('            updateArrow(btn, allOpen);')
         htmltext.append('        });')
         htmltext.append('        this.textContent = allOpen ? "Collapse all" : "Expand all";')
-        htmltext.append("        sessionStorage.setItem('chyoa-scraper-document.title', allOpen);")
+        htmltext.append('        sessionStorage.setItem(storageKey, allOpen);')
         htmltext.append('    });')
         htmltext.append('    function updateArrow(button, isOpen) {')
         htmltext.append('        button.textContent = isOpen')
@@ -594,16 +595,16 @@ class Chyoa:
 
     def create_description_story_body(self, htmltext, node):
         if node.value.meta.description:
-            htmltext.append(f'<div>| Description: {node.value.meta.description}</div>')
+            htmltext.append(f'<div>| <b>Description</b>: {node.value.meta.description}</div>')
         properties = "<div>"
         if node.value.meta.category:
-            properties = properties + f'| Category: {node.value.meta.category} '
+            properties = properties + f'| <b>Category</b>: {node.value.meta.category} '
         if node.value.meta.pov:
-            properties = properties + f'| Pov: {node.value.meta.pov} '
+            properties = properties + f'| <b>Pov</b>: {node.value.meta.pov} '
         if node.value.meta.language:
-            properties = properties + f'| Language: {node.value.meta.language} '
+            properties = properties + f'| <b>Language</b>: {node.value.meta.language} '
         if node.value.meta.url:
-            properties = properties + f'| Url: <a href="{node.value.meta.url}" target="_blank">{node.value.meta.url}</a> '
+            properties = properties + f'| <b>Url</b>: <a href="{node.value.meta.url}" target="_blank">{node.value.meta.url}</a> '
         properties = properties + "</div>"
         htmltext.append(properties)
 
