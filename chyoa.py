@@ -611,17 +611,17 @@ class Chyoa:
 
     def create_description_chapter_body(self, htmltext, node):
         if node.value.meta.author:
-            htmltext.append(f'| Author: {node.value.meta.author} ')
+            htmltext.append(f'| <b>Author</b>: {node.value.meta.author} ')
         if node.value.meta.published_time_short:
-            htmltext.append(f'| Created: {node.value.meta.published_time_short} ')
+            htmltext.append(f'| <b>Created</b>: {node.value.meta.published_time_short} ')
         if node.value.meta.modified_time_short:
-            htmltext.append(f'| Modified: {node.value.meta.modified_time_short} ')
+            htmltext.append(f'| <b>Modified</b>: {node.value.meta.modified_time_short} ')
         if node.value.meta.likes:
-            htmltext.append(f'| Likes: {node.value.meta.likes} ')
+            htmltext.append(f'| <b>Likes</b>: {node.value.meta.likes} ')
         if node.value.meta.views:
-            htmltext.append(f'| Views: {node.value.meta.views} ')
+            htmltext.append(f'| <b>Views</b>: {node.value.meta.views} ')
         if node.value.meta.tag:
-            htmltext.append(f'<div class="tag">| Tags: {node.value.meta.tag}</div>\n')
+            htmltext.append(f'<div class="tag">| <b>Tags</b>: {node.value.meta.tag}</div>\n')
 
         return htmltext
 
