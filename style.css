@@ -227,6 +227,11 @@ img {
   cursor: pointer;
 }
 
+.withoutbutton {
+  width: 22px;
+  height: 22px;
+}
+
 .children {
     display: none;
 }

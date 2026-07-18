@@ -11,6 +11,8 @@
   "show_error_loading_image": false,
   "show_chapter_name_loading_story": false,
   "directory_exists_skip_download": true,
+  "waiting_time_between_downloads_of": 2,
+  "waiting_time_between_downloads_until": 5,
   "login": {
     "login_url": "https://chyoa.com/auth/login",
     "username": "Yourusername",

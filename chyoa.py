@@ -3,6 +3,8 @@
 import sys
 import re
 from datetime import datetime
+import time
+import random
 import requests
 from bs4 import BeautifulSoup
 from story import Story
@@ -18,7 +20,7 @@ class Chyoa:
         # pylint: disable=W0612
         for idx, url in enumerate(urls, 1):
             try:
-                soup = self.get_soup(session, url)
+                soup = self.get_soup(session, config, url)
                 if not soup:
                     continue
 
@@ -33,6 +35,10 @@ class Chyoa:
                 meta.url = url
 
                 foldername_story = foldername_story.strip("-")
+                # Determine the ID of the home page from the URL (the number after the period)
+                id_of_startsite = url.split(".")[-1]
+                if (id_of_startsite):
+                    foldername_story = f"{foldername_story}({id_of_startsite})"
 
                 story_id = 1
 
@@ -63,14 +69,16 @@ class Chyoa:
                     print(f"root.storyFolderpath: {root_story.folderpath_story}")
                     print(f"root.imageFolderPath: {root_story.image_folderpath}")
 
-                print(f"downloading {url} -> title: {story_title}, folder: {root_story.folderpath_story}")
+                print(f"[story]       {story_title}")
+                print(f"[folder]      {root_story.folderpath_story}")
+                print(f"[downloading] {url}")
 
                 chapter_title, author,  _, _ = self.scrape_chapter_title_story_header(debug, soup)
                 root_story.meta.author = author
-                filename = self.create_filename(debug, story_header2, story_title, config.folderpathStories).strip("-")
+                filename = self.create_filename(debug, story_header2, story_title, config.folderpath_stories)
                 question = self.scrape_question(debug, soup)
                 story = self.scrape_content(debug, soup, root_story.image_folderpath, config)
-                image_filename = self.scrape_story_cover(debug, config, soup, root_story.image_folderpath, config.foldernameImage)
+                image_filename = self.scrape_story_cover(debug, config, soup, root_story.image_folderpath, config.foldername_image)
 
                 startsite = f"{story_id:04d}"+"-"+filename
 
@@ -86,7 +94,7 @@ class Chyoa:
                 )
                 root = Node(root_story)
 
-                sys.setrecursionlimit(config.recursionLimit)
+                sys.setrecursionlimit(config.recursion_limit)
                 story_id = self.get_links_from_site(debug, config, root, root, session, url, story_id, startsite, story_id)
                 if not story_id:
                     return
@@ -95,7 +103,7 @@ class Chyoa:
                     #self.getAllLinks(debug, root)
 
                 copy_css(debug, root.value.folderpath_story)
-                print("save...")
+                print("[saving]")
 
                 if config.multiple_pages:
                     self.save_stories(debug, root_story.folderpath_story, root, config, True)
@@ -103,15 +111,20 @@ class Chyoa:
                     self.save_stories_to_one_file(debug, root_story.folderpath_story, root, config)
 
                 if config.multiple_pages:
-                    self.create_map(debug, root_story.folderpath_story, root_story.filename_map, root, config.multiple_pages, config.overrideHtmlSites)
+                    self.create_map(debug, root_story.folderpath_story, root_story.filename_map, root, config.multiple_pages, config.override_html_sites)
 
-                print("finished download story")
+                print("[completed]")
 
             except requests.RequestException as e:
                 print(f"Error loading {url}: {e}")
+        print("[finished]")
 
-    def get_soup(self, session, url):
+    def get_soup(self, session, config, url):
         try:
+            # A wait time to prevent the web server from becoming overloaded.
+            # Random pauses are inserted between two values to prevent the server from being locked out.
+            wait_time = random.uniform(config.waiting_time_between_downloads_of, config.waiting_time_between_downloads_until)
+            time.sleep(wait_time)
             response = session.get(url)
             response.raise_for_status()
             soup = BeautifulSoup(response.text, 'html.parser')
@@ -121,7 +134,7 @@ class Chyoa:
         return None
 
     def get_links_from_site(self, debug, config, root, node, session, url, story_id, parent_filename, parent_id):
-        soup = self.get_soup(session, url)
+        soup = self.get_soup(session, config, url)
         if not soup:
             return None
 
@@ -138,7 +151,7 @@ class Chyoa:
 
     def scrape_links(self, debug, config, session, soup, root, story_id, parent_filename, parent_id):
         all_links = []
-        content_navigable_all = soup.find_all(config.chapterHtmltag, class_=config.questionClass)
+        content_navigable_all = soup.find_all(config.chapter_htmltag, class_=config.question_class)
 
         # anker-tags
         for c in content_navigable_all:
@@ -154,7 +167,7 @@ class Chyoa:
                         print(f"parent {parent_filename}")
 
                     story_id = story_id + 1
-                    soup_current_site = self.get_soup(session, a_href)
+                    soup_current_site = self.get_soup(session, config, a_href)
                     if not soup_current_site:
                         continue
 
@@ -164,7 +177,7 @@ class Chyoa:
 
                     chapter_title, author, story_header1, story_header2 = self.scrape_chapter_title_story_header(debug, soup_current_site)
                     meta.author = author
-                    filename = f"{story_id:04d}"+"-"+chapter_title.strip()+"-"+self.create_filename(debug, story_header1, root.value.story_title, config.folderpathStories).strip()
+                    filename = f"{story_id:04d}"+"-"+chapter_title.replace(" ", "_").strip()+"-"+self.create_filename(debug, story_header1, root.value.story_title, config.folderpath_stories).strip()
 
                     question = self.scrape_question(debug, soup_current_site)
                     contains_url, contains_node = Node.contains(root, a_href)
@@ -293,7 +306,7 @@ class Chyoa:
         filename = title
         if not filename:
             filename = story_title
-        filename = get_unique_filename(debug, folder, re.sub(r'[^a-zA-Z0-9áéíóàèìòîâûêäöüÄÖÜß\s]', "-", title).replace(" ", "_").replace('"', '_'), "html")
+        filename = get_unique_filename(debug, folder, re.sub(r'[^a-zA-Z0-9áéíóàèìòîâûêäöüÄÖÜß\s]', "-", title).replace(" ", "_").replace('"', '_').strip("-"), "html")
         if debug:
             print(f"filename: {filename}")
         return filename
@@ -317,7 +330,7 @@ class Chyoa:
             if img_src:
                 if debug:
                     print(f'image-src: {img_src}')
-                filename_image = download_image(debug, config, "chapter-image", image_folderpath, config.foldernameImage, img_src)
+                filename_image = download_image(debug, config, "chapter-image", image_folderpath, config.foldername_image, img_src)
                 if filename_image != "":
                     content_new = content.replace(f'{img_src}', f'{filename_image}')
                     if debug:
@@ -341,7 +354,7 @@ class Chyoa:
 
     def scrape_content(self, debug, soup, image_folderpath, config):
         """scrape the content"""
-        content_navigable_all = soup.find_all(config.chapterHtmltag, class_=config.contentClass)
+        content_navigable_all = soup.find_all(config.chapter_htmltag, class_=config.content_class)
         if not content_navigable_all:
             return "<!-- no content found -->"
         content = content_navigable_all[0].prettify() if content_navigable_all else "<!-- no content found -->"
@@ -361,7 +374,7 @@ class Chyoa:
         html = self.create_html(debug, node, config.multiple_pages, first_page)
         if first_page:
             first_page = False
-        save(foldername, node.value.filename, node, html, config.overrideHtmlSites)
+        save(foldername, node.value.filename, node, html, config.override_html_sites)
 
         if config.multiple_pages:
             for child in node.children:
@@ -372,7 +385,7 @@ class Chyoa:
             print(f"save to one filen {node.value.filename} - {node.value.follow}")
         if config.whole_story_one_page:
             html = self.create_html(debug, node, False, True)
-            save(foldername, node.value.filename_total, node, html, config.overrideHtmlSites)
+            save(foldername, node.value.filename_total, node, html, config.override_html_sites)
 
     def create_html(self, debug, node, multiple_pages, first_page):
         htmltext = []
@@ -422,14 +435,14 @@ class Chyoa:
             htmltext.append(f" by {node.value.meta.author}")
             if node.value.meta.published_time_short != "" or node.value.meta.modified_time_short != "":
                 htmltext.append('<span class="publisheddate">')
-                time = ""
+                published_time = ""
                 if node.value.meta.published_time_short != "":
-                    time = f" created on {node.value.meta.published_time_short}"
+                    published_time = f" created on {node.value.meta.published_time_short}"
                 if node.value.meta.published_time_short != "" and node.value.meta.modified_time_short != "":
-                    time = f"{time}, "
+                    published_time = f"{published_time}, "
                 if node.value.meta.modified_time_short != "":
-                    time = f"{time}updated on {node.value.meta.modified_time_short}"
-                htmltext.append(time)
+                    published_time = f"{published_time}updated on {node.value.meta.modified_time_short}"
+                htmltext.append(published_time)
                 htmltext.append('</span>')
         htmltext.append("</div>")
 
@@ -506,14 +519,14 @@ class Chyoa:
         if node.value.meta.author != "":
             additional_text = additional_text + f'<span class="author-link">by {node.value.meta.author}</span>'
         if node.value.meta.published_time_short != "" or node.value.meta.modified_time_short != "":
-            time = '<span class="publisheddate-link">'
+            published_time = '<span class="publisheddate-link">'
             if node.value.meta.published_time_short != "":
-                time = f"{time} (created on {node.value.meta.published_time_short}"
+                published_time = f"{published_time} (created on {node.value.meta.published_time_short}"
             if node.value.meta.published_time_short != "" and node.value.meta.modified_time_short != "":
-                time = f"{time},   "
+                published_time = f"{published_time},   "
             if node.value.meta.modified_time_short != "":
-                time = f"{time}updated on {node.value.meta.published_time_short}"
-            time = time + '</span>'
+                published_time = f"{time}updated on {node.value.meta.published_time_short}"
+            published_time = published_time + '</span>'
 
         style = "margin-left: 30px;"
         #display = "display: block;"
@@ -536,6 +549,8 @@ class Chyoa:
         if show_button:
             htmltext.append('<button class="toggle"> ▶ </button>')
             #htmltext.append(f'<button class="toggle"> ▼ </button>')
+        else:
+            htmltext.append('<span class="withoutbutton"> </span>')
         if multiple_pages:
             htmltext.append(f'<a href="{url}">{linktext}</a> {additional_text}')
         else:
