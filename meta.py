@@ -26,14 +26,15 @@ class Meta:
         self.modified_time_short = ""
         self.likes = ""
         self.views = ""
-
+        self.url = ""
 
     def scrape_meta_properties(self, soup):
         """scrape all properties"""
         self.title = self.scrape_meta_property(soup, "og:title")
         self.published_time = self.scrape_meta_property(soup, "article:published_time").strip()
         self.modified_time = self.scrape_meta_property(soup, "article:modified_time")
-        self.description = self.scrape_meta_property(soup, "og:description")
+        #The description from the meta tags does not include the full text; instead, it is truncated.
+        #self.description = self.scrape_meta_property(soup, "og:description")
         if not self.published_time == '':
             self.published_time_short = datetime.fromisoformat(self.published_time).date().isoformat()
         else:
@@ -46,13 +47,19 @@ class Meta:
 
         self.scrape_pairs_columns(soup)
 
+        #The description from the meta tags does not include the full text; instead, it is truncated.
+        #Instead, read the text from the HTML paragraph
+        synopsis = soup.find('p', class_='synopsis')
+        if synopsis:
+            self.description = synopsis.get_text(strip=True)
+        else:
+            self.description = ""
+
         if self.debug:
             print(f"content title: {self.title}")
             print(f"content published_time: {self.published_time}")
             print(f"content modified_time: {self.modified_time}")
             print(f"content description: {self.description}")
-            print(f"content description: {self.description}")
-
 
     def scrape_meta_property(self, soup, property_name):
         """scape the property name in the class meta"""
@@ -101,7 +108,7 @@ class Meta:
                         self.language_alternate_name = data["inLanguage"]["alternateName"]
 
                 if "keywords" in data:
-                    self.tag = data["keywords"]
+                    self.tag = data["keywords"].replace(",", ", ")
                 else:
                     self.tag = ""
 
