@@ -11,6 +11,7 @@ from story import Story
 from meta import Meta
 from node import Node
 from util import get_unique_filename, download_image, save, copy_css
+from personal_tags import PersonalTags
 
 class Chyoa:
     """class chyoa"""
@@ -37,8 +38,11 @@ class Chyoa:
                 foldername_story = foldername_story.strip("-")
                 # Determine the ID of the home page from the URL (the number after the period)
                 id_of_startsite = url.split(".")[-1]
-                if (id_of_startsite):
+                if id_of_startsite:
                     foldername_story = f"{foldername_story}({id_of_startsite})"
+
+                personal_tags = PersonalTags(debug, config)
+                personal_tags_of_story = personal_tags.read_personal_tags(foldername_story)
 
                 story_id = 1
 
@@ -53,7 +57,8 @@ class Chyoa:
                     story_header1 = story_header1,
                     story_header2 = story_header2,
                     filename_map = foldername_story + "-map.html",
-                    filename_total = foldername_story + "-total.html"
+                    filename_total = foldername_story + "-total.html",
+                    personal_tags = personal_tags_of_story
                 )
 
                 # create folder with modified_time
@@ -194,7 +199,8 @@ class Chyoa:
                             contains_node.value.story_header1,
                             contains_node.value.story_header2,
                             root.value.filename_map,
-                            root.value.filename_total
+                            root.value.filename_total,
+                            root.value.personal_tags
                         )
                         current_link.set(
                             "", 
@@ -224,7 +230,8 @@ class Chyoa:
                             story_header1,
                             story_header2,
                             root.value.filename_map,
-                            root.value.filename_total
+                            root.value.filename_total,
+                            root.value.personal_tags
                         )
                         current_link.set(
                             "", 
@@ -421,6 +428,7 @@ class Chyoa:
         htmltext = self.create_description_chapter_body(htmltext, node)
         if first_page:
             htmltext = self.create_description_story_body(htmltext, node)
+            htmltext = self.create_personal_tags_story_body(htmltext, node)
         htmltext.append('</div>\n')
 
         htmltext.append(f'<p id={str(node.value.id)} class="storyheader2">')
@@ -490,6 +498,14 @@ class Chyoa:
         htmltext.append(f'<meta name="likes" content="{node.value.meta.likes}">\n')
         htmltext.append(f'<meta name="views" content="{node.value.meta.views}">\n')
         htmltext.append(f'<meta name="scraper_date" content="{datetime.now().strftime('%Y-%m-%d')}">\n')
+
+        if node.value.personal_tags:
+            for key, value in node.value.personal_tags.items():
+                if not value:
+                    continue
+                personal_tag_value = value.replace("<br>", "").replace("<b>", "").replace("</b>", "").replace("<i>", "").replace("</i>", "").replace("<u>", "").replace("</u>", "")
+                htmltext.append(f'<meta name="{key}" content="{personal_tag_value}">\n')
+
         return htmltext
 
     def create_html_head(self, htmltext, node, multiple_pages, first_page):
@@ -608,6 +624,16 @@ class Chyoa:
         htmltext.append("</body></html>")
         save(foldername, filename, node, htmltext, html_site_override)
 
+    def create_personal_tags_story_body(self, htmltext, node):
+        if node.value.personal_tags:
+            htmltext.append('<div class="personal-tags">')
+            for key, value in node.value.personal_tags.items():
+                if not value:
+                    continue
+                htmltext.append(f'| <b>{key}</b>: {value} ')
+            htmltext.append('</div>')
+        return htmltext
+
     def create_description_story_body(self, htmltext, node):
         if node.value.meta.description:
             htmltext.append(f'<div>| <b>Description</b>: {node.value.meta.description}</div>')
@@ -645,6 +671,7 @@ class Chyoa:
         htmltext.append('\n<div class="description">')
         htmltext = self.create_description_chapter_body(htmltext, node)
         htmltext = self.create_description_story_body(htmltext, node)
+        htmltext = self.create_personal_tags_story_body(htmltext, node)
         htmltext.append('</div>\n')
 
         htmltext.append('<hr>')

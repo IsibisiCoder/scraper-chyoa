@@ -5,7 +5,20 @@ import os
 #from config import Config
 
 class Story:
-    def __init__(self, config, story_id, url, meta, linktext, follow, story_title, story_header1, story_header2, filename_map, filename_total):
+    def __init__(
+            self,
+            config,
+            story_id,
+            url,
+            meta,
+            linktext,
+            follow,
+            story_title,
+            story_header1,
+            story_header2,
+            filename_map,
+            filename_total,
+            personal_tags):
         self.config = config
         self.id = story_id
         self.url = url
@@ -21,6 +34,7 @@ class Story:
         self.foldername_story = ""
         self.filename_map = filename_map
         self.filename_total = filename_total
+        self.personal_tags = personal_tags
         self.image_folderpath  = ""
         self.chapter_title = ""
         self.question = ""

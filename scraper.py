@@ -54,8 +54,10 @@ def main():
     show_error_loading_image = config.get("show_error_loading_image")
     show_chapter_name_loading_story = config.get("show_chapter_name_loading_story")
     directory_exists_skip_download = config.get("directory_exists_skip_download")
-    waiting_time_between_downloads_of = config.get("waiting_time_between_downloads_of")
-    waiting_time_between_downloads_until = config.get("waiting_time_between_downloads_until")
+    waiting_time_between_downloads_of = config.get("waiting_time_between_downloads_of", 2)
+    waiting_time_between_downloads_until = config.get("waiting_time_between_downloads_until", 5)
+    foldername_personal_tags = config.get("foldername_personal_tags", "personal_tags")
+    suffix_personal_tags = config.get("suffix_personal_tags", "mytags")
 
     if not multiple_pages and not whole_story_one_page:
         print("Configuration error: Please set either `multiplepages` or `wholeStoryOnePage` to True")
@@ -90,7 +92,9 @@ def main():
         show_chapter_name_loading_story,
         directory_exists_skip_download,
         waiting_time_between_downloads_of,
-        waiting_time_between_downloads_until)
+        waiting_time_between_downloads_until,
+        foldername_personal_tags,
+        suffix_personal_tags)
 
     if debug:
         print(f"download-folder is: '{folderpath_stories}'")

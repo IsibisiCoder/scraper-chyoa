@@ -17,7 +17,9 @@ class Config:
             show_chapter_name_loading_story,
             directory_exists_skip_download,
             waiting_time_between_downloads_of,
-            waiting_time_between_downloads_until):
+            waiting_time_between_downloads_until,
+            foldername_personal_tags,
+            suffix_personal_tags):
         self.login = login
         self.question_class = question_class
         self.content_class = content_class
@@ -31,10 +33,13 @@ class Config:
         # Foldername and path
         self.folderpath_stories = folderpath_stories
         self.foldername_image = foldername_image
-
         self.show_error_loading_image = show_error_loading_image
         self.show_chapter_name_loading_story = show_chapter_name_loading_story
         self.directory_exists_skip_download = directory_exists_skip_download
+
+        # personal tags
+        self.foldername_personal_tags = foldername_personal_tags
+        self.suffix_personal_tags = suffix_personal_tags
 
         self.waiting_time_between_downloads_of = waiting_time_between_downloads_of
         self.waiting_time_between_downloads_until = waiting_time_between_downloads_until
