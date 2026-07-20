@@ -51,6 +51,8 @@ def main():
     directory_exists_skip_download = config.get("directory_exists_skip_download", False)
     waiting_time_between_downloads_of = config.get("waiting_time_between_downloads_of", 2)
     waiting_time_between_downloads_until = config.get("waiting_time_between_downloads_until", 5)
+    foldername_personal_tags = config.get("foldername_personal_tags", "personal_tags")
+    suffix_personal_tags = config.get("suffix_personal_tags", "mytags")
     create_epub = config.get("create_epub", False)
     ignore_links = config.get("ignore_links", [])
     image_prefix = config.get("image_prefix", False)
@@ -91,6 +93,8 @@ def main():
         directory_exists_skip_download,
         waiting_time_between_downloads_of,
         waiting_time_between_downloads_until,
+        foldername_personal_tags,
+        suffix_personal_tags,
         create_epub,
         ignore_links,
         image_prefix,

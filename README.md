@@ -15,10 +15,41 @@ This Python script allows you to download interactive stories from the Story web
 * Configuration of login data possible (automatic login)
 * Download and storage of multiple stories possible
 * Properties are saved e.g. description, author, published_time, category, language, tag
+* You can define custom properties for the story, which are then added to the HTML file when the story is retrieved
+
+## personal tags
+
+It is possible to define your own tags, such as keywords, notes, ratings, etc. These tags are then included in the HTML file when it is generated.  
+Personal tags are recorded in a separate JSON file. Within the "personal_tags" node, any number of so-called key/value pairs can be defined.  
+The JSON file must have exactly the same name as the main story’s folder, but without the date.  
+So, if the story folder is called `My_Story(1234) (2026-01-10)`, the JSON file must be called `My_Story(1234)_mytags.json`. The suffix `_mytags` can be changed via the configuration.  
+These personal_tags files are located in a separate folder, which is set to `personal_tags` by default. This folder name can also be changed via the configuration.  
+
+Example of a `personal_tags` JSON file: 
+```json
+{
+  "personal_tags": {
+    "Remarks": "",
+    "Read": "Yes",
+    "Interested": "Yes",
+    "Rating": "***<br>",
+    "Genre": "...",
+    "Keywords": "my owbn keywords"
+  }
+}
+ ```
+
+This example can also be found in the sample file `scraper_story_sample_mytags.json`.  
+
+- If no values are specified, the entry is ignored (see Remarks).  
+- Simple formatting, such as <b></b> <i></i> or <u></u>, can also be included in the values. <br> can be used for line breaks. Please note that this must be valid HTML. As the values are written into the HTML as meta tags, it is generally not advisable to include arbitrary HTML here.
+- The tags <b></b>, <i></i>, <u></u> and <br> are removed by spaces before being written into the HTML’s meta structure; however, other HTML tags are not.  
 
 ## install
 
 Install the dependencies:
+
+MacOS and Linux
 ```script
 pip3 install -r requirements.txt
 ```
@@ -28,6 +59,7 @@ pip install -r requirements.txt
 ```
 
 or you use a virtual environment:  
+MacOS and Linux:  
 ```script
     python3 -m venv .venv
     source .venv/bin/activate
@@ -36,7 +68,7 @@ or you use a virtual environment:
     or pip3 install -r requirements.txt
 ```
 
-Windows used the command  
+Windows:  
 ```
     python3 -m venv venv
     source venv/Scripts/activate
@@ -53,11 +85,14 @@ A sample JSON file is included and looks like this:
   "question_class": "question-content",
   "chapter_class": "chapter-content",
   "htmltag": "div",
-  "folder": "c:/story",
-  "imagefolder": "image",
+  "folder": "story",
+  "foldername_image": "image",
+  "foldername_personal_tags": "personal_tags",
+  "suffix_personal_tags": "mytags",
+  "storyname_with_id": true,
   "multiple_pages": true,
   "whole_story_one_page": false,
-  "htmlSiteOverride": true,
+  "override_html_sites": true,
   "storyname_with_id": false,
   "recursionlimit": 1500,
   "show_error_loading_image": false,
@@ -86,10 +121,11 @@ The following values must be adjusted:
 Value|Example|Meaning
 --|--|--
 folder|c:/story|This is the main folder where all stories are stored. For each story, another folder with the name of the story is created in this folder.
-imagefolder|image|All images are stored in this subfolder. There is a subfolder `image` for each story. It is possible to change the name, but this has not been tested.
+foldername_image|image|All images are stored in this subfolder. There is a subfolder `image` for each story. It is possible to change the name, but this has not been tested.
+foldername_personal_tags|personal_tags|Name of the folder containing the JSON files for your personal descriptions
 multiple_pages|false or true|one HTML page will be created per chapter
 whole_story_one_page|false or true|All chapters be saved in a shared HTML page
-htmlSiteOverride|false or true|If, when saving the HTML page, it is determined that this page already exists, this option determines whether the existing page is overwritten.
+override_html_sites|false or true|If, when saving the HTML page, it is determined that this page already exists, this option determines whether the existing page is overwritten. This can be the case with recursively linked stories (but should not be). However, this is always the case when saving the map file and the start file of the story.
 storyname_with_id|false or true|If true, the story folder name will include the story ID.
 recursionlimit|1500|The pages at chyoa are recursively structured, and in Python there is a default value for the recursion depth. The default value can be adjusted here if necessary.
 show_error_loading_image|false or true|If an embedded image cannot be loaded, the error should be displayed
@@ -154,17 +190,20 @@ Dieses Python-Script bietet die Möglich, interaktive Stories von der Story-Webs
 * Speicherung eines Kapitels als jeweils einzelne Html-Seite
 * Speicherung der Übersicht (Map) als eigene Html-Seite
 * Speicherung aller Kapitel in einer Html-Seite
+* Export der gesamten Story als EPUB
 * Die Übersicht (Map) wird hierbei in die Html-Seite integriert
 * Anpassung der Links auf die lokalen Html-Seiten bzw. internen Kapitel
 * Herunterladen von eingebetteten Bildern
 * Konfiguration von Login-Daten möglich (Automatische Anmeldung)
 * Download und Speicherung mehrerer Stories möglich
 * Die Eigenschaften der Geschichte werden gespeichert, wie z.B. Beschreibung, Autor, Erstellungsdatum, Änderungendatum, Kategorie
+* Es können eigene Eigenschaften der Geschichte definitiert werden, die dann beim Abruf der Geschichte in die Html-Datei dazugeschrieben werden
 
 
 ## Installation
 
-Install the dependencies:
+Installation der Abhängigkeiten:  
+MacOS und Linux
 ```script
 pip3 install -r requirements.txt
 ```
@@ -174,6 +213,7 @@ pip install -r requirements.txt
 ```
 
 or you use a virtual environment:  
+MacOS und Linux:  
 ```script
     python3 -m venv .venv
     source .venv/bin/activate
@@ -181,14 +221,40 @@ or you use a virtual environment:
     
     or pip3 install -r requirements.txt
 ```
+## persönliche Tags
 
-Windows used the command  
+Es ist möglich, eigene Tags, wie Stichwörter, Anmerkungen, Bewertungen usw. zu definieren. Diese Tags werden dann bei der Erzeugung der Html-Datei mit in die Datei geschrieben.  
+Die persönlichen Tags werden in einer eigenen JSON-Datei erfasst. Dabei können innerhalb des Knotens "personal_tags" beliebig viele so genannte key/value-Paare definiert werden.  
+Die JSON-Datei muss exakt so heißen, wie der Ordner der Hauptstory, aber ohne Datumsangabe.  
+Wenn der Ordner der Geschichte also `Meine_Story(1234) (2026-01-10)` heißt, muss die JSON-Datei `Meine_Story(1234)_mytags.json` heißen. Der Suffix `_mytags` kann über die Konfiguration verändert werden.  
+Diese personal_tags-Dateien liegen in einem seperaten Ordner, die per default auf `personal_tags` eingestellt ist. Dieser Ordnername kann ebenfalls über die Konfiguration verändert werden.  
+
+Windows:  
 ```
     python3 -m venv venv
     source venv/Scripts/activate
     python3 -m pip install -r requirements.txt
     or pip install -r requirements.txt
 ```
+Beispiel für eine personal_tags-JSON-Datei: 
+```json
+{
+  "personal_tags": {
+    "Remarks": "",
+    "Read": "Yes",
+    "Interested": "Yes",
+    "Rating": "***<br>",
+    "Genre": "...",
+    "Keywords": "my owbn keywords"
+  }
+}
+ ```  
+
+Das Beispiel findet man auch in der Beispiel-Datei `scraper_story_sample_mytags.json`.  
+
+- Werden keine Values angegeben, wird der Eintrag ignoriert (siehe Remarks).  
+- In den Values kann auch eine einfache Formatierung, wie <b></b> <i></i> oder <u></u> geschrieben werden. Für Zeilenumbrüche ist <br> möglich. Hierbei ist zu beachten, dass es sich um ein gültiges Html handeln muss. Da die Values als Meta-Tags in das Html geschrieben werden, ist es eher davon abzuraten, beliebiges Html hier zu schrieben.
+- Die Formatierungen <b></b>, <i></i>, <u></u> oder <br> werden vor dem Schreiben in die Meta-Struktur des Html durch Leerzeichen entfernt, andere Html-Tags jedoch nicht.
 
 ## Konfiguration
 
@@ -200,10 +266,13 @@ Eine Beispiel json-Datei ist enthalten und sieht wie folgt aus:
   "chapter_class": "chapter-content",
   "htmltag": "div",
   "folder": "c:/story",
-  "imagefolder": "image",
+  "foldername_image": "image",
+  "foldername_personal_tags": "personal_tags",
+  "suffix_personal_tags": "mytags",
+  "storyname_with_id": true,
   "multiple_pages": true,
   "whole_story_one_page": false,
-  "htmlSiteOverride": true,
+  "override_html_sites": true,
   "recursionlimit": 1500,
   "show_error_loading_image": false,
   "show_chapter_name_loading_story": false,
@@ -231,10 +300,11 @@ Folgende Werte müssen angepasst werden:
 Wert|Beispiel|Bedeutung
 --|--|--
 folder|c:/story|Dieses ist der Hauptordner, in dem alle Stories gespeichert werden. Pro Story wird in diesem Ordner ein weiterer Ordner mit dem Namen der Story angelegt
-imagefolder|image|Alle Bilder werden in diesem Unterordner gespeichert. Pro Story gibt es einen Unterordner `image`. Eine Änderung des Namens ist möglich, wurde aber nicht getestet.
+foldername_image|image|Alle Bilder werden in diesem Unterordner gespeichert. Pro Story gibt es einen Unterordner `image`. Eine Änderung des Namens ist möglich, wurde aber nicht getestet.
+foldername_personal_tags|personal_tags|Name des Ordners, in dem die JSON-Dateien für die eigenen persönlichen Beschreibungen
 multiple_pages|false or true|one HTML page will be created per chapter
 whole_story_one_page|false or true|alle Kapitel werden in einer gemeinsame html-Seite gespeichert
-htmlSiteOverride|false oder true|falls beim Speichern der html-Seite festgestellt wird, dass es diese Seite schon gibt, entscheidet diese Option darüber, ob die bestehende Seite überschrieben wird. Dieses kann bei rekursiv verlinkten Geschichten der Fall sein (sollte aber nicht). Bei der Speicherung der Map-Datei und der Startdatei der Geschichte ist das aber immer das Fall.
+override_html_sites|false oder true|falls beim Speichern der html-Seite festgestellt wird, dass es diese Seite schon gibt, entscheidet diese Option darüber, ob die bestehende Seite überschrieben wird. Dieses kann bei rekursiv verlinkten Geschichten der Fall sein (sollte aber nicht). Bei der Speicherung der Map-Datei und der Startdatei der Geschichte ist das aber immer das Fall.
 recursionlimit|1500|Die Seiten bei chyoa sind rekursiv aufgebaut und in python gibt es ein default-Wert für die Rekursionstiefe. Der default-Wert kann hiermit bei Bedarf angepasst werden
 show_error_loading_image|false or true|Wenn ein eingebundenes Bild nicht geladen werden kann, soll der Fehler angezeigt werden
 directory_exists_skip_download|false or true|wenn das Story-Verzeichnis bereits existiert, überspringe den download

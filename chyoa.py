@@ -14,6 +14,7 @@ from story import Story
 from meta import Meta
 from node import Node
 from util import get_unique_filename, download_image, save, copy_css
+from personal_tags import PersonalTags
 
 class Chyoa:
     """class chyoa"""
@@ -40,8 +41,11 @@ class Chyoa:
                 foldername_story = foldername_story.strip("-")
                 # Determine the ID of the home page from the URL (the number after the period)
                 id_of_startsite = url.split(".")[-1]
-                if (id_of_startsite):
+                if id_of_startsite:
                     foldername_story = f"{foldername_story}({id_of_startsite})"
+
+                personal_tags = PersonalTags(debug, config)
+                personal_tags_of_story = personal_tags.read_personal_tags(foldername_story)
 
                 story_id = 1
 
@@ -56,7 +60,8 @@ class Chyoa:
                     story_header1 = story_header1,
                     story_header2 = story_header2,
                     filename_map = foldername_story + "-map.html",
-                    filename_total = foldername_story + "-total.html"
+                    filename_total = foldername_story + "-total.html",
+                    personal_tags = personal_tags_of_story
                 )
 
                 # create folder with modified_time
@@ -116,10 +121,6 @@ class Chyoa:
                 if config.multiple_pages:
                     self.create_map(debug, root_story.folderpath_story, root_story.filename_map, root, config.multiple_pages, config.override_html_sites)
 
-                if getattr(config, 'create_epub', False):
-                    print(f"Generate EPUB {root_story.folderpath_story} ...")
-                    self.save_epub(debug, root_story.folderpath_story, root, config)
-
                 print("[completed]")
 
             except requests.RequestException as e:
@@ -165,11 +166,8 @@ class Chyoa:
             for a_tag in c.find_all("a"):
                 a_href = a_tag.get("href")
                 a_text = a_tag.get_text(strip=True)
-                # Filter out links based on config.ignore_links
-                check_link_text = False
-                if getattr(config, 'ignore_links', None):
-                    check_link_text = any(ignore in a_text for ignore in config.ignore_links) or any(ignore in a_href for ignore in config.ignore_links)
-
+                not_continue_link_text = ["Add a new chapter", "Link a chapter", "Write a chapter"]
+                check_link_text = any(link_text in a_text for link_text in not_continue_link_text)
                 if not check_link_text:
                     if debug:
                         print(f"link {a_href}")
@@ -204,7 +202,8 @@ class Chyoa:
                             contains_node.value.story_header1,
                             contains_node.value.story_header2,
                             root.value.filename_map,
-                            root.value.filename_total
+                            root.value.filename_total,
+                            root.value.personal_tags
                         )
                         current_link.set(
                             "", 
@@ -234,7 +233,8 @@ class Chyoa:
                             story_header1,
                             story_header2,
                             root.value.filename_map,
-                            root.value.filename_total
+                            root.value.filename_total,
+                            root.value.personal_tags
                         )
                         current_link.set(
                             "", 
@@ -431,6 +431,7 @@ class Chyoa:
         htmltext = self.create_description_chapter_body(htmltext, node)
         if first_page:
             htmltext = self.create_description_story_body(htmltext, node)
+            htmltext = self.create_personal_tags_story_body(htmltext, node)
         htmltext.append('</div>\n')
 
         htmltext.append(f'<p id={str(node.value.id)} class="storyheader2">')
@@ -500,6 +501,14 @@ class Chyoa:
         htmltext.append(f'<meta name="likes" content="{node.value.meta.likes}">\n')
         htmltext.append(f'<meta name="views" content="{node.value.meta.views}">\n')
         htmltext.append(f'<meta name="scraper_date" content="{datetime.now().strftime("%Y-%m-%d")}">\n')
+
+        if node.value.personal_tags:
+            for key, value in node.value.personal_tags.items():
+                if not value:
+                    continue
+                personal_tag_value = value.replace("<br>", "").replace("<b>", "").replace("</b>", "").replace("<i>", "").replace("</i>", "").replace("<u>", "").replace("</u>", "")
+                htmltext.append(f'<meta name="{key}" content="{personal_tag_value}">\n')
+
         return htmltext
 
     def create_html_head(self, htmltext, node, multiple_pages, first_page):
@@ -618,6 +627,16 @@ class Chyoa:
         htmltext.append("</body></html>")
         save(foldername, filename, node, htmltext, html_site_override)
 
+    def create_personal_tags_story_body(self, htmltext, node):
+        if node.value.personal_tags:
+            htmltext.append('<div class="personal-tags">')
+            for key, value in node.value.personal_tags.items():
+                if not value:
+                    continue
+                htmltext.append(f'| <b>{key}</b>: {value} ')
+            htmltext.append('</div>')
+        return htmltext
+
     def create_description_story_body(self, htmltext, node):
         if node.value.meta.description:
             htmltext.append(f'<div>| <b>Description</b>: {node.value.meta.description}</div>')
@@ -655,6 +674,7 @@ class Chyoa:
         htmltext.append('\n<div class="description">')
         htmltext = self.create_description_chapter_body(htmltext, node)
         htmltext = self.create_description_story_body(htmltext, node)
+        htmltext = self.create_personal_tags_story_body(htmltext, node)
         htmltext.append('</div>\n')
 
         htmltext.append('<hr>')
@@ -696,7 +716,7 @@ class Chyoa:
         book.set_identifier(str(uuid.uuid4()))
         story_title = root.value.story_title or root.value.chapter_title
         book.set_title(story_title)
-        
+
         # Use language_alternate_name if available, fallback to en
         lang = getattr(root.value.meta, 'language_alternate_name', 'en')
         if not lang:
@@ -705,10 +725,10 @@ class Chyoa:
 
         if root.value.meta.author:
             book.add_author(root.value.meta.author)
-            
+
         if root.value.meta.description:
             book.add_metadata('DC', 'description', root.value.meta.description)
-            
+
         if root.value.meta.published_time_short:
             book.add_metadata('DC', 'date', root.value.meta.published_time_short)
 
@@ -760,7 +780,7 @@ class Chyoa:
                 chapter_html += f"<h1>{node.value.story_header1}</h1>"
             else:
                 chapter_html += f"<h1>{node.value.chapter_title}</h1>"
-            
+
             if getattr(config, 'include_meta_in_epub', False):
                 meta_html = ""
                 if node.value.meta.author:
@@ -783,7 +803,7 @@ class Chyoa:
                 chapter_html += "</ul>"
             elif not node.value.follow:
                 chapter_html += "<p><em>This path ends here.</em></p>"
-                
+
             if getattr(config, 'include_url_in_epub', False) and node.value.url:
                 chapter_html += f'<br/><p><a href="{node.value.url}">Original Chapter URL</a></p>'
 
@@ -800,13 +820,13 @@ class Chyoa:
                 if os.path.isfile(img_path):
                     with open(img_path, "rb") as f:
                         img_content = f.read()
-                    
+
                     media_type = "image/jpeg"
                     if img_name.lower().endswith('.png'):
                         media_type = "image/png"
                     elif img_name.lower().endswith('.gif'):
                         media_type = "image/gif"
-                        
+
                     epub_img = epub.EpubItem(uid=img_name,
                                            file_name=f"{image_foldername}/{img_name}",
                                            media_type=media_type,
