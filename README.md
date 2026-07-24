@@ -1,5 +1,5 @@
 # scraper-chyoa
-Python script for saving chyoa stories in an interactive HTML webpage, individual HTML webpages, or as a compiled EPUB e-book.  
+Python script for saving chyoa stories in an interactive HTML webpage or for saving chapters in individual HTML webpages  
 This Python script allows you to download interactive stories from the Story website [chyoa](https://chyoa.com/).  
 
 
@@ -44,9 +44,13 @@ A sample JSON file is included and looks like this:
   "multiple_pages": true,
   "whole_story_one_page": false,
   "htmlSiteOverride": true,
+  "storyname_with_id": false,
   "recursionlimit": 1500,
   "show_error_loading_image": false,
   "show_chapter_name_loading_story": false,
+  "directory_exists_skip_download": true,
+  "waiting_time_between_downloads_of": 2,
+  "waiting_time_between_downloads_until": 5,
   "create_epub": true,
   "ignore_links": ["/new?type=", "Add a new chapter", "Write a chapter", "Link a chapter"],
   "image_prefix": false,
@@ -73,6 +77,9 @@ htmlSiteOverride|false or true|If, when saving the HTML page, it is determined t
 storyname_with_id|false or true|If true, the story folder name will include the story ID.
 recursionlimit|1500|The pages at chyoa are recursively structured, and in Python there is a default value for the recursion depth. The default value can be adjusted here if necessary.
 show_error_loading_image|false or true|If an embedded image cannot be loaded, the error should be displayed
+directory_exists_skip_download|false or true|if the story directory exists, skip the download
+waiting_time_between_downloads_of|2|A wait time to prevent the web server from becoming overloaded, of time in seconds
+waiting_time_between_downloads_until|5|A wait time to prevent the web server from becoming overloaded, until time in seconds
 create_epub|false or true|If true, the story is exported as an EPUB e-book in addition to HTML. The EPUB includes all chapters, images, a Table of Contents, and story metadata.
 ignore_links|["..."]|A list of link texts or URL fragments to skip while scraping. Use this to filter out website UI buttons like "Write a chapter" that would otherwise cause the scraper to follow edit forms.
 image_prefix|false or true|If true, the text `illustration-` is added directly before each embedded image in the output.
@@ -163,6 +170,9 @@ Eine Beispiel json-Datei ist enthalten und sieht wie folgt aus:
   "recursionlimit": 1500,
   "show_error_loading_image": false,
   "show_chapter_name_loading_story": false,
+  "directory_exists_skip_download": true,
+  "waiting_time_between_downloads_of": 2,
+  "waiting_time_between_downloads_until": 5,
   "login": {
     "login_url": "https://chyoa.com/auth/login",
     "username": "Yourusername",
@@ -185,6 +195,9 @@ whole_story_one_page|false or true|alle Kapitel werden in einer gemeinsame html-
 htmlSiteOverride|false oder true|falls beim Speichern der html-Seite festgestellt wird, dass es diese Seite schon gibt, entscheidet diese Option darüber, ob die bestehende Seite überschrieben wird. Dieses kann bei rekursiv verlinkten Geschichten der Fall sein (sollte aber nicht). Bei der Speicherung der Map-Datei und der Startdatei der Geschichte ist das aber immer das Fall.
 recursionlimit|1500|Die Seiten bei chyoa sind rekursiv aufgebaut und in python gibt es ein default-Wert für die Rekursionstiefe. Der default-Wert kann hiermit bei Bedarf angepasst werden
 show_error_loading_image|false or true|Wenn ein eingebundenes Bild nicht geladen werden kann, soll der Fehler angezeigt werden
+directory_exists_skip_download|false or true|wenn das Story-Verzeichnis bereits existiert, überspringe den download
+waiting_time_between_downloads_of|2|Eine Wartezeit, um eine Überlastung des Webservers zu verhindern, von Zeit in Sekunden
+waiting_time_between_downloads_until|5|Eine Wartezeit, um eine Überlastung des Webservers zu verhindern, bis Zeit in Sekunden
 login|user/password|Hier kann man die Anmeldeinformationen hinterlegen
 urls|["..."]|Liste der Urls der zu speichernden Stories.
 

@@ -20,9 +20,6 @@ def main():
         print("call: python scraper.py <config_file> optional: <url>")
         sys.exit(1)
 
-    def __init__(self):
-        self.chyoa = Chyoa()
-
     config_json_file = sys.argv[1]
     url = ""
     if len(sys.argv) == 3:
@@ -34,15 +31,13 @@ def main():
         sys.exit(1)
 
     try:
-        with open(config_json_file, 'r', encoding='utf-8') as f:
+        with open(config_json_file, 'r', encoding='utf-8-sig') as f:
             config = json.load(f)
     except Exception as e:
         print(f"config '{config_json_file}' can not loaded '{e}'")
         sys.exit(1)
 
     login_data = config.get("login")
-    if not login:
-        print("No login defined.")
     question_class = config.get("question_class")
     content_class = config.get("chapter_class")
     chapter_htmltag = config.get("htmltag")
@@ -53,6 +48,9 @@ def main():
     storyname_with_id = config.get("storyname_with_id")
     show_error_loading_image = config.get("show_error_loading_image")
     show_chapter_name_loading_story = config.get("show_chapter_name_loading_story")
+    directory_exists_skip_download = config.get("directory_exists_skip_download")
+    waiting_time_between_downloads_of = config.get("waiting_time_between_downloads_of")
+    waiting_time_between_downloads_until = config.get("waiting_time_between_downloads_until")
     create_epub = config.get("create_epub", False)
     ignore_links = config.get("ignore_links", [])
     image_prefix = config.get("image_prefix", False)
@@ -74,7 +72,26 @@ def main():
     if not foldername_image:
         foldername_image = "image"
 
-    configuration = Config(login_data, question_class, content_class, chapter_htmltag, recursion_limit, storyname_with_id, multiple_pages, whole_story_one_page, override_html_sites, folderpath_stories, foldername_image, show_error_loading_image, show_chapter_name_loading_story, create_epub, ignore_links, image_prefix)
+    configuration = Config(
+        login_data,
+        question_class,
+        content_class,
+        chapter_htmltag,
+        recursion_limit,
+        storyname_with_id,
+        multiple_pages,
+        whole_story_one_page,
+        override_html_sites,
+        folderpath_stories,
+        foldername_image,
+        show_error_loading_image,
+        show_chapter_name_loading_story,
+        directory_exists_skip_download,
+        waiting_time_between_downloads_of,
+        waiting_time_between_downloads_until,
+        create_epub,
+        ignore_links,
+        image_prefix)
 
     if debug:
         print(f"download-folder is: '{folderpath_stories}'")

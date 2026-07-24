@@ -1,19 +1,39 @@
 # (c) 2025-2026 by IsibisiCoder, MIT-License, https://github.com/IsibisiCoder
 class Config:
-    def __init__(self, login, questionClass, contentClass, chapterHtmltag, recursionLimit, storyNameWithId, multiplePages, wholeStoryOnePage, overrideHtmlSites, folderpathStories, foldernameImage, show_error_loading_image, show_chapter_name_loading_story, create_epub=False, ignore_links=None, image_prefix=False):
+    def __init__(
+            self,
+            login,
+            question_class,
+            content_class,
+            chapter_htmltag,
+            recursion_limit,
+            storyname_with_id,
+            multiple_pages,
+            whole_story_one_page,
+            override_html_sites,
+            folderpath_stories,
+            foldername_image,
+            show_error_loading_image,
+            show_chapter_name_loading_story,
+            directory_exists_skip_download,
+            waiting_time_between_downloads_of,
+            waiting_time_between_downloads_until,
+            create_epub=False,
+            ignore_links=None,
+            image_prefix=False):
         self.login = login
-        self.questionClass = questionClass
-        self.contentClass = contentClass
-        self.chapterHtmltag = chapterHtmltag
-        self.recursionLimit = recursionLimit
-        self.multiple_pages = multiplePages
-        self.whole_story_one_page = wholeStoryOnePage
-        self.overrideHtmlSites = overrideHtmlSites
-        self.storyNameWithId = storyNameWithId,
+        self.question_class = question_class
+        self.content_class = content_class
+        self.chapter_htmltag = chapter_htmltag
+        self.recursion_limit = recursion_limit
+        self.multiple_pages = multiple_pages
+        self.whole_story_one_page = whole_story_one_page
+        self.override_html_sites = override_html_sites
+        self.storyname_with_id = storyname_with_id
 
         # Foldername and path
-        self.folderpathStories = folderpathStories
-        self.foldernameImage = foldernameImage
+        self.folderpath_stories = folderpath_stories
+        self.foldername_image = foldername_image
 
         self.show_error_loading_image = show_error_loading_image
         self.show_chapter_name_loading_story = show_chapter_name_loading_story
@@ -21,3 +41,7 @@ class Config:
         self.create_epub = create_epub
         self.ignore_links = ignore_links if ignore_links is not None else []
         self.image_prefix = image_prefix
+        self.directory_exists_skip_download = directory_exists_skip_download
+
+        self.waiting_time_between_downloads_of = waiting_time_between_downloads_of
+        self.waiting_time_between_downloads_until = waiting_time_between_downloads_until

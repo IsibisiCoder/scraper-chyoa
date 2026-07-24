@@ -45,7 +45,7 @@ class Story:
 
 
     def create_folder(self, foldername_story):
-        folderpath_story = os.path.join(self.config.folderpathStories, foldername_story)
+        folderpath_story = os.path.join(self.config.folderpath_stories, foldername_story)
         counter = 1
         while os.path.exists(folderpath_story):
             folderpath_story = f"{folderpath_story}_{counter}"
@@ -54,7 +54,11 @@ class Story:
         self.folderpath_story = folderpath_story
         self.foldername_story = foldername_story
 
+    def check_folder_if_exists(self, foldername_story):
+        folderpath_story = os.path.join(self.config.folderpath_stories, foldername_story)
+        return os.path.exists(folderpath_story)
+
     def create_folder_image(self):
-        image_folderpath = os.path.join(self.folderpath_story, self.config.foldernameImage)
+        image_folderpath = os.path.join(self.folderpath_story, self.config.foldername_image)
         os.makedirs(image_folderpath, exist_ok=True)
         self.image_folderpath = image_folderpath

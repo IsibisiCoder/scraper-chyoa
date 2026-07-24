@@ -1,5 +1,5 @@
 body{
-    background-color:rgb(255, 255, 255);
+    background-color:rgb(247,247,247) !important;
     margin-top: 10px;
     margin-left: 50px;
     margin-right: 50px;
@@ -13,35 +13,103 @@ html {
 }
 
 p {
-  line-height: 1.8;
-  font-size: 18px;
+    line-height: 1.8;
+    font-size: 18px;
+}
+
+ul {
+    font-size: 18px;
+ }
+
+.storytitle {
+    font-size: 30px;
+    background-color: lightgrey;
+    border-radius: 25px;
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
+
+.storytitleshort {
+    font-size: 14px;
 }
 
 img {
-  max-width: 300px;
-  max-height: auto;
-  width: 100%;
-  height: auto;
-}
-
-.storytitle {
-    font-size: 20px
+    vertical-align: middle;
+    border-radius: 8px;
+    max-width: 100%;
+    max-height: 100%;
 }
 
 .cover {
-    text-align: center;
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+.cover img {
+    display: block;
+    max-height: 530px;
+    height: auto;
+    width: auto;
+    max-width: 100%;
+}
+
+.rd-story-media {
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+
+.rd-story-media img {
+    display: block;
+    max-height: 1280px;
+    height: auto;
+    width: auto;
+    max-width: 100%;
 }
 
 .chapterheader {
-    font-size: 15px
+    font-size: 15px;
+    background-color: #dee2e6;
+    border-radius: 25px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    padding-left: 12px;
+    padding-right: 12px;
+    margin-top: 6px;
+    margin-bottom: 6px;
 }
 
 .storyheader1 {
-    font-size: 30px
+    font-size: 30px;
+    background-color: lightgrey;
+    border-radius: 25px;
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-top: 8px;
+    padding-bottom: 8px;
 }
 
 .storyheader2 {
-    font-size: 20px
+    font-size: 20px;
+    background-color: #dee2e6;
+    border-radius: 25px;
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
+.chapter-content {
+    font-size: 18px;
 }
 
 .publisheddate {
@@ -54,7 +122,17 @@ img {
 }
 
 .description {
-    font-size: 14px
+    font-size: 14px;
+    background-color: #dee2e6;
+    border-radius: 25px;
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
+.tag {
+    word-wrap: break-all;
 }
 
 .author {
@@ -69,7 +147,12 @@ img {
 .list-item {
     padding-left: 10px;
     padding-top: 10px;
+    padding-bottom: 10px;
     font-size: 16px
+}
+
+.list-item:hover {
+  background-color: #dee2e6;
 }
 
 .list-item-previous {
@@ -79,16 +162,30 @@ img {
 }
 
 .anker-text {
-    font-size: 14px
+    font-size: 20px;
+    background-color: #dee2e6;
+    border-radius: 25px;
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
+
+.anker-text-map-start {
+    font-size: 20px;
+    padding-left: 12px;
+    padding-right: 12px;
 }
 
 .question-content {
-    font-size: 16px
+    font-size: 16px;
+    margin-top: 4px;
+    margin-bottom: 4px;
 }
 
 .question-header {
-    font-size: 18px;
-    padding-left: 10px;
+    font-size: 16px;
+    padding-left: 12px;
     padding-top: 10px;
 }
 
@@ -114,17 +211,25 @@ img {
   color: #000000;
   width: 100vw;
   box-sizing: border-box;
+  border-radius: 25px;
   padding-top: 8px;
   padding-bottom: 8px;
+  margin-top: 4px;
+  margin-bottom: 4px;
 }
 .item:hover {
-  background-color: #ddd;
+  background-color: #dee2e6;
 }
 
 .toggle {
   width: 22px;
   height: 22px;
   cursor: pointer;
+}
+
+.withoutbutton {
+  width: 22px;
+  height: 22px;
 }
 
 .children {
