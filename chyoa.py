@@ -757,7 +757,7 @@ class Chyoa:
             else:
                 chapter_html += f"<h1>{node.value.chapter_title}</h1>"
 
-            chapter_html += node.value.chapter_content
+            chapter_html += node.value.text
 
             # Add links to child chapters ("What's Next")
             if len(node.children) > 0:
