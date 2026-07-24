@@ -116,6 +116,10 @@ class Chyoa:
                 if config.multiple_pages:
                     self.create_map(debug, root_story.folderpath_story, root_story.filename_map, root, config.multiple_pages, config.override_html_sites)
 
+                if getattr(config, 'create_epub', False):
+                    print(f"Generate EPUB {root_story.folderpath_story} ...")
+                    self.save_epub(debug, root_story.folderpath_story, root, config)
+
                 print("[completed]")
 
             except requests.RequestException as e:
