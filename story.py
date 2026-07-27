@@ -13,6 +13,7 @@ class Story:
             meta,
             linktext,
             follow,
+            redirect,
             story_title,
             story_header1,
             story_header2,
@@ -25,6 +26,7 @@ class Story:
         self.meta = meta
         self.linktext = linktext
         self.follow=follow
+        self.redirect=redirect
         self.story_title = story_title
         self.story_header1 = story_header1
         self.story_header2 = story_header2
