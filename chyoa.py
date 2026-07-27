@@ -53,7 +53,7 @@ class Chyoa:
                     story_id = story_id,
                     url = url,
                     meta = meta,
-                    linktext = "",
+                    linktext = story_header1,
                     follow = True,
                     redirect = False,
                     story_title = story_title,
