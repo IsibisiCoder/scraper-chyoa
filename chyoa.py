@@ -21,7 +21,9 @@ class Chyoa:
         # pylint: disable=W0612
         for idx, url in enumerate(urls, 1):
             try:
-                soup = self.get_soup(session, config, url)
+                start = time.perf_counter()
+
+                soup, _ = self.get_soup(debug, session, config, url)
                 if not soup:
                     continue
 
@@ -53,6 +55,7 @@ class Chyoa:
                     meta = meta,
                     linktext = "",
                     follow = True,
+                    redirect = False,
                     story_title = story_title,
                     story_header1 = story_header1,
                     story_header2 = story_header2,
@@ -107,6 +110,9 @@ class Chyoa:
                     print(f"Count: {story_id}")
                     #self.getAllLinks(debug, root)
 
+                # Find the links and replace the placeholders with the linked information
+                Node.check_all_chapters(root, root)
+
                 copy_css(debug, root.value.folderpath_story)
                 print("[saving]")
 
@@ -118,28 +124,36 @@ class Chyoa:
                 if config.multiple_pages:
                     self.create_map(debug, root_story.folderpath_story, root_story.filename_map, root, config.multiple_pages, config.override_html_sites)
 
-                print("[completed]")
+                end = time.perf_counter()
+                duration = end - start
+                hours, rest = divmod(duration, 3600)
+                minutes, seconds = divmod(rest, 60)
+                print(f"[completed]   duration: {int(hours):02d}:{int(minutes):02d}:{seconds:05.2f}")
 
             except requests.RequestException as e:
                 print(f"Error loading {url}: {e}")
         print("[finished]")
 
-    def get_soup(self, session, config, url):
+    def get_soup(self, debug, session, config, url):
         try:
             # A wait time to prevent the web server from becoming overloaded.
             # Random pauses are inserted between two values to prevent the server from being locked out.
             wait_time = random.uniform(config.waiting_time_between_downloads_of, config.waiting_time_between_downloads_until)
             time.sleep(wait_time)
             response = session.get(url)
+            # If a link in chyao points to a new page, an HTTP redirect (302) is performed.
+            # To intercept and evaluate this redirect, the response-url must be returned as well
+            response_url = response.url
+            status_code = response.status_code
             response.raise_for_status()
             soup = BeautifulSoup(response.text, 'html.parser')
-            return soup
+            return soup, response_url
         except requests.exceptions.HTTPError as err_http:
             print(f"HTTP-Error story link: {url}: {err_http}")
-        return None
+        return None, None
 
     def get_links_from_site(self, debug, config, root, node, session, url, story_id, parent_filename, parent_id):
-        soup = self.get_soup(session, config, url)
+        soup, _ = self.get_soup(debug, session, config, url)
         if not soup:
             return None
 
@@ -172,9 +186,13 @@ class Chyoa:
                         print(f"parent {parent_filename}")
 
                     story_id = story_id + 1
-                    soup_current_site = self.get_soup(session, config, a_href)
+                    soup_current_site, response_url = self.get_soup(debug, session, config, a_href)
                     if not soup_current_site:
                         continue
+
+                    redirect = False
+                    if a_href != response_url:
+                        redirect = True
 
                     meta = Meta(debug)
                     meta.scrape_meta_properties(soup_current_site)
@@ -185,6 +203,38 @@ class Chyoa:
                     filename = f"{story_id:04d}"+"-"+chapter_title.replace(" ", "_").strip()+"-"+self.create_filename(debug, story_header1, root.value.story_title, config.folderpath_stories).strip()
 
                     question = self.scrape_question(debug, soup_current_site)
+
+                    # If the link is to another chapter, the correct chapter must only be linked once all chapters have been scanned
+                    if redirect:
+                        follow = False
+                        current_link = Story(
+                            config,
+                            None,
+                            response_url,
+                            meta,
+                            a_text,
+                            follow,
+                            redirect,
+                            root.value.story_title,
+                            None,
+                            None,
+                            root.value.filename_map,
+                            root.value.filename_total,
+                            root.value.personal_tags
+                        )
+                        current_link.set(
+                            "", 
+                            chapter_title,
+                            None,
+                            None,
+                            None,
+                            None,
+                            root.value.start_site,
+                            None
+                        )
+                        all_links.append(current_link)
+                        continue
+
                     contains_url, contains_node = Node.contains(root, a_href)
                     if contains_url:
                         follow = False
@@ -195,6 +245,7 @@ class Chyoa:
                             meta,
                             contains_node.value.linktext,
                             follow,
+                            redirect,
                             root.value.story_title,
                             contains_node.value.story_header1,
                             contains_node.value.story_header2,
@@ -213,6 +264,7 @@ class Chyoa:
                             contains_node.value.text
                         )
                         all_links.append(current_link)
+
                     if not contains_url:
                         story = ""
                         follow = True
@@ -226,6 +278,7 @@ class Chyoa:
                             meta,
                             a_text,
                             follow,
+                            redirect,
                             root.value.story_title,
                             story_header1,
                             story_header2,
@@ -432,10 +485,10 @@ class Chyoa:
         htmltext.append('</div>\n')
 
         htmltext.append(f'<p id={str(node.value.id)} class="storyheader2">')
-        if node.value.story_header2.strip():
+        if node.value.story_header2 and node.value.story_header2.strip():
             htmltext.append(f'{node.value.story_header2}')
         htmltext.append('</p>')
-        if node.value.story_header1.strip():
+        if node.value.story_header1 and node.value.story_header1.strip():
             htmltext.append(f'<div class="storyheader1">{node.value.story_header1}</div>')
 
         htmltext.append(f'<div class="chapterheader">{node.value.chapter_title.strip()}')
