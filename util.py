@@ -61,7 +61,7 @@ def download_image(debug, config, filename_base_name, image_folderpath, image_fo
         status_code = img_data.status_code
         if status_code != 200:
             if config.show_error_loading_image:
-                print(f"Status code: {status_code}: Error downloading image: {img_url}")
+                print(f"              Error downloading image: Status {status_code} - {img_url}")
             return ""
         img_data.raise_for_status()
         with open(filepath, "wb") as f:
@@ -71,19 +71,19 @@ def download_image(debug, config, filename_base_name, image_folderpath, image_fo
             print(f"image saved: {filepath}")
     except requests.exceptions.HTTPError as err_http:
         if config.show_error_loading_image:
-            print(f"HTTP-Error image: {img_url}: {err_http}")
+            print(f"              HTTP-Error image: {img_url}: {err_http}")
         filepath_relativ = ""
     except requests.exceptions.ConnectionError:
         if config.show_error_loading_image:
-            print(f"ConnectionError image: Please check your connection or the url. {img_url}")
+            print(f"              ConnectionError image: Please check your connection or the url. {img_url}")
         filepath_relativ = ""
     except requests.exceptions.Timeout:
         if config.show_error_loading_image:
-            print(f"Timeout image: The website has an timeout: {img_url}")
+            print(f"              Timeout image: The website has an timeout: {img_url}")
         filepath_relativ = ""
     except Exception as err:
         if config.show_error_loading_image:
-            print(f"An unexpected error occurred while loading image: {img_url}: {err}")
+            print(f"              An unexpected error occurred while loading image: {img_url}: {err}")
         filepath_relativ = ""
 
     return filepath_relativ

@@ -128,7 +128,7 @@ class Chyoa:
                 duration = end - start
                 hours, rest = divmod(duration, 3600)
                 minutes, seconds = divmod(rest, 60)
-                print(f"[completed]   duration: {int(hours):02d}:{int(minutes):02d}:{seconds:05.2f}")
+                print(f"[completed]   duration: {int(hours):02d}:{int(minutes):02d}:{seconds:05.2f}\n")
 
             except requests.RequestException as e:
                 print(f"Error loading {url}: {e}")
@@ -144,7 +144,6 @@ class Chyoa:
             # If a link in chyao points to a new page, an HTTP redirect (302) is performed.
             # To intercept and evaluate this redirect, the response-url must be returned as well
             response_url = response.url
-            status_code = response.status_code
             response.raise_for_status()
             soup = BeautifulSoup(response.text, 'html.parser')
             return soup, response_url

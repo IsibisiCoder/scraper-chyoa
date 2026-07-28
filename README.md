@@ -20,8 +20,8 @@ This Python script allows you to download interactive stories from the Story web
 
 It is possible to define your own tags, such as keywords, notes, ratings, etc. These tags are then included in the HTML file when it is generated.  
 Personal tags are recorded in a separate JSON file. Within the "personal_tags" node, any number of so-called key/value pairs can be defined.  
-The JSON file must have exactly the same name as the main story’s folder, but without the date.  
-So, if the story folder is called `My_Story(1234) (2026-01-10)`, the JSON file must be called `My_Story(1234)_mytags.json`. The suffix `_mytags` can be changed via the configuration.  
+The JSON file must have the same name as the main story’s folder, but without the date and the id.  
+So, if the story folder is called `My_Story(1234) (2026-01-10)`, the JSON file must be called `My_Story_mytags.json`. The suffix `_mytags` can be changed via the configuration.  
 These personal_tags files are located in a separate folder, which is set to `personal_tags` by default. This folder name can also be changed via the configuration.  
 
 Example of a `personal_tags` JSON file: 
@@ -76,7 +76,7 @@ A sample JSON file is included and looks like this:
   "whole_story_one_page": false,
   "override_html_sites": true,
   "recursionlimit": 1500,
-  "show_error_loading_image": false,
+  "show_error_loading_image": true,
   "show_chapter_name_loading_story": false,
   "directory_exists_skip_download": true,
   "waiting_time_between_downloads_of": 2,
@@ -168,7 +168,6 @@ Dieses Python-Script bietet die Möglich, interaktive Stories von der Story-Webs
 * Die Eigenschaften der Geschichte werden gespeichert, wie z.B. Beschreibung, Autor, Erstellungsdatum, Änderungendatum, Kategorie
 * Es können eigene Eigenschaften der Geschichte definitiert werden, die dann beim Abruf der Geschichte in die Html-Datei dazugeschrieben werden
 
-
 ## Installation
 
 Die Python-Scripte verwendete einige weitere externe Python-Scripte, die vorher installiert werden müssen:  
@@ -178,8 +177,8 @@ Die Python-Scripte verwendete einige weitere externe Python-Scripte, die vorher 
 
 Es ist möglich, eigene Tags, wie Stichwörter, Anmerkungen, Bewertungen usw. zu definieren. Diese Tags werden dann bei der Erzeugung der Html-Datei mit in die Datei geschrieben.  
 Die persönlichen Tags werden in einer eigenen JSON-Datei erfasst. Dabei können innerhalb des Knotens "personal_tags" beliebig viele so genannte key/value-Paare definiert werden.  
-Die JSON-Datei muss exakt so heißen, wie der Ordner der Hauptstory, aber ohne Datumsangabe.  
-Wenn der Ordner der Geschichte also `Meine_Story(1234) (2026-01-10)` heißt, muss die JSON-Datei `Meine_Story(1234)_mytags.json` heißen. Der Suffix `_mytags` kann über die Konfiguration verändert werden.  
+Die JSON-Datei muss so heißen, wie der Ordner der Hauptstory, aber ohne Datumsangabe und id.  
+Wenn der Ordner der Geschichte also `Meine_Story(1234) (2026-01-10)` heißt, muss die JSON-Datei `Meine_Story_mytags.json` heißen. Der Suffix `_mytags` kann über die Konfiguration verändert werden.  
 Diese personal_tags-Dateien liegen in einem seperaten Ordner, die per default auf `personal_tags` eingestellt ist. Dieser Ordnername kann ebenfalls über die Konfiguration verändert werden.  
 
 Beispiel für eine personal_tags-JSON-Datei: 
@@ -220,7 +219,7 @@ Eine Beispiel json-Datei ist enthalten und sieht wie folgt aus:
   "whole_story_one_page": false,
   "override_html_sites": true,
   "recursionlimit": 1500,
-  "show_error_loading_image": false,
+  "show_error_loading_image": true,
   "show_chapter_name_loading_story": false,
   "directory_exists_skip_download": true,
   "waiting_time_between_downloads_of": 2,
