@@ -44,7 +44,9 @@ class Chyoa:
                 # Determine the ID of the home page from the URL (the number after the period)
                 id_of_startsite = url.split(".")[-1]
                 if id_of_startsite:
-                    foldername_story = f"{foldername_story}({id_of_startsite})"
+                    foldername_story_with_id = f"{foldername_story}_({id_of_startsite})"
+                else:
+                    foldername_story_with_id = foldername_story
 
                 personal_tags = PersonalTags(debug, config)
                 personal_tags_of_story = personal_tags.read_personal_tags(foldername_story)
@@ -68,11 +70,11 @@ class Chyoa:
                 )
 
                 # create folder with modified_time
-                folder = foldername_story
+                folder = foldername_story_with_id
                 if meta.modified_time_short != '':
                     folder = folder + f' ({meta.modified_time_short})'
                 if config.directory_exists_skip_download and root_story.check_folder_if_exists(folder):
-                    print(f"skip story: {story_title}")
+                    print(f"[skip story]  {story_title}")
                     continue
                 root_story.create_folder(folder)
                 root_story.create_folder_image()
