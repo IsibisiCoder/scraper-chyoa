@@ -54,6 +54,8 @@ def main():
     create_epub = config.get("create_epub", False)
     ignore_links = config.get("ignore_links", [])
     image_prefix = config.get("image_prefix", False)
+    include_url_in_epub = config.get("include_url_in_epub", True)
+    include_meta_in_epub = config.get("include_meta_in_epub", True)
 
     if not multiple_pages and not whole_story_one_page:
         print("Configuration error: Please set either `multiplepages` or `wholeStoryOnePage` to True")
@@ -91,7 +93,9 @@ def main():
         waiting_time_between_downloads_until,
         create_epub,
         ignore_links,
-        image_prefix)
+        image_prefix,
+        include_url_in_epub,
+        include_meta_in_epub)
 
     if debug:
         print(f"download-folder is: '{folderpath_stories}'")

@@ -713,12 +713,15 @@ class Chyoa:
             book.add_metadata('DC', 'date', root.value.meta.published_time_short)
 
         # Gather all nodes to process chapters
-        all_nodes = [root]
-        def gather_nodes(node):
-            for child in node.children:
-                all_nodes.append(child)
-                gather_nodes(child)
-        gather_nodes(root)
+        all_nodes = []
+        def gather_nodes(node, level, sibling_index):
+            if not hasattr(node, 'toc_number'):
+                node.toc_number = f"{level}.{sibling_index}"
+            if node not in all_nodes:
+                all_nodes.append(node)
+                for idx, child in enumerate(node.children, 1):
+                    gather_nodes(child, level + 1, idx)
+        gather_nodes(root, 1, 1)
 
         # Add the CSS styling
         style_css_path = "style-epub.css"
@@ -741,7 +744,8 @@ class Chyoa:
         # Map node ids to epub chapters
         epub_chapters = {}
         for node in all_nodes:
-            c = epub.EpubHtml(title=node.value.chapter_title or story_title, file_name=f'chapter_{node.value.id}.xhtml', lang=lang)
+            c_title = node.value.story_header1 or node.value.chapter_title or story_title
+            c = epub.EpubHtml(title=f"{node.toc_number} {c_title}", file_name=f'chapter_{node.value.id}.xhtml', lang=lang)
             c.add_item(default_css)
 
             # Build the chapter HTML content
@@ -756,6 +760,17 @@ class Chyoa:
                 chapter_html += f"<h1>{node.value.story_header1}</h1>"
             else:
                 chapter_html += f"<h1>{node.value.chapter_title}</h1>"
+            
+            if getattr(config, 'include_meta_in_epub', False):
+                meta_html = ""
+                if node.value.meta.author:
+                    meta_html += f"<b>Author:</b> {node.value.meta.author}<br/>"
+                if node.value.meta.published_time_short:
+                    meta_html += f"<b>Created:</b> {node.value.meta.published_time_short}<br/>"
+                if node.value.meta.modified_time_short:
+                    meta_html += f"<b>Modified:</b> {node.value.meta.modified_time_short}<br/>"
+                if meta_html:
+                    chapter_html += f'<p style="font-size: small; color: #666;">{meta_html}</p>'
 
             chapter_html += node.value.text
 
@@ -763,11 +778,14 @@ class Chyoa:
             if len(node.children) > 0:
                 chapter_html += "<h3>What's Next:</h3><ul>"
                 for child in node.children:
-                    child_title = child.value.chapter_title or "Next Chapter"
+                    child_title = child.value.story_header1 or child.value.chapter_title or "Next Chapter"
                     chapter_html += f'<li><a href="chapter_{child.value.id}.xhtml">{child_title}</a></li>'
                 chapter_html += "</ul>"
             elif not node.value.follow:
                 chapter_html += "<p><em>This path ends here.</em></p>"
+                
+            if getattr(config, 'include_url_in_epub', False) and node.value.url:
+                chapter_html += f'<br/><p><a href="{node.value.url}">Original Chapter URL</a></p>'
 
             c.content = f'<html><head><link href="style/style-epub.css" rel="stylesheet" type="text/css"/></head><body>{chapter_html}</body></html>'
             book.add_item(c)
@@ -796,7 +814,8 @@ class Chyoa:
                     book.add_item(epub_img)
 
         # Build TOC recursively
-        book.toc = (self._add_epub_chapter(book, None, epub_chapters, root),)
+        # Replace the nested TOC with a flat TOC to prevent deep nesting off-screen
+        book.toc = tuple(epub_chapters.values())
 
         book.add_item(epub.EpubNcx())
         book.add_item(epub.EpubNav())

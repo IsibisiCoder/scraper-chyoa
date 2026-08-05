@@ -52,6 +52,8 @@ A sample JSON file is included and looks like this:
   "waiting_time_between_downloads_of": 2,
   "waiting_time_between_downloads_until": 5,
   "create_epub": true,
+  "include_url_in_epub": true,
+  "include_meta_in_epub": true,
   "ignore_links": ["/new?type=", "Add a new chapter", "Write a chapter", "Link a chapter"],
   "image_prefix": false,
   "login": {
@@ -81,6 +83,8 @@ directory_exists_skip_download|false or true|if the story directory exists, skip
 waiting_time_between_downloads_of|2|A wait time to prevent the web server from becoming overloaded, of time in seconds
 waiting_time_between_downloads_until|5|A wait time to prevent the web server from becoming overloaded, until time in seconds
 create_epub|false or true|If true, the story is exported as an EPUB e-book in addition to HTML. The EPUB includes all chapters, images, a Table of Contents, and story metadata.
+include_url_in_epub|false or true|If true, a link to the original URL is added to the bottom of each chapter in the EPUB.
+include_meta_in_epub|false or true|If true, the author and creation date are added to the top of each chapter in the EPUB.
 ignore_links|["..."]|A list of link texts or URL fragments to skip while scraping. Use this to filter out website UI buttons like "Write a chapter" that would otherwise cause the scraper to follow edit forms.
 image_prefix|false or true|If true, the text `illustration-` is added directly before each embedded image in the output.
 login|user/password|You can store your login information here.

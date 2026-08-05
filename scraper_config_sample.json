@@ -15,6 +15,8 @@
   "waiting_time_between_downloads_of": 2,
   "waiting_time_between_downloads_until": 5,
   "create_epub": true,
+  "include_url_in_epub": true,
+  "include_meta_in_epub": true,
   "ignore_links": ["/new?type=", "Add a new chapter", "Write a chapter", "Link a chapter"],
   "image_prefix": false,
   "login": {
