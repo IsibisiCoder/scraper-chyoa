@@ -20,9 +20,6 @@ def main():
         print("call: python scraper.py <config_file> optional: <url>")
         sys.exit(1)
 
-    def __init__(self):
-        self.chyoa = Chyoa()
-
     config_json_file = sys.argv[1]
     url = ""
     if len(sys.argv) == 3:
@@ -41,21 +38,24 @@ def main():
         sys.exit(1)
 
     login_data = config.get("login")
-    if not login:
-        print("No login defined.")
     question_class = config.get("question_class")
     content_class = config.get("chapter_class")
     chapter_htmltag = config.get("htmltag")
     recursion_limit = config.get("recursionlimit")
     multiple_pages = config.get("multiple_pages")
     whole_story_one_page = config.get("whole_story_one_page")
-    override_html_sites = config.get("override_html_sites")
+    override_html_sites = config.get("htmlSiteOverride")
     storyname_with_id = config.get("storyname_with_id")
     show_error_loading_image = config.get("show_error_loading_image")
     show_chapter_name_loading_story = config.get("show_chapter_name_loading_story")
-    directory_exists_skip_download = config.get("directory_exists_skip_download")
-    waiting_time_between_downloads_of = config.get("waiting_time_between_downloads_of")
-    waiting_time_between_downloads_until = config.get("waiting_time_between_downloads_until")
+    directory_exists_skip_download = config.get("directory_exists_skip_download", False)
+    waiting_time_between_downloads_of = config.get("waiting_time_between_downloads_of", 2)
+    waiting_time_between_downloads_until = config.get("waiting_time_between_downloads_until", 5)
+    create_epub = config.get("create_epub", False)
+    ignore_links = config.get("ignore_links", [])
+    image_prefix = config.get("image_prefix", False)
+    include_url_in_epub = config.get("include_url_in_epub", True)
+    include_meta_in_epub = config.get("include_meta_in_epub", True)
 
     if not multiple_pages and not whole_story_one_page:
         print("Configuration error: Please set either `multiplepages` or `wholeStoryOnePage` to True")
@@ -90,7 +90,12 @@ def main():
         show_chapter_name_loading_story,
         directory_exists_skip_download,
         waiting_time_between_downloads_of,
-        waiting_time_between_downloads_until)
+        waiting_time_between_downloads_until,
+        create_epub,
+        ignore_links,
+        image_prefix,
+        include_url_in_epub,
+        include_meta_in_epub)
 
     if debug:
         print(f"download-folder is: '{folderpath_stories}'")

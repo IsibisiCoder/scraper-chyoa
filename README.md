@@ -8,6 +8,7 @@ This Python script allows you to download interactive stories from the Story web
 * Saving a chapter as a separate HTML page
 * Saving the overview (map) as a separate HTML page
 * Saving all chapters in one HTML page
+* Export the full story as an EPUB e-book (with nested Table of Contents, images, and chapter links)
 * The overview (map) is integrated into the HTML page
 * Adjusting the links to the local HTML pages or internal chapters
 * Downloading embedded images
@@ -43,12 +44,18 @@ A sample JSON file is included and looks like this:
   "multiple_pages": true,
   "whole_story_one_page": false,
   "htmlSiteOverride": true,
+  "storyname_with_id": false,
   "recursionlimit": 1500,
   "show_error_loading_image": false,
   "show_chapter_name_loading_story": false,
   "directory_exists_skip_download": true,
   "waiting_time_between_downloads_of": 2,
   "waiting_time_between_downloads_until": 5,
+  "create_epub": true,
+  "include_url_in_epub": true,
+  "include_meta_in_epub": true,
+  "ignore_links": ["/new?type=", "Add a new chapter", "Write a chapter", "Link a chapter"],
+  "image_prefix": false,
   "login": {
     "login_url": "https://chyoa.com/auth/login",
     "username": "Yourusername",
@@ -68,12 +75,18 @@ folder|c:/story|This is the main folder where all stories are stored. For each s
 imagefolder|image|All images are stored in this subfolder. There is a subfolder `image` for each story. It is possible to change the name, but this has not been tested.
 multiple_pages|false or true|one HTML page will be created per chapter
 whole_story_one_page|false or true|All chapters be saved in a shared HTML page
-htmlSiteOverride|false or true|If, when saving the HTML page, it is determined that this page already exists, this option determines whether the existing page is overwritten. This can be the case with recursively linked stories (but should not be). However, this is always the case when saving the map file and the start file of the story.
+htmlSiteOverride|false or true|If, when saving the HTML page, it is determined that this page already exists, this option determines whether the existing page is overwritten.
+storyname_with_id|false or true|If true, the story folder name will include the story ID.
 recursionlimit|1500|The pages at chyoa are recursively structured, and in Python there is a default value for the recursion depth. The default value can be adjusted here if necessary.
 show_error_loading_image|false or true|If an embedded image cannot be loaded, the error should be displayed
 directory_exists_skip_download|false or true|if the story directory exists, skip the download
 waiting_time_between_downloads_of|2|A wait time to prevent the web server from becoming overloaded, of time in seconds
 waiting_time_between_downloads_until|5|A wait time to prevent the web server from becoming overloaded, until time in seconds
+create_epub|false or true|If true, the story is exported as an EPUB e-book in addition to HTML. The EPUB includes all chapters, images, a Table of Contents, and story metadata.
+include_url_in_epub|false or true|If true, a link to the original URL is added to the bottom of each chapter in the EPUB.
+include_meta_in_epub|false or true|If true, the author and creation date are added to the top of each chapter in the EPUB.
+ignore_links|["..."]|A list of link texts or URL fragments to skip while scraping. Use this to filter out website UI buttons like "Write a chapter" that would otherwise cause the scraper to follow edit forms.
+image_prefix|false or true|If true, the text `illustration-` is added directly before each embedded image in the output.
 login|user/password|You can store your login information here.
 urls|...|List of URLs of the stories to be saved.
 

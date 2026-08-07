@@ -5,6 +5,9 @@ import re
 from datetime import datetime
 import time
 import random
+import os
+from ebooklib import epub
+import uuid
 import requests
 from bs4 import BeautifulSoup
 from story import Story
@@ -113,6 +116,10 @@ class Chyoa:
                 if config.multiple_pages:
                     self.create_map(debug, root_story.folderpath_story, root_story.filename_map, root, config.multiple_pages, config.override_html_sites)
 
+                if getattr(config, 'create_epub', False):
+                    print(f"Generate EPUB {root_story.folderpath_story} ...")
+                    self.save_epub(debug, root_story.folderpath_story, root, config)
+
                 print("[completed]")
 
             except requests.RequestException as e:
@@ -158,8 +165,11 @@ class Chyoa:
             for a_tag in c.find_all("a"):
                 a_href = a_tag.get("href")
                 a_text = a_tag.get_text(strip=True)
-                not_continue_link_text = ["Add a new chapter", "Link a chapter", "Write a chapter"]
-                check_link_text = any(link_text in a_text for link_text in not_continue_link_text)
+                # Filter out links based on config.ignore_links
+                check_link_text = False
+                if getattr(config, 'ignore_links', None):
+                    check_link_text = any(ignore in a_text for ignore in config.ignore_links) or any(ignore in a_href for ignore in config.ignore_links)
+
                 if not check_link_text:
                     if debug:
                         print(f"link {a_href}")
@@ -489,7 +499,7 @@ class Chyoa:
             htmltext.append(f'<meta name="modified_time" content="{node.value.meta.modified_time_short}">\n')
         htmltext.append(f'<meta name="likes" content="{node.value.meta.likes}">\n')
         htmltext.append(f'<meta name="views" content="{node.value.meta.views}">\n')
-        htmltext.append(f'<meta name="scraper_date" content="{datetime.now().strftime('%Y-%m-%d')}">\n')
+        htmltext.append(f'<meta name="scraper_date" content="{datetime.now().strftime("%Y-%m-%d")}">\n')
         return htmltext
 
     def create_html_head(self, htmltext, node, multiple_pages, first_page):
@@ -663,3 +673,159 @@ class Chyoa:
         htmltext = self.create_javascript(htmltext)
         htmltext.append('</head><body>')
         return htmltext
+
+    def _add_epub_chapter(self, book, parent_nav_item, epub_chapters, node):
+        """Recursively builds the EPUB structure starting from a root node"""
+        current_epub_item = epub_chapters.get(node.value.id)
+        if current_epub_item:
+            # Check if this node has children
+            if len(node.children) > 0:
+                # Add it as a section containing its children
+                children_nav = []
+                for child in node.children:
+                    child_nav = self._add_epub_chapter(book, current_epub_item, epub_chapters, child)
+                    if child_nav:
+                        children_nav.append(child_nav)
+                return (current_epub_item, children_nav)
+            else:
+                return current_epub_item
+        return None
+
+    def save_epub(self, debug, folderpath, root, config):
+        book = epub.EpubBook()
+        book.set_identifier(str(uuid.uuid4()))
+        story_title = root.value.story_title or root.value.chapter_title
+        book.set_title(story_title)
+        
+        # Use language_alternate_name if available, fallback to en
+        lang = getattr(root.value.meta, 'language_alternate_name', 'en')
+        if not lang:
+            lang = 'en'
+        book.set_language(lang)
+
+        if root.value.meta.author:
+            book.add_author(root.value.meta.author)
+            
+        if root.value.meta.description:
+            book.add_metadata('DC', 'description', root.value.meta.description)
+            
+        if root.value.meta.published_time_short:
+            book.add_metadata('DC', 'date', root.value.meta.published_time_short)
+
+        # Gather all nodes to process chapters
+        all_nodes = []
+        def gather_nodes(node, level, sibling_index):
+            if not hasattr(node, 'toc_number'):
+                node.toc_number = f"{level}.{sibling_index}"
+            if node not in all_nodes:
+                all_nodes.append(node)
+                for idx, child in enumerate(node.children, 1):
+                    gather_nodes(child, level + 1, idx)
+        gather_nodes(root, 1, 1)
+
+        # Add the CSS styling
+        style_css_path = "style-epub.css"
+        css_content = ""
+        if os.path.exists(style_css_path):
+            with open(style_css_path, "r", encoding="utf-8") as css_file:
+                css_content = css_file.read()
+        else:
+            # Fallback default CSS
+            css_content = """body { font-family: Arial, sans-serif; }
+                             img { max-width: 100%; height: auto; }
+                             .chapter-header { text-align: center; }"""
+
+        default_css = epub.EpubItem(uid="style_nav",
+                                  file_name="style/style-epub.css",
+                                  media_type="text/css",
+                                  content=css_content)
+        book.add_item(default_css)
+
+        # Map node ids to epub chapters
+        epub_chapters = {}
+        for node in all_nodes:
+            c_title = node.value.story_header1 or node.value.chapter_title or story_title
+            c = epub.EpubHtml(title=f"{node.toc_number} {c_title}", file_name=f'chapter_{node.value.id}.xhtml', lang=lang)
+            c.add_item(default_css)
+
+            # Build the chapter HTML content
+            chapter_html = ""
+            if node.value.story_header1 and node.value.chapter_title:
+                if node.value.story_header1.strip() != node.value.chapter_title.strip():
+                    chapter_html += f"<h1>{node.value.story_header1}</h1>"
+                    chapter_html += f"<h2>{node.value.chapter_title}</h2>"
+                else:
+                    chapter_html += f"<h1>{node.value.chapter_title}</h1>"
+            elif node.value.story_header1:
+                chapter_html += f"<h1>{node.value.story_header1}</h1>"
+            else:
+                chapter_html += f"<h1>{node.value.chapter_title}</h1>"
+            
+            if getattr(config, 'include_meta_in_epub', False):
+                meta_html = ""
+                if node.value.meta.author:
+                    meta_html += f"<b>Author:</b> {node.value.meta.author}<br/>"
+                if node.value.meta.published_time_short:
+                    meta_html += f"<b>Created:</b> {node.value.meta.published_time_short}<br/>"
+                if node.value.meta.modified_time_short:
+                    meta_html += f"<b>Modified:</b> {node.value.meta.modified_time_short}<br/>"
+                if meta_html:
+                    chapter_html += f'<p style="font-size: small; color: #666;">{meta_html}</p>'
+
+            chapter_html += node.value.text
+
+            # Add links to child chapters ("What's Next")
+            if len(node.children) > 0:
+                chapter_html += "<h3>What's Next:</h3><ul>"
+                for child in node.children:
+                    child_title = child.value.story_header1 or child.value.chapter_title or "Next Chapter"
+                    chapter_html += f'<li><a href="chapter_{child.value.id}.xhtml">{child_title}</a></li>'
+                chapter_html += "</ul>"
+            elif not node.value.follow:
+                chapter_html += "<p><em>This path ends here.</em></p>"
+                
+            if getattr(config, 'include_url_in_epub', False) and node.value.url:
+                chapter_html += f'<br/><p><a href="{node.value.url}">Original Chapter URL</a></p>'
+
+            c.content = f'<html><head><link href="style/style-epub.css" rel="stylesheet" type="text/css"/></head><body>{chapter_html}</body></html>'
+            book.add_item(c)
+            epub_chapters[node.value.id] = c
+
+        # Images logic
+        image_foldername = config.foldername_image
+        image_dir = os.path.join(folderpath, image_foldername)
+        if os.path.exists(image_dir):
+            for img_name in os.listdir(image_dir):
+                img_path = os.path.join(image_dir, img_name)
+                if os.path.isfile(img_path):
+                    with open(img_path, "rb") as f:
+                        img_content = f.read()
+                    
+                    media_type = "image/jpeg"
+                    if img_name.lower().endswith('.png'):
+                        media_type = "image/png"
+                    elif img_name.lower().endswith('.gif'):
+                        media_type = "image/gif"
+                        
+                    epub_img = epub.EpubItem(uid=img_name,
+                                           file_name=f"{image_foldername}/{img_name}",
+                                           media_type=media_type,
+                                           content=img_content)
+                    book.add_item(epub_img)
+
+        # Build TOC recursively
+        # Replace the nested TOC with a flat TOC to prevent deep nesting off-screen
+        book.toc = tuple(epub_chapters.values())
+
+        book.add_item(epub.EpubNcx())
+        book.add_item(epub.EpubNav())
+
+        book.spine = ['nav'] + list(epub_chapters.values())
+
+        # Cleanup story title for filename
+        safe_title = "".join([c for c in story_title if c.isalpha() or c.isdigit() or c==' ']).rstrip()
+        safe_title = safe_title.replace(' ', '_')
+        if not safe_title:
+            safe_title = "story"
+        epub_filename = os.path.join(folderpath, f"{safe_title}.epub")
+        epub.write_epub(epub_filename, book, {})

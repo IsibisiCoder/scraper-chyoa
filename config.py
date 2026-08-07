@@ -17,7 +17,12 @@ class Config:
             show_chapter_name_loading_story,
             directory_exists_skip_download,
             waiting_time_between_downloads_of,
-            waiting_time_between_downloads_until):
+            waiting_time_between_downloads_until,
+            create_epub=False,
+            ignore_links=None,
+            image_prefix=False,
+            include_url_in_epub=True,
+            include_meta_in_epub=True):
         self.login = login
         self.question_class = question_class
         self.content_class = content_class
@@ -34,6 +39,12 @@ class Config:
 
         self.show_error_loading_image = show_error_loading_image
         self.show_chapter_name_loading_story = show_chapter_name_loading_story
+        
+        self.create_epub = create_epub
+        self.ignore_links = ignore_links if ignore_links is not None else []
+        self.image_prefix = image_prefix
+        self.include_url_in_epub = include_url_in_epub
+        self.include_meta_in_epub = include_meta_in_epub
         self.directory_exists_skip_download = directory_exists_skip_download
 
         self.waiting_time_between_downloads_of = waiting_time_between_downloads_of
