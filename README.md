@@ -20,15 +20,29 @@ This Python script allows you to download interactive stories from the Story web
 
 Install the dependencies:
 ```script
+pip3 install -r requirements.txt
+```
+Windows:
+```script
 pip install -r requirements.txt
 ```
 
 or you use a virtual environment:  
+```script
+    python3 -m venv .venv
+    source .venv/bin/activate
+    python3 -m pip3 install -r requirements.txt
+    
+    or pip3 install -r requirements.txt
 ```
-    python3 -m venv path/to/venv
-    source path/to/venv/bin/activate
+
+Windows used the command  
+```
+    python3 -m venv venv
+    source venv/Scripts/activate
     python3 -m pip install -r requirements.txt
-  ```
+    or pip install -r requirements.txt
+```
 
 ## configuration
 
@@ -150,12 +164,31 @@ Dieses Python-Script bietet die Möglich, interaktive Stories von der Story-Webs
 
 ## Installation
 
-Die Python-Scripte verwendete einige weitere externe Python-Scripte, die vorher installiert werden müssen:  
-* pip install beautifulsoup4
+Install the dependencies:
+```script
+pip3 install -r requirements.txt
+```
+Windows:
+```script
+pip install -r requirements.txt
+```
 
-## Was ist neu:
+or you use a virtual environment:  
+```script
+    python3 -m venv .venv
+    source .venv/bin/activate
+    python3 -m pip3 install -r requirements.txt
+    
+    or pip3 install -r requirements.txt
+```
 
-Die Konfiguration wurde angepasst: `oneHtmlSite` entfällt, statt dessen gibt es zwei neue Parameter `multiple_pages` und `whole_story_one_page`. Mit `multiple_pages: true` werden die Kapitel einzelnd gespeichert, mit `whole_story_one_page` werden alle Kapitel in einer einziger Html-Datei gespeichert. Einer dieser Parameter muss `true` sein, es können nun aber auch keine Parameter `true` ein, dann werden neben den Einzeldateien auch eine Gesamtdatei mit dem Suffix `-total.html` erzeugt.
+Windows used the command  
+```
+    python3 -m venv venv
+    source venv/Scripts/activate
+    python3 -m pip install -r requirements.txt
+    or pip install -r requirements.txt
+```
 
 ## Konfiguration
 
@@ -177,6 +210,11 @@ Eine Beispiel json-Datei ist enthalten und sieht wie folgt aus:
   "directory_exists_skip_download": true,
   "waiting_time_between_downloads_of": 2,
   "waiting_time_between_downloads_until": 5,
+  "create_epub": true,
+  "include_url_in_epub": true,
+  "include_meta_in_epub": true,
+  "ignore_links": ["/new?type=", "Add a new chapter", "Write a chapter", "Link a chapter"],
+  "image_prefix": false,
   "login": {
     "login_url": "https://chyoa.com/auth/login",
     "username": "Yourusername",
@@ -202,6 +240,11 @@ show_error_loading_image|false or true|Wenn ein eingebundenes Bild nicht geladen
 directory_exists_skip_download|false or true|wenn das Story-Verzeichnis bereits existiert, überspringe den download
 waiting_time_between_downloads_of|2|Eine Wartezeit, um eine Überlastung des Webservers zu verhindern, von Zeit in Sekunden
 waiting_time_between_downloads_until|5|Eine Wartezeit, um eine Überlastung des Webservers zu verhindern, bis Zeit in Sekunden
+create_epub|false or true|Wenn true, wird zusätzlich eine ebub-Datei angelegt
+include_url_in_epub|false or true|Wenn true, wird zu jedem Kapitel der Link zur Originalseite hinzugefügt (nur EPUB)
+include_meta_in_epub|false or true|Wenn true, wird im EPUB der Autor und das Erzeugungsdatum angezeigt.
+ignore_links|["..."]|Eine Liste von Link-Texten, die ignoriert werden müssen "Write a chapter".
+image_prefix|false or true|Wenn true, der Text `illustration-` wird direkt vor einem Image ins EPUB geschrieben.
 login|user/password|Hier kann man die Anmeldeinformationen hinterlegen
 urls|["..."]|Liste der Urls der zu speichernden Stories.
 
