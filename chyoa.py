@@ -72,7 +72,7 @@ class Chyoa:
                 # create folder with modified_time
                 folder = foldername_story_with_id
                 if meta.modified_time_short != '':
-                    folder = folder + f' ({meta.modified_time_short})'
+                    folder = folder + f'_({meta.modified_time_short})'
                 if config.directory_exists_skip_download and root_story.check_folder_if_exists(folder):
                     print(f"[skip story]  {story_title}")
                     continue
@@ -113,7 +113,6 @@ class Chyoa:
                     return
                 if debug:
                     print(f"Count: {story_id}")
-                    #self.getAllLinks(debug, root)
 
                 # Find the links and replace the placeholders with the linked information
                 Node.check_all_chapters(root, root)
