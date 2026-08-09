@@ -1,8 +1,6 @@
 # (c) 2025-2026 by IsibisiCoder, MIT-License, https://github.com/IsibisiCoder
 
 import os
-#from meta import Meta
-#from config import Config
 
 class Story:
     def __init__(
@@ -19,7 +17,8 @@ class Story:
             story_header2,
             filename_map,
             filename_total,
-            personal_tags):
+            personal_tags,
+            images_replacement_url):
         self.config = config
         self.id = story_id
         self.url = url
@@ -37,6 +36,7 @@ class Story:
         self.filename_map = filename_map
         self.filename_total = filename_total
         self.personal_tags = personal_tags
+        self.images_replacement_url = images_replacement_url
         self.image_folderpath  = ""
         self.chapter_title = ""
         self.question = ""
