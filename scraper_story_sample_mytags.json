@@ -6,5 +6,11 @@
     "Rating": "***<br>",
     "Genre": "...",
     "Keywords": "my owbn keywords"
-  }
+  },
+  "images": [
+    {
+      "invalid_image_url": "https://www.DOMAIN.com/1.jpeg",
+      "replacement_url": "../story/chapter-image.webp"
+    }
+  ]
 }
