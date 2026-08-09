@@ -47,12 +47,18 @@ def main():
     override_html_sites = config.get("htmlSiteOverride")
     storyname_with_id = config.get("storyname_with_id")
     show_error_loading_image = config.get("show_error_loading_image")
+    show_skip_loading_image = config.get("show_skip_loading_image", True)
     show_chapter_name_loading_story = config.get("show_chapter_name_loading_story")
     directory_exists_skip_download = config.get("directory_exists_skip_download", False)
     waiting_time_between_downloads_of = config.get("waiting_time_between_downloads_of", 2)
     waiting_time_between_downloads_until = config.get("waiting_time_between_downloads_until", 5)
-    foldername_personal_tags = config.get("foldername_personal_tags", "personal_tags")
-    suffix_personal_tags = config.get("suffix_personal_tags", "mytags")
+    http_header_user_agent = config.get("http_header_user_agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0")
+    http_header_referer = config.get("http_header_referer", "https://www.google.com")
+    http_img_alt_text = config.get("http_img_alt_text", "Image")
+    http_img_alt_text_cover = config.get("http_img_alt_text_cover", "Cover Image")
+    images_ignore_domain_url = config.get("images_ignore_domain_url", [])
+    foldername_personal_settings = config.get("foldername_personal_settings", "personal_settings")
+    suffix_personal_settings = config.get("suffix_personal_settings", "mytags")
     create_epub = config.get("create_epub", False)
     ignore_links = config.get("ignore_links", [])
     image_prefix = config.get("image_prefix", False)
@@ -89,12 +95,18 @@ def main():
         folderpath_stories,
         foldername_image,
         show_error_loading_image,
+        show_skip_loading_image,
         show_chapter_name_loading_story,
         directory_exists_skip_download,
         waiting_time_between_downloads_of,
         waiting_time_between_downloads_until,
-        foldername_personal_tags,
-        suffix_personal_tags,
+        http_header_user_agent,
+        http_header_referer,
+        http_img_alt_text,
+        http_img_alt_text_cover,
+        images_ignore_domain_url,
+        foldername_personal_settings,
+        suffix_personal_settings,
         create_epub,
         ignore_links,
         image_prefix,
@@ -116,7 +128,14 @@ def main():
     if url:
         urls.append(url)
 
+    headers = {
+        "User-Agent": http_header_user_agent,
+        "Referer": http_header_referer
+    }
+
     with requests.Session() as session:
+        session.headers.update(headers)
+
         login.login(debug, session, configuration)
 
         if debug:
