@@ -2,6 +2,7 @@
 class Config:
     def __init__(
             self,
+            version,
             login,
             question_class,
             content_class,
@@ -31,6 +32,7 @@ class Config:
             image_prefix=False,
             include_url_in_epub=True,
             include_meta_in_epub=True):
+        self.version = version
         self.login = login
         self.question_class = question_class
         self.content_class = content_class

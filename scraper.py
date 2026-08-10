@@ -12,6 +12,9 @@ from chyoa import Chyoa
 #call: python scraper.py scraper_config.json <url>
 def main():
     """main"""
+    version = "scraper-chyoa V1.3.0"
+    print(f"{version}, MIT-License")
+
     debug = os.environ.get("DEBUG", False)
     debug = False
     if debug:
@@ -83,6 +86,7 @@ def main():
         foldername_image = "image"
 
     configuration = Config(
+        version,
         login_data,
         question_class,
         content_class,

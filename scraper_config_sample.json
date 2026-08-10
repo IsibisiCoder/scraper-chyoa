@@ -2,7 +2,7 @@
   "question_class": "question-content",
   "chapter_class": "chapter-content",
   "htmltag": "div",
-  "folder": "c:/story",
+  "folder": "story",
   "foldername_image": "image",
   "foldername_personal_settings": "personal_tags",
   "suffix_personal_settings": "mytags",

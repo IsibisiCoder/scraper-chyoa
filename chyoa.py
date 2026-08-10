@@ -94,7 +94,7 @@ class Chyoa:
                 root_story.meta.author = author
                 filename = self.create_filename(debug, story_header2, story_title, config.folderpath_stories)
                 question = self.scrape_question(debug, soup)
-                story = self.scrape_content(debug, soup, images_replacement_url, root_story.image_folderpath, config)
+                story_content = self.scrape_content(debug, soup, images_replacement_url, root_story.image_folderpath, config)
                 image_filename, soup = self.scrape_story_cover(debug, config, soup, images_replacement_url, root_story.image_folderpath, config.foldername_image)
 
                 startsite = f"{story_id:04d}"+"-"+filename
@@ -107,7 +107,7 @@ class Chyoa:
                     parent_filename = "",
                     parent_id = "",
                     startsite = startsite,
-                    text = story
+                    text = story_content
                 )
                 root = Node(root_story)
 
@@ -157,7 +157,7 @@ class Chyoa:
             # If a link in chyao points to a new page, an HTTP redirect (302) is performed.
             # To intercept and evaluate this redirect, the response-url must be returned as well
             response_url = response.url
-            status_code = response.status_code
+            #status_code = response.status_code
             response.raise_for_status()
             soup = BeautifulSoup(response.text, 'html.parser')
             return soup, response_url
@@ -286,7 +286,7 @@ class Chyoa:
 
                     if not contains_url:
                         follow = True
-                        story = self.scrape_content(debug, soup_current_site, images_replacement_url, root.value.image_folderpath, config)
+                        story_content = self.scrape_content(debug, soup_current_site, images_replacement_url, root.value.image_folderpath, config)
                         if config.show_chapter_name_loading_story:
                             print(f"Chapter {story_header1}")
 
@@ -314,7 +314,7 @@ class Chyoa:
                             parent_filename,
                             parent_id,
                             root.value.start_site,
-                            story)
+                            story_content)
                         all_links.append(current_link)
         return all_links, story_id
 
@@ -403,23 +403,8 @@ class Chyoa:
             print(f"question: {question}")
         return question
 
-#    def scrape_images(self, debug, soup, config, images_replacement_url, image_folderpath, content):
-#        content_new = content
-#        for img in soup.find_all("img"):
-#            img_src = img.get("src")
-#            if img_src:
-#                if debug:
-#                    print(f'image-src: {img_src}')
-#                #filename_image = download_image(debug, config, "chapter-image", image_folderpath, config.foldername_image, img_src)
-#                filename_image = download_image(debug, config, images_replacement_url, "chapter-image", image_folderpath, config.foldername_image, img_src)
-#                if filename_image != "":
-#                    content_new = content.replace(f'{img_src}', f'{filename_image}')
-#                    if debug:
-#                        print(f'image-src: {img_src}')
-#                        print(f'replace with: {filename_image}')
-#        return content_new
-
     def scrape_images(self, debug, soup, config, images_replacement_url, image_folderpath):
+        """scrape images"""
         for img in soup.find_all("img"):
             img_src = img.get("src")
             if img_src:
@@ -476,7 +461,7 @@ class Chyoa:
             return
         if debug:
             print(f"save Filename {node.value.filename} - {node.value.follow}")
-        html = self.create_html(debug, node, config.multiple_pages, first_page)
+        html = self.create_html(debug, config, node, config.multiple_pages, first_page)
         if first_page:
             first_page = False
         save(foldername, node.value.filename, node, html, config.override_html_sites)
@@ -489,12 +474,12 @@ class Chyoa:
         if debug:
             print(f"save to one filen {node.value.filename} - {node.value.follow}")
         if config.whole_story_one_page:
-            html = self.create_html(debug, node, False, True)
+            html = self.create_html(debug, config, node, False, True)
             save(foldername, node.value.filename_total, node, html, config.override_html_sites)
 
-    def create_html(self, debug, node, multiple_pages, first_page):
+    def create_html(self, debug, config, node, multiple_pages, first_page):
         htmltext = []
-        htmltext = self.create_html_head(htmltext, node, multiple_pages, first_page)
+        htmltext = self.create_html_head(config, htmltext, node, multiple_pages, first_page)
         htmltext = self.create_javascript(htmltext)
         if not multiple_pages:
             htmltext = self.create_map_body(debug, htmltext, node, multiple_pages)
@@ -606,10 +591,10 @@ class Chyoa:
 
         return htmltext
 
-    def create_html_head(self, htmltext, node, multiple_pages, first_page):
+    def create_html_head(self, config, htmltext, node, multiple_pages, first_page):
         """create html body with title"""
         htmltext.append("<!DOCTYPE html>\n")
-        htmltext.append("<html><head><meta charset='utf-8'>\n")
+        htmltext.append(f'<html><head><meta charset="utf-8"><meta name="generator" content="{config.version}">\n')
         if multiple_pages:
             htmltext.append(f"<title>{node.value.chapter_title} - {node.value.story_header2}</title>\n")
         else:
@@ -835,7 +820,8 @@ class Chyoa:
             if node not in all_nodes:
                 all_nodes.append(node)
                 for idx, child in enumerate(node.children, 1):
-                    gather_nodes(child, level + 1, idx)
+                    if (child.value.follow):
+                        gather_nodes(child, level + 1, idx)
         gather_nodes(root, 1, 1)
 
         # Add the CSS styling

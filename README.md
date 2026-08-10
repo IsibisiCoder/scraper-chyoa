@@ -24,10 +24,10 @@ This Python script allows you to download interactive stories from the Story web
 It is possible to define your own tags, such as keywords, notes, ratings, etc. These tags are then included in the HTML file when it is generated.  
 Personal tags are recorded in a separate JSON file. Within the "personal_tags" node, any number of so-called key/value pairs can be defined.  
 The JSON file must have the same name as the main story’s folder, but without the date and the id.  
-So, if the story folder is called `My_Story(1234) (2026-01-10)`, the JSON file must be called `My_Story_mytags.json`. The suffix `_mytags` can be changed via the configuration.  
-These personal_tags files are located in a separate folder, which is set to `personal_tags` by default. This folder name can also be changed via the configuration.  
+So, if the story folder is called `My_Story_(1234)_(2026-01-10)`, the JSON file must be called `My_Story_mytags.json`. The suffix `_mytags` can be changed via the configuration.  
+These personal_settings files are located in a separate folder, which is set to `personal_settings` by default. This folder name can also be changed via the configuration.  
 
-Example of a `personal_tags` JSON file: 
+Example of a `personal_settings` JSON file: 
 ```json
 {
   "personal_tags": {
@@ -52,7 +52,7 @@ This example can also be found in the sample file `scraper_story_sample_mytags.j
 It’s always frustrating when images can no longer be loaded from the Internet. It’s even more frustrating when those images are still available from a previous download, but you want to reload the story - for example, because a new chapter has been added.  
 Now you can replace the broken images with locally stored images.  
 
-Configuration is also done in the `personal_tags` files mentioned above, now in the new “images” section:  
+Configuration is also done in the `personal_settings` files mentioned above, now in the new “images” section:  
 ```json
 {
   "images": [
@@ -63,10 +63,16 @@ Configuration is also done in the `personal_tags` files mentioned above, now in 
     {
       "invalid_image_url": "https://URL2/image2.jpg",
       "replacement_url": "../story/chapter-image2.jpg"
+    },
+    {
+      "invalid_image_url": "https://URL2/image3.jpg",
+      "replacement_url": ""
     }
   ]
 }
  ```  
+
+If you only want to prevent the download and use a new local image instead, you simply need to set "replacement_url" to an empty string.
 
 ## images_ignore_domain_url
 
@@ -111,7 +117,7 @@ MacOS and Linux:
 ```script
     python3 -m venv .venv
     source .venv/bin/activate
-    python3 -m pip3 install -r requirements.txt
+    python3 -m pip install -r requirements.txt
     
     or pip3 install -r requirements.txt
 ```
@@ -273,17 +279,10 @@ MacOS und Linux:
 ```script
     python3 -m venv .venv
     source .venv/bin/activate
-    python3 -m pip3 install -r requirements.txt
+    python3 -m pip install -r requirements.txt
     
     or pip3 install -r requirements.txt
 ```
-## persönliche Tags
-
-Es ist möglich, eigene Tags, wie Stichwörter, Anmerkungen, Bewertungen usw. zu definieren. Diese Tags werden dann bei der Erzeugung der Html-Datei mit in die Datei geschrieben.  
-Die persönlichen Tags werden in einer eigenen JSON-Datei erfasst. Dabei können innerhalb des Knotens "personal_tags" beliebig viele so genannte key/value-Paare definiert werden.  
-Die JSON-Datei muss so heißen, wie der Ordner der Hauptstory, aber ohne Datumsangabe und id.  
-Wenn der Ordner der Geschichte also `Meine_Story(1234) (2026-01-10)` heißt, muss die JSON-Datei `Meine_Story_mytags.json` heißen. Der Suffix `_mytags` kann über die Konfiguration verändert werden.  
-Diese personal_tags-Dateien liegen in einem seperaten Ordner, die per default auf `personal_tags` eingestellt ist. Dieser Ordnername kann ebenfalls über die Konfiguration verändert werden.  
 
 Windows:  
 ```
@@ -291,8 +290,17 @@ Windows:
     source venv/Scripts/activate
     python3 -m pip install -r requirements.txt
     or pip install -r requirements.txt
+
+## persönliche Tags
+
+Es ist möglich, eigene Tags, wie Stichwörter, Anmerkungen, Bewertungen usw. zu definieren. Diese Tags werden dann bei der Erzeugung der Html-Datei mit in die Datei geschrieben.  
+Die persönlichen Tags werden in einer eigenen JSON-Datei erfasst. Dabei können innerhalb des Knotens "personal_tags" beliebig viele so genannte key/value-Paare definiert werden.  
+Die JSON-Datei muss so heißen, wie der Ordner der Hauptstory, aber ohne Datumsangabe und id.  
+Wenn der Ordner der Geschichte also `Meine_Story_(1234)_(2026-01-10)` heißt, muss die JSON-Datei `Meine_Story_mytags.json` heißen. Der Suffix `_mytags` kann über die Konfiguration verändert werden.  
+Diese personal_settings-Dateien liegen in einem seperaten Ordner, die per default auf `personal_settings` eingestellt ist. Dieser Ordnername kann ebenfalls über die Konfiguration verändert werden.  
+
 ```
-Beispiel für eine personal_tags-JSON-Datei: 
+Beispiel für eine personal_settings-JSON-Datei: 
 ```json
 {
   "personal_tags": {
@@ -328,10 +336,16 @@ Die Konfiguration erfolgt auch in den schon oben erwähnten personal_tags-Dateie
     {
       "invalid_image_url": "https://URL2/image2.jpg",
       "replacement_url": "../story/chapter-image2.jpg"
+    },
+    {
+      "invalid_image_url": "https://URL2/image2.jpg",
+      "replacement_url": ""
     }
   ]
 }
  ```  
+
+ Wenn der Download nur verhindert werden und kann neues lokales Bild eingesetzt werden soll, so muss man in 'replacement_url' nur eine leere Zeichenkette definieren.  
 
 ## images_ignore_domain_url
 
