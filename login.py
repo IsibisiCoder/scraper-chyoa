@@ -3,27 +3,27 @@ import sys
 
 # load login from configfile and login in chyoa-site
 def login(debug, session, config):
-    login = config.login
-    if not login:
-        print(f"no login defined.")
+    login_data = config.login
+    if not login_data:
+        print("no login defined.")
 
-    loginWithUsernameAndPassword = False
+    login_with_username_and_password = False
 
-    if login:
-        login_url = login.get("login_url")
+    if login_data:
+        login_url = login_data.get("login_url")
         if not login_url:
-            print(f"no login-url defined.")
+            print("no login-url defined.")
 
         if login_url:
-            username = login.get("username")
-            password = login.get("password")
+            username = login_data.get("username")
+            password = login_data.get("password")
             if username and password:
-                loginWithUsernameAndPassword = True
+                login_with_username_and_password = True
                 if debug:
                     print(f"Username '{username}'")
                     print(f"Password '{password}'")
 
-        if loginWithUsernameAndPassword:
+        if login_with_username_and_password:
             login_payload = {
                 'username': username,
                 'password': password

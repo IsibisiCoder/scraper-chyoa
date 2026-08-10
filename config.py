@@ -2,6 +2,7 @@
 class Config:
     def __init__(
             self,
+            version,
             login,
             question_class,
             content_class,
@@ -14,15 +15,24 @@ class Config:
             folderpath_stories,
             foldername_image,
             show_error_loading_image,
+            show_skip_loading_image,
             show_chapter_name_loading_story,
             directory_exists_skip_download,
             waiting_time_between_downloads_of,
             waiting_time_between_downloads_until,
+            http_header_user_agent,
+            http_header_referer,
+            http_img_alt_text,
+            http_img_alt_text_cover,
+            images_ignore_domain_url,
+            foldername_personal_settings,
+            suffix_personal_settings,
             create_epub=False,
             ignore_links=None,
             image_prefix=False,
             include_url_in_epub=True,
             include_meta_in_epub=True):
+        self.version = version
         self.login = login
         self.question_class = question_class
         self.content_class = content_class
@@ -36,10 +46,10 @@ class Config:
         # Foldername and path
         self.folderpath_stories = folderpath_stories
         self.foldername_image = foldername_image
-
         self.show_error_loading_image = show_error_loading_image
+        self.show_skip_loading_image = show_skip_loading_image
         self.show_chapter_name_loading_story = show_chapter_name_loading_story
-        
+
         self.create_epub = create_epub
         self.ignore_links = ignore_links if ignore_links is not None else []
         self.image_prefix = image_prefix
@@ -47,5 +57,15 @@ class Config:
         self.include_meta_in_epub = include_meta_in_epub
         self.directory_exists_skip_download = directory_exists_skip_download
 
+        # personal tags
+        self.foldername_personal_settings = foldername_personal_settings
+        self.suffix_personal_settings = suffix_personal_settings
+
         self.waiting_time_between_downloads_of = waiting_time_between_downloads_of
         self.waiting_time_between_downloads_until = waiting_time_between_downloads_until
+        self.images_ignore_domain_url = images_ignore_domain_url
+
+        self.http_header_user_agent = http_header_user_agent
+        self.http_header_referer = http_header_referer
+        self.http_img_alt_text = http_img_alt_text
+        self.http_img_alt_text_cover = http_img_alt_text_cover

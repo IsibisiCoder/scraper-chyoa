@@ -1,17 +1,31 @@
 # (c) 2025-2026 by IsibisiCoder, MIT-License, https://github.com/IsibisiCoder
 
 import os
-#from meta import Meta
-#from config import Config
 
 class Story:
-    def __init__(self, config, story_id, url, meta, linktext, follow, story_title, story_header1, story_header2, filename_map, filename_total):
+    def __init__(
+            self,
+            config,
+            story_id,
+            url,
+            meta,
+            linktext,
+            follow,
+            redirect,
+            story_title,
+            story_header1,
+            story_header2,
+            filename_map,
+            filename_total,
+            personal_tags,
+            images_replacement_url):
         self.config = config
         self.id = story_id
         self.url = url
         self.meta = meta
         self.linktext = linktext
         self.follow=follow
+        self.redirect=redirect
         self.story_title = story_title
         self.story_header1 = story_header1
         self.story_header2 = story_header2
@@ -21,6 +35,8 @@ class Story:
         self.foldername_story = ""
         self.filename_map = filename_map
         self.filename_total = filename_total
+        self.personal_tags = personal_tags
+        self.images_replacement_url = images_replacement_url
         self.image_folderpath  = ""
         self.chapter_title = ""
         self.question = ""
