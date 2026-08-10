@@ -50,7 +50,6 @@ class Chyoa:
                 else:
                     foldername_story_with_id = foldername_story
 
-                print(f"personal settings folder: {foldername_story_with_id}")
                 personal_settings = PersonalSettings(debug, config)
                 personal_tags_of_story, images_replacement_url = personal_settings.read_personal_settings(foldername_story_with_id)
 
@@ -816,6 +815,12 @@ class Chyoa:
         if root.value.meta.published_time_short:
             book.add_metadata('DC', 'date', root.value.meta.published_time_short)
 
+        # add cover if available
+        if root.value.story_image and os.path.exists(os.path.join(folderpath, root.value.story_image)):
+            with open(os.path.join(folderpath, root.value.story_image), "rb") as f:
+                book.set_cover(root.value.story_image, f.read())
+ 
+
         # Gather all nodes to process chapters
         all_nodes = []
         def gather_nodes(node, level, sibling_index):
@@ -901,6 +906,10 @@ class Chyoa:
         image_dir = os.path.join(folderpath, image_foldername)
         if os.path.exists(image_dir):
             for img_name in os.listdir(image_dir):
+                # Skip the cover image if it's already set as the book cover
+                relative_img_path = os.path.join(image_foldername, img_name)
+                if relative_img_path == root.value.story_image:
+                    continue
                 img_path = os.path.join(image_dir, img_name)
                 if os.path.isfile(img_path):
                     with open(img_path, "rb") as f:
