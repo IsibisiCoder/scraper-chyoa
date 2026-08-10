@@ -1,0 +1,24 @@
+{
+  "personal_tags": {
+    "Remarks": "",
+    "Read": "Yes",
+    "Interested": "Yes",
+    "Rating": "***<br>",
+    "Genre": "...",
+    "Keywords": "my owbn keywords"
+  },
+  "images": [
+    {
+      "invalid_image_url": "https://URL/image.jpg",
+      "replacement_url": "../story/chapter-image.jpg"
+    },
+    {
+      "invalid_image_url": "https://URL2/image2.jpg",
+      "replacement_url": "../story/chapter-image2.jpg"
+    },
+    {
+      "invalid_image_url": "https://URL2/image3.jpg",
+      "replacement_url": ""
+    }
+  ]
+}

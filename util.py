@@ -68,7 +68,7 @@ def download_image(debug, config, images_replacement_url, filename_base_name, im
         print(f"Image filepath: {filepath}")
         print(f"filepath relativ: {filepath_relativ}")
 
-    if img_url.startswith("http://") or img_url.startswith("https://"):
+    if not is_replacement:
         if debug:
             print(f"              downloading image url: {img_url}")
         status_code = 200
@@ -114,7 +114,7 @@ def download_image(debug, config, images_replacement_url, filename_base_name, im
                 print(f"              Image copied from local file: {img_url} to {filepath_relativ}")
         else:
             if config.show_error_loading_image:
-                print(f"                Error copying image from local file: {filepath_new_image} to {filepath_relativ}. File does not exist.")
+                print(f"                Error copying image from local file: {filepath_new_image} to {filepath_relativ}. File does not exist; (Orig-file: {img_url}).")
             filepath_relativ = ""
 
     return filepath_relativ

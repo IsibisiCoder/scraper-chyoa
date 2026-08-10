@@ -31,6 +31,10 @@
     "username": "Yourusername",
     "password": "xxxxx"
   },
+  "images_ignore_domain_url": [
+    "https://www.DOMAIN.org",
+    "https://www.DOMAIN2.org"
+  ],
   "urls": [
     "https://chyoa.com/story/sample1.12345",
     "https://chyoa.com/story/sample2.52900"
