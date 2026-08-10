@@ -16,6 +16,8 @@ This Python script allows you to download interactive stories from the Story web
 * Download and storage of multiple stories possible
 * Properties are saved e.g. description, author, published_time, category, language, tag
 * You can define custom properties for the story, which are then added to the HTML file when the story is retrieved
+* Images can be replaced with other images (URLs) or local images. This is useful, for example, when the original images can no longer be loaded (e.g., because the image is no longer available on the Internet), but the original images are still available from an older download.
+* You can prevent images from being downloaded from specified web addresses. This is useful, for example, when an image hosting service is no longer available (the domain is no longer accessible). This setting saves download time, since the download timeout always takes time.
 
 ## personal tags
 
@@ -44,6 +46,52 @@ This example can also be found in the sample file `scraper_story_sample_mytags.j
 - If no values are specified, the entry is ignored (see Remarks).  
 - Simple formatting, such as <b></b> <i></i> or <u></u>, can also be included in the values. <br> can be used for line breaks. Please note that this must be valid HTML. As the values are written into the HTML as meta tags, it is generally not advisable to include arbitrary HTML here.
 - The tags <b></b>, <i></i>, <u></u> and <br> are removed by spaces before being written into the HTML’s meta structure; however, other HTML tags are not.  
+
+## Personal Images to Replace
+
+It’s always frustrating when images can no longer be loaded from the Internet. It’s even more frustrating when those images are still available from a previous download, but you want to reload the story - for example, because a new chapter has been added.  
+Now you can replace the broken images with locally stored images.  
+
+Configuration is also done in the `personal_tags` files mentioned above, now in the new “images” section:  
+```json
+{
+  "images": [
+    {
+      "invalid_image_url": "https://URL/image.jpg",
+      "replacement_url": "../story/chapter-image.jpg"
+    },
+    {
+      "invalid_image_url": "https://URL2/image2.jpg",
+      "replacement_url": "../story/chapter-image2.jpg"
+    }
+  ]
+}
+ ```  
+
+## images_ignore_domain_url
+
+It's always frustrating when images can no longer be loaded from the Internet. But these loading attempts also take a lot of time each time. If there are many images, this can significantly delay the story's loading time.  
+That's why you can add these unreachable domains to a list in the configuration:  
+```json
+  "images_ignore_domain_url": [
+    "https://www.DOMAIN.org",
+    "https://www.DOMAIN2.org"
+  ],
+```  
+
+Important: It is not the domain address that is checked, but the beginning of the URL. This means that the URL of the image that is no longer accessible must begin exactly with the configured entry.  
+Sample 1:  
+Url: https://www.my.org/image1.jpg
+Config: https://www.my.org
+
+Image is ignored.  
+
+Sample 2:  
+Url: https://www.my.org/image1.jpg
+Config: http://www.my.org
+
+The image is not ignored; the system attempts to load it.  
+Reason: The domain was defined as http://, but the URL begins with https://  
 
 ## install
 
@@ -93,18 +141,25 @@ A sample JSON file is included and looks like this:
   "multiple_pages": true,
   "whole_story_one_page": false,
   "override_html_sites": true,
-  "storyname_with_id": false,
   "recursionlimit": 1500,
   "show_error_loading_image": true,
+  "show_skip_loading_image": true,
   "show_chapter_name_loading_story": false,
   "directory_exists_skip_download": true,
   "waiting_time_between_downloads_of": 2,
   "waiting_time_between_downloads_until": 5,
+  "http_header_user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0",
+  "http_header_referer": "https://www.google.com",
+  "http_img_alt_text": "Image",
+  "http_img_alt_text_cover": "Cover Image",
   "create_epub": true,
   "include_url_in_epub": true,
   "include_meta_in_epub": true,
-  "ignore_links": ["/new?type=", "Add a new chapter", "Write a chapter", "Link a chapter"],
+  "ignore_links": ["/new?type=", "Add a new chapter", "Write a chapter", "Link a chapter", "Customize choices"],
   "image_prefix": false,
+  "images_ignore_domain_url": [
+    "https://www.DOMAIN.org"
+  ],
   "login": {
     "login_url": "https://chyoa.com/auth/login",
     "username": "Yourusername",
@@ -198,6 +253,8 @@ Dieses Python-Script bietet die Möglich, interaktive Stories von der Story-Webs
 * Download und Speicherung mehrerer Stories möglich
 * Die Eigenschaften der Geschichte werden gespeichert, wie z.B. Beschreibung, Autor, Erstellungsdatum, Änderungendatum, Kategorie
 * Es können eigene Eigenschaften der Geschichte definitiert werden, die dann beim Abruf der Geschichte in die Html-Datei dazugeschrieben werden
+* Es können Bilder gegen andere Bilder (urls) oder lokale Bilder ausgetauscht werden. Das ist z.B. dann sinnvoll, wenn die original Bilder nicht mehr geladen werden können (z.B. weil das Bild nicht mehr im Internet vorhanden ist), die ursprünglichen Bilder aber aus einem älteren Download noch vorliegen.
+* Das Herunterladen von Bildern aus konfigurierten Internetadressen kann verhindert werden. Das ist z.B. dann sinnvoll, wenn es einen Image-Hoster nicht mehr gibt (domain ist nicht mehr erreichbar). Diese Konfiguration spart dann Downloadzeit, da der Timeout beim Download immer Zeit in Anspruch nimmt.
 
 ## Installation
 
@@ -255,6 +312,52 @@ Das Beispiel findet man auch in der Beispiel-Datei `scraper_story_sample_mytags.
 - In den Values kann auch eine einfache Formatierung, wie <b></b> <i></i> oder <u></u> geschrieben werden. Für Zeilenumbrüche ist <br> möglich. Hierbei ist zu beachten, dass es sich um ein gültiges Html handeln muss. Da die Values als Meta-Tags in das Html geschrieben werden, ist es eher davon abzuraten, beliebiges Html hier zu schrieben.
 - Die Formatierungen <b></b>, <i></i>, <u></u> oder <br> werden vor dem Schreiben in die Meta-Struktur des Html durch Leerzeichen entfernt, andere Html-Tags jedoch nicht.
 
+## persönliche auszutauschende Bilder
+
+Sind Bilder nicht mehr aus dem Internet geladen werden können, ist das immer ärgerlich. Wenn diese Bilder aus einem früheren Download noch vorhanden sind, man aber die Story neu laden möchte, weil z.B. ein neues Kapitel dazugekommen ist, ist das noch ärgerlicher.  
+Nun kann die fehlerhaften Bilder durch lokal vorhandene Bilder ersetzen.  
+
+Die Konfiguration erfolgt auch in den schon oben erwähnten personal_tags-Dateien, nun im neuen Abschnitt "images":  
+```json
+{
+  "images": [
+    {
+      "invalid_image_url": "https://URL/image.jpg",
+      "replacement_url": "../story/chapter-image.jpg"
+    },
+    {
+      "invalid_image_url": "https://URL2/image2.jpg",
+      "replacement_url": "../story/chapter-image2.jpg"
+    }
+  ]
+}
+ ```  
+
+## images_ignore_domain_url
+
+Sind Bilder nicht mehr aus dem Internet geladen werden können, ist das immer ärgerlich. Aber diese Ladeversuche kosten auch jedesmal viel Zeit. Bei vielen Bildern kann sich so die Ladezeit der Geschichte enorm verzögern.  
+Deshalb kann diese nicht mehr erreichbaren Domains in eine Liste in der Konfiguration aufnehmen:  
+```json
+  "images_ignore_domain_url": [
+    "https://www.DOMAIN.org",
+    "https://www.DOMAIN2.org"
+  ],
+```  
+
+Wichtig: Es wird nicht die Domainadresse überprüft, sondern der Beginn der Url. D.h. die Url des nicht mehr erreichbaren Bildes muss exakt mit dem konfigurierten Eintrag beginnen.  
+Beispiel 1:  
+Url: https://www.my.org/image1.jpg
+Config: https://www.my.org
+
+Bild wird igniert.  
+
+Beispiel 2:  
+Url: https://www.my.org/image1.jpg
+Config: http://www.my.org
+
+Bild wird nicht igniert, es wird versucht das Bild zu laden.  
+Grund: Die Domaine wurde mit http:// definiert und die Url beginnt mit https://  
+
 ## Konfiguration
 
 Die Konfiguration des Python-Scriptes erfolgt in einer seperaten json-Datei. Der Name der Datei ist beliebig und wird als Parameter beim Aufruf mitgegeben.  
@@ -264,7 +367,7 @@ Eine Beispiel json-Datei ist enthalten und sieht wie folgt aus:
   "question_class": "question-content",
   "chapter_class": "chapter-content",
   "htmltag": "div",
-  "folder": "c:/story",
+  "folder": "story",
   "foldername_image": "image",
   "foldername_personal_tags": "personal_tags",
   "suffix_personal_tags": "mytags",
@@ -274,15 +377,23 @@ Eine Beispiel json-Datei ist enthalten und sieht wie folgt aus:
   "override_html_sites": true,
   "recursionlimit": 1500,
   "show_error_loading_image": true,
+  "show_skip_loading_image": true,
   "show_chapter_name_loading_story": false,
   "directory_exists_skip_download": true,
   "waiting_time_between_downloads_of": 2,
   "waiting_time_between_downloads_until": 5,
+  "http_header_user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0",
+  "http_header_referer": "https://www.google.com",
+  "http_img_alt_text": "Image",
+  "http_img_alt_text_cover": "Cover Image",
   "create_epub": true,
   "include_url_in_epub": true,
   "include_meta_in_epub": true,
-  "ignore_links": ["/new?type=", "Add a new chapter", "Write a chapter", "Link a chapter"],
+  "ignore_links": ["/new?type=", "Add a new chapter", "Write a chapter", "Link a chapter", "Customize choices"],
   "image_prefix": false,
+  "images_ignore_domain_url": [
+    "https://www.DOMAIN.org"
+  ],
   "login": {
     "login_url": "https://chyoa.com/auth/login",
     "username": "Yourusername",
