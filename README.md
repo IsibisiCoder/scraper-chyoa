@@ -23,8 +23,8 @@ This Python script allows you to download interactive stories from the Story web
 
 It is possible to define your own tags, such as keywords, notes, ratings, etc. These tags are then included in the HTML file when it is generated.  
 Personal tags are recorded in a separate JSON file. Within the "personal_tags" node, any number of so-called key/value pairs can be defined.  
-The JSON file must have the same name as the main story’s folder, but without the date and the id.  
-So, if the story folder is called `My_Story_(1234)_(2026-01-10)`, the JSON file must be called `My_Story_mytags.json`. The suffix `_mytags` can be changed via the configuration.  
+The JSON file must have the same name as the main story’s folder, but without the date.  
+So, if the story folder is called `My_Story_(1234)_(2026-01-10)`, the JSON file must be called `My_Story__(1234)_mytags.json`. The suffix `_mytags` can be changed via the configuration.  
 These personal_settings files are located in a separate folder, which is set to `personal_settings` by default. This folder name can also be changed via the configuration.  
 
 Example of a `personal_settings` JSON file: 
@@ -41,7 +41,7 @@ Example of a `personal_settings` JSON file:
 }
  ```
 
-This example can also be found in the sample file `scraper_story_sample_mytags.json`.  
+This example can also be found in the sample file `personal_settings_story_(4711)_mytags_sample.json`.  
 
 - If no values are specified, the entry is ignored (see Remarks).  
 - Simple formatting, such as <b></b> <i></i> or <u></u>, can also be included in the values. <br> can be used for line breaks. Please note that this must be valid HTML. As the values are written into the HTML as meta tags, it is generally not advisable to include arbitrary HTML here.
@@ -295,7 +295,7 @@ Windows:
 
 Es ist möglich, eigene Tags, wie Stichwörter, Anmerkungen, Bewertungen usw. zu definieren. Diese Tags werden dann bei der Erzeugung der Html-Datei mit in die Datei geschrieben.  
 Die persönlichen Tags werden in einer eigenen JSON-Datei erfasst. Dabei können innerhalb des Knotens "personal_tags" beliebig viele so genannte key/value-Paare definiert werden.  
-Die JSON-Datei muss so heißen, wie der Ordner der Hauptstory, aber ohne Datumsangabe und id.  
+Die JSON-Datei muss so heißen, wie der Ordner der Hauptstory, aber ohne Datumsangabe.  
 Wenn der Ordner der Geschichte also `Meine_Story_(1234)_(2026-01-10)` heißt, muss die JSON-Datei `Meine_Story_mytags.json` heißen. Der Suffix `_mytags` kann über die Konfiguration verändert werden.  
 Diese personal_settings-Dateien liegen in einem seperaten Ordner, die per default auf `personal_settings` eingestellt ist. Dieser Ordnername kann ebenfalls über die Konfiguration verändert werden.  
 
@@ -314,7 +314,7 @@ Beispiel für eine personal_settings-JSON-Datei:
 }
  ```  
 
-Das Beispiel findet man auch in der Beispiel-Datei `scraper_story_sample_mytags.json`.  
+Das Beispiel findet man auch in der Beispiel-Datei `personal_settings_story_(4711)_mytags_sample.json`.  
 
 - Werden keine Values angegeben, wird der Eintrag ignoriert (siehe Remarks).  
 - In den Values kann auch eine einfache Formatierung, wie <b></b> <i></i> oder <u></u> geschrieben werden. Für Zeilenumbrüche ist <br> möglich. Hierbei ist zu beachten, dass es sich um ein gültiges Html handeln muss. Da die Values als Meta-Tags in das Html geschrieben werden, ist es eher davon abzuraten, beliebiges Html hier zu schrieben.

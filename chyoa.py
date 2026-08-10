@@ -45,14 +45,14 @@ class Chyoa:
                 foldername_story = foldername_story.strip("-")
                 # Determine the ID of the home page from the URL (the number after the period)
                 id_of_startsite = url.split(".")[-1]
-                foldername_personal_settings = foldername_story
                 if id_of_startsite:
                     foldername_story_with_id = f"{foldername_story}_({id_of_startsite})"
                 else:
                     foldername_story_with_id = foldername_story
 
+                print(f"personal settings folder: {foldername_story_with_id}")
                 personal_settings = PersonalSettings(debug, config)
-                personal_tags_of_story, images_replacement_url = personal_settings.read_personal_settings(foldername_personal_settings)
+                personal_tags_of_story, images_replacement_url = personal_settings.read_personal_settings(foldername_story_with_id)
 
                 story_id = 1
 
@@ -88,6 +88,10 @@ class Chyoa:
 
                 print(f"[story]         {story_title}")
                 print(f"[folder]        {root_story.folderpath_story}")
+                if (personal_tags_of_story):
+                    print("[personal]      personal tags found")
+                if (images_replacement_url):
+                    print("[personal]      personal settings - replacement url for images found")
                 print(f"[downloading]   {url}")
 
                 chapter_title, author,  _, _ = self.scrape_chapter_title_story_header(debug, soup)
