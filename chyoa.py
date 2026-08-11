@@ -144,7 +144,7 @@ class Chyoa:
                 hours, rest = divmod(duration, 3600)
                 minutes, seconds = divmod(rest, 60)
 
-                print(f"[completed]     duration: {int(hours):02d}:{int(minutes):02d}:{seconds:05.2f}")
+                print(f"[completed]     duration: {int(hours):02d}:{int(minutes):02d}:{seconds:05.2f}\n")
 
             except requests.RequestException as e:
                 print(f"Error loading {url}: {e}")
@@ -907,9 +907,10 @@ class Chyoa:
         if os.path.exists(image_dir):
             for img_name in os.listdir(image_dir):
                 # Skip the cover image if it's already set as the book cover
-                relative_img_path = os.path.join(image_foldername, img_name)
-                if relative_img_path == root.value.story_image:
-                    continue
+                if root.value.story_image:
+                    relative_img_path = os.path.join(image_foldername, img_name)
+                    if relative_img_path == root.value.story_image:
+                        continue
                 img_path = os.path.join(image_dir, img_name)
                 if os.path.isfile(img_path):
                     with open(img_path, "rb") as f:
