@@ -1,4 +1,4 @@
-# scraper-chyoa
+﻿# scraper-chyoa
 Python script for saving chyoa stories in an interactive HTML webpage or for saving chapters in individual HTML webpages  
 This Python script allows you to download interactive stories from the Story website [chyoa](https://chyoa.com/).  
 
@@ -24,7 +24,7 @@ This Python script allows you to download interactive stories from the Story web
 It is possible to define your own tags, such as keywords, notes, ratings, etc. These tags are then included in the HTML file when it is generated.  
 Personal tags are recorded in a separate JSON file. Within the "personal_tags" node, any number of so-called key/value pairs can be defined.  
 The JSON file must have the same name as the main story’s folder, but without the date.  
-So, if the story folder is called `My_Story_(1234)_(2026-01-10)`, the JSON file must be called `My_Story__(1234)_mytags.json`. The suffix `_mytags` can be changed via the configuration.  
+So, if the story folder is called `My_Story_(1234)_(2026-01-10)`, the JSON file must be called `My_Story_(1234)_mytags.json`. The suffix `_mytags` can be changed via the configuration.  
 These personal_settings files are located in a separate folder, which is set to `personal_settings` by default. This folder name can also be changed via the configuration.  
 
 Example of a `personal_settings` JSON file: 
@@ -290,6 +290,7 @@ Windows:
     source venv/Scripts/activate
     python3 -m pip install -r requirements.txt
     or pip install -r requirements.txt
+```
 
 ## persönliche Tags
 
