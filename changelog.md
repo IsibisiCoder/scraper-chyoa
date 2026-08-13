@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-08-13
+
 Added:   Export the full story as an EPUB e-book
 Added:   You can define custom properties for the story, which are then added to the HTML file when the story is retrieved
 Added:   Image URLs that no longer exist can be globally excluded from downloads
