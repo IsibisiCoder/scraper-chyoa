@@ -43,9 +43,10 @@ def download_image(debug, config, images_replacement_url, filename_base_name, im
             print(f"                Ignore image url is in ignore list: {img_url}")
         return ""
     replacement_img_url, is_replacement = get_image_url_if_replacement_image_exists(images_replacement_url, img_url)
+    original_img_url = img_url
     img_url = replacement_img_url
     if is_replacement and config.show_skip_loading_image:
-        print(f"                Replacement image url is in replacement list, new url: {img_url}")
+        print(f"                Replacement image url is in replacement list, new url: {original_img_url}")
 
     if img_url == "":
         return ""

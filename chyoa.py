@@ -6,17 +6,17 @@ from datetime import datetime
 import time
 import random
 import os
-from ebooklib import epub
 import uuid
+from ebooklib import epub
 import requests
 from bs4 import BeautifulSoup
 
-import story
 from story import Story
 from meta import Meta
 from node import Node
 from util import get_unique_filename, download_image, save, copy_css
 from personal_settings import PersonalSettings
+from translate import translate_text
 
 class Chyoa:
     """class chyoa"""
@@ -136,7 +136,7 @@ class Chyoa:
                     self.create_map(debug, root_story.folderpath_story, root_story.filename_map, root, config.multiple_pages, config.override_html_sites)
 
                 if getattr(config, 'create_epub', False):
-                    print(f"[Generate EPUB] {root_story.folderpath_story} ...")
+                    print("[Generate EPUB]")
                     self.save_epub(debug, root_story.folderpath_story, root, config)
 
                 end = time.perf_counter()
@@ -454,6 +454,13 @@ class Chyoa:
         #save images and convert image name in html
         soup = self.scrape_images(debug, content_navigable_all[0], config, images_replacement_url, image_folderpath)
         content = soup.prettify() if content_navigable_all else "<!-- no content found -->"
+
+        #TODO try translate, in work
+        if getattr(config, 'translate', False):
+            print("[translate]")
+            content = translate_text(config, content)
+            #print(f"Story: {content[1:50]}")
+
         if debug:
             print(f"Story: {content[1:50]}")
         return content

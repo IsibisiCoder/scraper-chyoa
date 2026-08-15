@@ -31,7 +31,8 @@ class Config:
             ignore_links=None,
             image_prefix=False,
             include_url_in_epub=True,
-            include_meta_in_epub=True):
+            include_meta_in_epub=True,
+            translate=False):
         self.version = version
         self.login = login
         self.question_class = question_class
@@ -65,7 +66,11 @@ class Config:
         self.waiting_time_between_downloads_until = waiting_time_between_downloads_until
         self.images_ignore_domain_url = images_ignore_domain_url
 
+        # http headers and images
         self.http_header_user_agent = http_header_user_agent
         self.http_header_referer = http_header_referer
         self.http_img_alt_text = http_img_alt_text
         self.http_img_alt_text_cover = http_img_alt_text_cover
+
+        # translate
+        self.translate = translate

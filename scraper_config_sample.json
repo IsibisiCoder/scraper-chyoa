@@ -26,6 +26,7 @@
   "include_meta_in_epub": true,
   "ignore_links": ["/new?type=", "Add a new chapter", "Write a chapter", "Link a chapter", "Customize choices"],
   "image_prefix": false,
+  "translate": false,
   "login": {
     "login_url": "https://chyoa.com/auth/login",
     "username": "Yourusername",

@@ -67,6 +67,7 @@ def main():
     image_prefix = config.get("image_prefix", False)
     include_url_in_epub = config.get("include_url_in_epub", True)
     include_meta_in_epub = config.get("include_meta_in_epub", True)
+    translate = config.get("translate", False)
 
     if not multiple_pages and not whole_story_one_page:
         print("Configuration error: Please set either `multiplepages` or `wholeStoryOnePage` to True")
@@ -115,7 +116,8 @@ def main():
         ignore_links,
         image_prefix,
         include_url_in_epub,
-        include_meta_in_epub)
+        include_meta_in_epub,
+        translate)
 
     if debug:
         print(f"download-folder is: '{folderpath_stories}'")
