@@ -68,6 +68,11 @@ def main():
     include_url_in_epub = config.get("include_url_in_epub", True)
     include_meta_in_epub = config.get("include_meta_in_epub", True)
     translate = config.get("translate", False)
+    translate_language = config.get("translate_language")
+    llm_system = config.get("llm_system")
+    llm_model = config.get("llm_model")
+    llm_question = config.get("llm_question")
+    llm_api = config.get("llm_api")
 
     if not multiple_pages and not whole_story_one_page:
         print("Configuration error: Please set either `multiplepages` or `wholeStoryOnePage` to True")
@@ -117,7 +122,12 @@ def main():
         image_prefix,
         include_url_in_epub,
         include_meta_in_epub,
-        translate)
+        translate,
+        translate_language,
+        llm_system,
+        llm_model,
+        llm_question,
+        llm_api)
 
     if debug:
         print(f"download-folder is: '{folderpath_stories}'")

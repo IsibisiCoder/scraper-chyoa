@@ -1,4 +1,22 @@
 # (c) 2025-2026 by IsibisiCoder, MIT-License, https://github.com/IsibisiCoder
+from enum import StrEnum
+
+class Llm_system(StrEnum):
+    OLLAMA = "ollama"
+    LMSTUDIO = "lmstudio"
+
+    @classmethod
+    def has_value(cls, value: str) -> bool:
+        return value.lower() in (item.value.lower() for item in cls)
+
+    @classmethod
+    def from_string(cls, value: str):
+        for item in cls:
+            if item.value.lower() == value.lower():
+                return item
+        raise ValueError(f"'{value}' is not a valid value for {cls.__name__}")
+
+
 class Config:
     def __init__(
             self,
@@ -32,7 +50,12 @@ class Config:
             image_prefix=False,
             include_url_in_epub=True,
             include_meta_in_epub=True,
-            translate=False):
+            translate=False,
+            translate_language="",
+            llm_system = Llm_system.OLLAMA,
+            llm_model = "",
+            llm_question = "",
+            llm_api = ""):
         self.version = version
         self.login = login
         self.question_class = question_class
@@ -74,3 +97,12 @@ class Config:
 
         # translate
         self.translate = translate
+        self.translate_language = translate_language
+        self.llm_model = llm_model
+        self.llm_question = llm_question
+        self.llm_api = llm_api
+
+        try:
+            self.llm_system = Llm_system.from_string(llm_system)
+        except ValueError as e:
+            self.llm_system = Llm_system.OLLAMA

@@ -11,6 +11,7 @@ from ebooklib import epub
 import requests
 from bs4 import BeautifulSoup
 
+import config
 from story import Story
 from meta import Meta
 from node import Node
@@ -32,7 +33,7 @@ class Chyoa:
                 if not soup:
                     continue
 
-                story_header1, story_header2, foldername_story = self.scrape_story_title(debug, soup)
+                story_header1, story_header2, foldername_story = self.scrape_story_title(debug, soup, config)
                 if len(foldername_story) > 100:
                     foldername_story = foldername_story[0:100]
                 story_title = story_header2
@@ -40,6 +41,7 @@ class Chyoa:
                 meta = Meta(debug)
                 meta.scrape_meta_properties(soup)
                 meta.scrape_json(soup)
+                meta.set_translation_information(config)
                 meta.url = url
 
                 foldername_story = foldername_story.strip("-")
@@ -92,8 +94,10 @@ class Chyoa:
                 if (images_replacement_url):
                     print("[personal]      personal settings - replacement url for images found")
                 print(f"[downloading]   {url}")
+                if config.translate:
+                    print("[translate]")
 
-                chapter_title, author,  _, _ = self.scrape_chapter_title_story_header(debug, soup)
+                chapter_title, author,  _, _ = self.scrape_chapter_title_story_header(debug, soup, config)
                 root_story.meta.author = author
                 filename = self.create_filename(debug, story_header2, story_title, config.folderpath_stories)
                 question = self.scrape_question(debug, soup)
@@ -133,7 +137,7 @@ class Chyoa:
                     self.save_stories_to_one_file(debug, root_story.folderpath_story, root, config)
 
                 if config.multiple_pages:
-                    self.create_map(debug, root_story.folderpath_story, root_story.filename_map, root, config.multiple_pages, config.override_html_sites)
+                    self.create_map(debug, root_story.folderpath_story, root_story.filename_map, root, config)
 
                 if getattr(config, 'create_epub', False):
                     print("[Generate EPUB]")
@@ -218,7 +222,7 @@ class Chyoa:
                     meta.scrape_meta_properties(soup_current_site)
                     meta.scrape_json(soup_current_site)
 
-                    chapter_title, author, story_header1, story_header2 = self.scrape_chapter_title_story_header(debug, soup_current_site)
+                    chapter_title, author, story_header1, story_header2 = self.scrape_chapter_title_story_header(debug, soup_current_site, config)
                     meta.author = author
                     filename = f"{story_id:04d}"+"-"+chapter_title.replace(" ", "_").strip()+"-"+self.create_filename(debug, story_header1, root.value.story_title, config.folderpath_stories).strip()
 
@@ -333,7 +337,7 @@ class Chyoa:
             if child.value.follow:
                 self.get_all_links(debug, child, level + 1)
 
-    def scrape_story_title(self, debug, soup):
+    def scrape_story_title(self, debug, soup, config):
         header = soup.find('header', class_='story-header')
         story_header1 = ""
         story_header2 = ""
@@ -344,6 +348,11 @@ class Chyoa:
             headerh2 = header.find('h2')
             if headerh2:
                 story_header1 = headerh2.get_text(strip=True)
+
+        if config.translate:
+            story_header1 = translate_text(config, story_header1)
+            story_header2 = translate_text(config, story_header2)
+
         foldername = re.sub(r'[^a-zA-Z0-9áéíóàèìòîâûêäöüÄÖÜß\s]', "-", story_header2).replace(" ", "_")
         if debug:
             print(f"story_header1: {story_header1}")
@@ -351,7 +360,7 @@ class Chyoa:
             print(f"Folder: {foldername}")
         return story_header1, story_header2, foldername
 
-    def scrape_chapter_title_story_header(self, debug, soup):
+    def scrape_chapter_title_story_header(self, debug, soup, config):
         """scrape chapter_title_story_header"""
         header = soup.find('header', class_='chapter-header')
         if header:
@@ -359,6 +368,9 @@ class Chyoa:
             story_header2 = h2.get_text(strip=True)
             h1 = header.find('h1')
             story_header1 = h1.get_text(strip=True)
+            if config.translate:
+                story_header1 = translate_text(config, story_header1)
+                story_header2 = translate_text(config, story_header2)
             if debug:
                 print(f"story_header 1: {story_header1}")
                 print(f"story_header 2: {story_header2}")
@@ -456,8 +468,9 @@ class Chyoa:
         content = soup.prettify() if content_navigable_all else "<!-- no content found -->"
 
         #TODO try translate, in work
-        if getattr(config, 'translate', False):
-            print("[translate]")
+        #if getattr(config, 'translate', False):
+        if config.translate:
+            #print("[translate]")
             content = translate_text(config, content)
             #print(f"Story: {content[1:50]}")
 
@@ -492,16 +505,16 @@ class Chyoa:
         htmltext = self.create_html_head(config, htmltext, node, multiple_pages, first_page)
         htmltext = self.create_javascript(htmltext)
         if not multiple_pages:
-            htmltext = self.create_map_body(debug, htmltext, node, multiple_pages)
+            htmltext = self.create_map_body(debug, htmltext, node, multiple_pages, config)
             htmltext = self.create_html_recursive(debug, htmltext, node, multiple_pages, False)
         else:
-            htmltext = self.create_html_body(htmltext, node, multiple_pages, first_page)
+            htmltext = self.create_html_body(htmltext, node, multiple_pages, first_page, config)
         htmltext.append("</body></html>")
         return htmltext
 
     def create_html_recursive(self, debug, htmltext, node, multiple_pages, first_page):
         """get html content of all chapters"""
-        htmltext = self.create_html_body(htmltext, node, multiple_pages, first_page)
+        htmltext = self.create_html_body(htmltext, node, multiple_pages, first_page, config)
         if node.value.follow:
             htmltext.append('<hr>')
             for child in node.children:
@@ -510,17 +523,17 @@ class Chyoa:
                     first_page = False
         return htmltext
 
-    def create_html_body(self, htmltext, node, multiple_pages, first_page):
+    def create_html_body(self, htmltext, node, multiple_pages, first_page, config):
         """get html content of one chapter"""
         if first_page:
-            htmltext = self.create_meta(htmltext, node)
+            htmltext = self.create_meta(htmltext, node, config)
 
         htmltext.append('\n<aside><div class="description">')
         if multiple_pages and not first_page:
             htmltext.append(f'<div class="storytitleshort">| Story: {node.value.story_title}</div>\n')
         htmltext = self.create_description_chapter_body(htmltext, node)
         if first_page:
-            htmltext = self.create_description_story_body(htmltext, node)
+            htmltext = self.create_description_story_body(htmltext, node, config)
             htmltext = self.create_personal_tags_story_body(htmltext, node)
         htmltext.append('</div></aside>\n')
 
@@ -574,12 +587,17 @@ class Chyoa:
         htmltext.append("</div>\n")
         return htmltext
 
-    def create_meta(self, htmltext, node):
+    def create_meta(self, htmltext, node, config):
         """create meta-tags of one chapter"""
         htmltext.append(f'\n<meta name="story" content="{node.value.story_title}">\n')
         htmltext.append(f'<meta name="title" content="{node.value.chapter_title}">\n')
         htmltext.append(f'<meta name="author" content="{node.value.meta.author}">\n')
         htmltext.append(f'<meta name="language" content="{node.value.meta.language}">\n')
+        if config.translate:
+            if node.value.meta.translate_from:
+                htmltext.append(f'<meta name="translate_from" content="{node.value.meta.translate_from}">\n')
+            if node.value.meta.translate_with:
+                htmltext.append(f'<meta name="translate_with" content="{node.value.meta.translate_with}">\n')
         if node.value.meta.tag.strip():
             htmltext.append(f'<meta name="tag" content="{node.value.meta.tag}">\n')
         if node.value.meta.category.strip():
@@ -705,17 +723,17 @@ class Chyoa:
         htmltext.append('</script>\n\n')
         return htmltext
 
-    def create_map(self, debug, foldername, filename, node, multiple_pages, html_site_override):
+    def create_map(self, debug, foldername, filename, node, config):
         htmltext = []
         if debug:
             print(f"Map-filename: {filename}")
             print(f"Map-foldername: {foldername}")
         htmltext = self.create_map_head(htmltext, node)
-        if node.value.story_title and multiple_pages:
+        if node.value.story_title and config.multiple_pages:
             htmltext.append(f'<h1 class="storytitle">Story: {node.value.story_title}</h1>')
-        htmltext = self.create_map_body(debug, htmltext, node, multiple_pages)
+        htmltext = self.create_map_body(debug, htmltext, node, config.multiple_pages, config)
         htmltext.append("</body></html>")
-        save(foldername, filename, node, htmltext, html_site_override)
+        save(foldername, filename, node, htmltext, config.override_html_sites)
 
     def create_personal_tags_story_body(self, htmltext, node):
         if node.value.personal_tags:
@@ -727,7 +745,7 @@ class Chyoa:
             htmltext.append('</div>')
         return htmltext
 
-    def create_description_story_body(self, htmltext, node):
+    def create_description_story_body(self, htmltext, node, config):
         if node.value.meta.description:
             htmltext.append(f'<div>| <b>Description</b>: {node.value.meta.description}</div>')
         properties = "<div>"
@@ -737,6 +755,11 @@ class Chyoa:
             properties = properties + f'| <b>Pov</b>: {node.value.meta.pov} '
         if node.value.meta.language:
             properties = properties + f'| <b>Language</b>: {node.value.meta.language} '
+        if config.translate:
+            if node.value.meta.translate_from:
+                properties = properties + f'| <b>translate from</b>: {node.value.meta.translate_from} '
+                if node.value.meta.translate_with:
+                    properties = properties + f'with {node.value.meta.translate_with} '
         if node.value.meta.url:
             properties = properties + f'| <b>Url</b>: <a href="{node.value.meta.url}" target="_blank">{node.value.meta.url}</a> '
         properties = properties + "</div>"
@@ -760,10 +783,10 @@ class Chyoa:
 
         return htmltext
 
-    def create_map_body(self, debug, htmltext, node, multiple_pages):
+    def create_map_body(self, debug, htmltext, node, multiple_pages, config):
         htmltext.append('\n<div class="description">')
         htmltext = self.create_description_chapter_body(htmltext, node)
-        htmltext = self.create_description_story_body(htmltext, node)
+        htmltext = self.create_description_story_body(htmltext, node, config)
         htmltext = self.create_personal_tags_story_body(htmltext, node)
         htmltext.append('</div>\n')
 

@@ -19,6 +19,8 @@ class Meta:
         self.pov = ""
         self.category = ""
         self.language = ""
+        self.translate_from = ""
+        self.translate_with = ""
         self.language_alternate_name = "en"
         self.published_time = ""
         self.published_time_short = ""
@@ -60,6 +62,13 @@ class Meta:
             print(f"content published_time: {self.published_time}")
             print(f"content modified_time: {self.modified_time}")
             print(f"content description: {self.description}")
+
+
+    def set_translation_information(self, config):
+        if config.translate:
+            self.translate_from = self.language
+            self.translate_with = f" Translate with: {config.llm_system.value} - Model: {config.llm_model}"
+            self.language = config.translate_language
 
     def scrape_meta_property(self, soup, property_name):
         """scape the property name in the class meta"""

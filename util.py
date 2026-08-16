@@ -9,6 +9,7 @@ create unique filename
 base_name: filename without extension (e.g. 'output')
 extension: extension without point (e.g. 'html')
 """
+#@staticmethod
 def get_unique_filename(debug, folder, base_name, extension):
     if len(base_name) > 100:
         base_name = base_name[0:100]

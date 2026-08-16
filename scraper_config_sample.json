@@ -27,6 +27,11 @@
   "ignore_links": ["/new?type=", "Add a new chapter", "Write a chapter", "Link a chapter", "Customize choices"],
   "image_prefix": false,
   "translate": false,
+  "translate_language": "",
+  "llm_system": "ollama",
+  "llm_model": "",
+  "llm_question": "Translate the following text into {LANGUAGE} and return only the translation",
+  "llm_api": "",
   "login": {
     "login_url": "https://chyoa.com/auth/login",
     "username": "Yourusername",

@@ -1,11 +1,15 @@
 """Translate helper module."""
 
 import os
+import ollama
+from openai import OpenAI
 import shutil
 from typing import Any, Dict
 
 import requests
 from bs4 import BeautifulSoup
+
+from config import Llm_system
 
 
 def translate_text(config, content: str, target_language: str = "de") -> str:
@@ -13,28 +17,67 @@ def translate_text(config, content: str, target_language: str = "de") -> str:
     if not content or not content.strip():
         return content
 
-    payload = {
-        "q": contentcontent,
-        "source": "auto",
-        "target": target_language,
-        "format": "text",
-    }
+    llm = config.llm_system
+    question = config.llm_question.replace("{LANGUAGE}", config.translate_language)
+    question = f"{question}: {content}"
 
-    try:
-        response = requests.post(
-            "https://libretranslate.de/translate",
-            json=payload,
-            timeout=30,
+    # uncensored:
+    # dolphin-llama3, dolphin-mistral-nemo, dolphin3, llama2-uncensored
+    # https://erichartford.com/uncensored-models
+    #ollama run CognitiveComputations/dolphin-llama3.1:8b-v2.9.4
+    #
+    #cognitivecomputations.Dolphin3.0-Llama3.1-8B-GGUF ?
+    #
+    # no
+    # gemma4:12b-mlx
+    #
+    # Für hochwertige Ergebnisse eignen sich mittelgroße, mehrsprachig trainierte Modelle (wie Qwen mit 7B/8B oder größer) meist am besten.
+    if llm == Llm_system.OLLAMA:
+        response = ollama.chat(
+            model=config.llm_model,
+            messages=[
+                {"role": "user", "content": question},
+                {"role": "system", "content": "Code-Assistent."},
+            ]
         )
-        response.raise_for_status()
-        data = response.json()
-        return data.get("translatedText", text)
-    except requests.RequestException as exc:
-        print(f"translate: translation request failed: {exc}")
-        return text
-    except ValueError as exc:
-        print(f"translate: invalid JSON response: {exc}")
-        return text
+        translation_content = response['message']['content']
+        #print(f"content: {translation_content}")
+
+    if llm == Llm_system.LMSTUDIO:
+        # Verbindet sich mit dem lokalen LM-Studio-Server
+        #client = OpenAI(base_url="http://localhost:1234/v1", api_key="not-needed")
+        client = OpenAI(base_url=config.llm_api, api_key="not-needed")
+
+        response = client.chat.completions.create(
+            model=config.llm_model,  # Name des in LM Studio geladenen Modells
+            messages=[{"role": "user", "content": question}],
+        )
+        #print(response.choices[0].message.content)
+        translation_content = response.choices[0].message.content
+        print(f"content:{translation_content}")
+    return translation_content
+    #payload = {
+    #    "q": content,
+    #    "source": "auto",
+    #    "target": target_language,
+    #    "format": "text",
+    #}
+
+    #try:
+    #    response = requests.post(
+    #        "https://libretranslate.de/translate",
+    #        json=payload,
+    #        timeout=30,
+    #    )
+    #    response.raise_for_status()
+    #    data = response.json()
+    #    return data.get("translatedText", content)
+    #except requests.RequestException as exc:
+    #    print(f"translate: translation request failed: {exc}")
+    #    return content
+    #except ValueError as exc:
+    #    print(f"translate: invalid JSON response: {exc}")
+    #    return content
 
 
 def handle_html_file(file_path: str) -> None:
