@@ -153,10 +153,6 @@ img {
     font-size: 16px
 }
 
-.list-item:hover {
-  background-color: #dee2e6;
-}
-
 .list-item-previous {
     padding-left: 10px;
     padding-top: 5px;
