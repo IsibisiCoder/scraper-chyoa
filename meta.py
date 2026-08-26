@@ -3,6 +3,7 @@
 
 import json
 from datetime import datetime
+from translate import translate_text
 
 
 class Meta:
@@ -30,7 +31,7 @@ class Meta:
         self.views = ""
         self.url = ""
 
-    def scrape_meta_properties(self, soup):
+    def scrape_meta_properties(self, soup, config):
         """scrape all properties"""
         self.title = self.scrape_meta_property(soup, "og:title")
         self.published_time = self.scrape_meta_property(soup, "article:published_time").strip()
@@ -47,13 +48,15 @@ class Meta:
         else:
             self.modified_time_short = ""
 
-        self.scrape_pairs_columns(soup)
+        self.scrape_pairs_columns(soup, config)
 
         #The description from the meta tags does not include the full text; instead, it is truncated.
         #Instead, read the text from the HTML paragraph
         synopsis = soup.find('p', class_='synopsis')
         if synopsis:
             self.description = synopsis.get_text(strip=True)
+            if config.translate:
+                self.description = translate_text(config, self.description)
         else:
             self.description = ""
 
@@ -81,7 +84,7 @@ class Meta:
         return content
 
 
-    def scrape_pairs_columns(self, soup):
+    def scrape_pairs_columns(self, soup, config):
         """scape the pov and category content"""
         pair = soup.find("div", class_="pairs-columns info")
 
@@ -97,9 +100,11 @@ class Meta:
                 dd = dt.find_next_sibling("dd")
                 if dd:
                     self.category = dd.get_text(strip=True)
+                    if config.translate:
+                        self.category = translate_text(config, self.category)
 
 
-    def scrape_json(self, soap):
+    def scrape_json(self, soap, config):
         """scrape json information if exists"""
         script = soap.find("script", type="application/ld+json")
 
@@ -118,6 +123,8 @@ class Meta:
 
                 if "keywords" in data:
                     self.tag = data["keywords"].replace(",", ", ")
+                    if config.translate:
+                        self.tag = translate_text(config, self.tag)
                 else:
                     self.tag = ""
 

@@ -1,6 +1,9 @@
 # Changelog
 
 ## [Unreleased]
+Fixed:   css delete list-item.hover
+Changed: Attention: Many configuration values in scraper-config.json have been reorganized. Please check and update your configuration values.
+
 
 ## [1.3.0] - 2026-08-13
 

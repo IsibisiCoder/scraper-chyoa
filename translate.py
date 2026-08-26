@@ -24,24 +24,56 @@ def translate_text(config, content: str, target_language: str = "de") -> str:
     # uncensored:
     # dolphin-llama3, dolphin-mistral-nemo, dolphin3, llama2-uncensored
     # https://erichartford.com/uncensored-models
-    #ollama run CognitiveComputations/dolphin-llama3.1:8b-v2.9.4
     #
-    #cognitivecomputations.Dolphin3.0-Llama3.1-8B-GGUF ?
+    # dolphin3                      => einige Texte und Wörter mal nicht übersetzt, mal ja
+    # wizardlm-uncensored           => ungeeignet, konnte Texte / Überschriften nicht übersetzen
+    # wizard-vicuna-uncensored:30b  => stehengeblieben
+    # llama2-uncensored:7b          => nichts wurde übersetzt, fragen wie what next werden mit weiss ich doch nicht übersetzt
+    # hf.co/cognitivecomputations/Dolphin3.0-Llama3.1-8B-GGUF:Q4_0 => bisher okay
+    # GFalcon-UA/dolphin3-llama3.1
+
+    #ollama run CognitiveComputations/dolphin-llama3.1:8b-v2.9.4
     #
     # no
     # gemma4:12b-mlx
     #
     # Für hochwertige Ergebnisse eignen sich mittelgroße, mehrsprachig trainierte Modelle (wie Qwen mit 7B/8B oder größer) meist am besten.
+
+    system_prompt = (
+        "Du bist ein präzises Übersetzungs-Tool. Übersetze die User-Nachricht in das Deutsche.\n"
+        "Halte dich strikt an diese drei Regeln:\n"
+        "1. Antworte AUSSCHLIESSLICH mit dem direkt übersetzten Text incl. der enthaltenen Html-Tags.\n"
+        "2. Füge KEINE Einleitungen, Erklärungen, Kommentare oder Labels hinzu.\n"
+        "3. Wenn der Text unklar ist oder du ihn nicht übersetzen kannst, "
+        "antworte mit einem absolut leeren Text (leerer String)."
+    )
+
+#    messages = [
+#        {"role": "user", "content": question},
+#        {"role": "system", "content": "Code-Assistent."},
+#    ]
+
     if llm == Llm_system.OLLAMA:
         response = ollama.chat(
             model=config.llm_model,
             messages=[
-                {"role": "user", "content": question},
-                {"role": "system", "content": "Code-Assistent."},
-            ]
+                {'role': 'system', 'content': system_prompt},
+                {'role': 'user', 'content': content}
+            ],
+            options={
+                'temperature': 0.0  # Verhindert kreative Abweichungen
+            }
         )
-        translation_content = response['message']['content']
-        #print(f"content: {translation_content}")
+        translation_content = response['message']['content'].strip()
+        print(f"orig:      {content[0:30]}")
+        print(f"translate: {translation_content[0:30]}\n")
+        # --- Python-Filter als Sicherheitsnetz ---
+        # Wenn das Modell trotz Verbot versucht, sich zu entschuldigen,
+        # leeren wir den Text manuell.
+        verbotene_woerter = ["sorry", "entschuldigung", "ich kann", "bitte geben", "unverständlich"]
+        if any(wort in translation_content.lower() for wort in verbotene_woerter):
+            print(f"ai can not translate the text: {translation_content[0:300]}")
+            return ""
 
     if llm == Llm_system.LMSTUDIO:
         # Verbindet sich mit dem lokalen LM-Studio-Server

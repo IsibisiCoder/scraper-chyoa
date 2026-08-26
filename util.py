@@ -1,5 +1,6 @@
 # (c) 2025-2026 by IsibisiCoder, MIT-License, https://github.com/IsibisiCoder
 import os
+from urllib.parse import parse_qs, urlparse
 import shutil
 import re
 import requests
@@ -25,6 +26,31 @@ def get_unique_filename(debug, folder, base_name, extension):
             print(f"filepath: {filepath}")
         counter += 1
     return filename
+
+def get_filename_from_url_and_save(url, folder):
+    parsed = urlparse(url)
+
+    filename = os.path.basename(parsed.path)
+
+    # filename are in query-parameter (e.g. ?file=image.jpg)
+    if not filename or "." not in filename:
+        query_params = parse_qs(parsed.query)
+        if "file" in query_params:
+            filename = query_params["file"][0]
+
+    # save image to disk
+    filepath = os.path.join(folder, str(filename))
+    prefix, suffix = os.path.splitext(str(filename))
+    suffix = re.sub(r'[^a-zA-Z0-9áéíóàèìòîâûêäöüÄÖÜß\s]', "-", suffix)
+    counter = 1
+    while os.path.exists(filepath):
+        filename = f"{prefix}_{counter:03d}.{suffix}"
+        filepath = os.path.join(folder, filename)
+        counter += 1
+
+    return str(filename)
+
+
 
 # save image, return local filename
 def download_image(debug, config, images_replacement_url, filename_base_name, image_folderpath, image_folder_name_only, img_url):
@@ -63,7 +89,8 @@ def download_image(debug, config, images_replacement_url, filename_base_name, im
         print(f"suffix: {suffix}")
         print(f"imageFolderPath: {image_folderpath}")
 
-    filename = get_unique_filename(debug, image_folderpath, filename_base_name, suffix)
+    #filename = get_unique_filename(debug, image_folderpath, filename_base_name, suffix)
+    filename = get_filename_from_url_and_save(img_url, image_folderpath)
     filepath = os.path.join(image_folderpath, filename)
     filepath_relativ = os.path.join(image_folder_name_only, filename)
     if debug:

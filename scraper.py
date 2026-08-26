@@ -12,7 +12,7 @@ from chyoa import Chyoa
 #call: python scraper.py scraper_config.json <url>
 def main():
     """main"""
-    version = "scraper-chyoa V1.3.0"
+    version = "scraper-chyoa V1.3.1alpha"
     print(f"{version}, MIT-License")
 
     debug = os.environ.get("DEBUG", False)
@@ -43,7 +43,8 @@ def main():
     login_data = config.get("login")
     question_class = config.get("question_class")
     content_class = config.get("chapter_class")
-    chapter_htmltag = config.get("htmltag")
+    chapter_htmltag = config.get("htmltag", "div")
+    folderpath_stories = config.get("folder", "story")
     recursion_limit = config.get("recursionlimit")
     multiple_pages = config.get("multiple_pages")
     whole_story_one_page = config.get("whole_story_one_page")
@@ -55,24 +56,35 @@ def main():
     directory_exists_skip_download = config.get("directory_exists_skip_download", False)
     waiting_time_between_downloads_of = config.get("waiting_time_between_downloads_of", 2)
     waiting_time_between_downloads_until = config.get("waiting_time_between_downloads_until", 5)
-    http_header_user_agent = config.get("http_header_user_agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0")
-    http_header_referer = config.get("http_header_referer", "https://www.google.com")
-    http_img_alt_text = config.get("http_img_alt_text", "Image")
-    http_img_alt_text_cover = config.get("http_img_alt_text_cover", "Cover Image")
-    images_ignore_domain_url = config.get("images_ignore_domain_url", [])
-    foldername_personal_settings = config.get("foldername_personal_settings", "personal_settings")
-    suffix_personal_settings = config.get("suffix_personal_settings", "mytags")
-    create_epub = config.get("create_epub", False)
     ignore_links = config.get("ignore_links", [])
-    image_prefix = config.get("image_prefix", False)
+
+    http_header = config.get("http_header")
+    http_header_user_agent = http_header.get("http_header_user_agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0")
+    http_header_referer = http_header.get("http_header_referer", "https://www.google.com")
+
+    image = config.get("image")
+    http_img_alt_text = image.get("http_img_alt_text", "Image")
+    http_img_alt_text_cover = image.get("http_img_alt_text_cover", "Cover Image")
+    foldername_image = image.get("foldername_image", "image")
+    images_ignore_domain_url = image.get("images_ignore_domain_url", [])
+
+    personal_settings = config.get("personal_settings")
+    foldername_personal_settings = personal_settings.get("foldername_personal_settings", "personal_settings")
+    suffix_personal_settings = personal_settings.get("suffix_personal_settings", "mytags")
+
+    epub = config.get("epub")
+    create_epub = epub.get("create_epub", False)
+    image_prefix = epub.get("image_prefix", False)
     include_url_in_epub = config.get("include_url_in_epub", True)
     include_meta_in_epub = config.get("include_meta_in_epub", True)
-    translate = config.get("translate", False)
-    translate_language = config.get("translate_language")
-    llm_system = config.get("llm_system")
-    llm_model = config.get("llm_model")
-    llm_question = config.get("llm_question")
-    llm_api = config.get("llm_api")
+
+    translation = config.get("translation")
+    translate = translation.get("translate", False)
+    translate_language = translation.get("translate_language")
+    llm_system = translation.get("llm_system")
+    llm_model = translation.get("llm_model")
+    llm_question = translation.get("llm_question")
+    llm_api = translation.get("llm_api")
 
     if not multiple_pages and not whole_story_one_page:
         print("Configuration error: Please set either `multiplepages` or `wholeStoryOnePage` to True")
@@ -81,15 +93,6 @@ def main():
     if not question_class:
         print("configfile: question_class not found!")
         sys.exit(1)
-    if not chapter_htmltag:
-        chapter_htmltag = "div"
-
-    folderpath_stories = config.get("folder")
-    if not folderpath_stories:
-        folderpath_stories = "story"
-    foldername_image = config.get("foldername_image")
-    if not foldername_image:
-        foldername_image = "image"
 
     configuration = Config(
         version,

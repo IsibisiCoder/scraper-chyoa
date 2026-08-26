@@ -39,8 +39,8 @@ class Chyoa:
                 story_title = story_header2
 
                 meta = Meta(debug)
-                meta.scrape_meta_properties(soup)
-                meta.scrape_json(soup)
+                meta.scrape_meta_properties(soup, config)
+                meta.scrape_json(soup, config)
                 meta.set_translation_information(config)
                 meta.url = url
 
@@ -89,9 +89,9 @@ class Chyoa:
 
                 print(f"[story]         {story_title}")
                 print(f"[folder]        {root_story.folderpath_story}")
-                if (personal_tags_of_story):
+                if personal_tags_of_story:
                     print("[personal]      personal tags found")
-                if (images_replacement_url):
+                if images_replacement_url:
                     print("[personal]      personal settings - replacement url for images found")
                 print(f"[downloading]   {url}")
                 if config.translate:
@@ -100,7 +100,7 @@ class Chyoa:
                 chapter_title, author,  _, _ = self.scrape_chapter_title_story_header(debug, soup, config)
                 root_story.meta.author = author
                 filename = self.create_filename(debug, story_header2, story_title, config.folderpath_stories)
-                question = self.scrape_question(debug, soup)
+                question = self.scrape_question(debug, soup, config)
                 story_content = self.scrape_content(debug, soup, images_replacement_url, root_story.image_folderpath, config)
                 image_filename, soup = self.scrape_story_cover(debug, config, soup, images_replacement_url, root_story.image_folderpath, config.foldername_image)
 
@@ -204,6 +204,8 @@ class Chyoa:
                     check_link_text = any(ignore in a_text for ignore in config.ignore_links) or any(ignore in a_href for ignore in config.ignore_links)
 
                 if not check_link_text:
+                    if config.translate:
+                        a_text = translate_text(config, a_text)
                     if debug:
                         print(f"link {a_href}")
                         print(f"text {a_text}")
@@ -219,14 +221,14 @@ class Chyoa:
                         redirect = True
 
                     meta = Meta(debug)
-                    meta.scrape_meta_properties(soup_current_site)
-                    meta.scrape_json(soup_current_site)
+                    meta.scrape_meta_properties(soup_current_site, config)
+                    meta.scrape_json(soup_current_site, config)
 
                     chapter_title, author, story_header1, story_header2 = self.scrape_chapter_title_story_header(debug, soup_current_site, config)
                     meta.author = author
                     filename = f"{story_id:04d}"+"-"+chapter_title.replace(" ", "_").strip()+"-"+self.create_filename(debug, story_header1, root.value.story_title, config.folderpath_stories).strip()
 
-                    question = self.scrape_question(debug, soup_current_site)
+                    question = self.scrape_question(debug, soup_current_site, config)
 
                     # If the link is to another chapter, the correct chapter must only be linked once all chapters have been scanned
                     if redirect:
@@ -406,7 +408,7 @@ class Chyoa:
             print(f"filename: {filename}")
         return filename
 
-    def scrape_question(self, debug, soup):
+    def scrape_question(self, debug, soup, config):
         """read the question"""
         header = soup.find('header', class_='question-header')
         question = ""
@@ -416,6 +418,8 @@ class Chyoa:
                 question = h2.get_text(strip=True)
         if debug:
             print(f"question: {question}")
+        if config.translate:
+            question = translate_text(config, question)
         return question
 
     def scrape_images(self, debug, soup, config, images_replacement_url, image_folderpath):
@@ -530,7 +534,7 @@ class Chyoa:
 
         htmltext.append('\n<aside><div class="description">')
         if multiple_pages and not first_page:
-            htmltext.append(f'<div class="storytitleshort">| Story: {node.value.story_title}</div>\n')
+            htmltext.append(f'<div class="storytitleshort"><b>| Story: {node.value.story_title}</b></div>\n')
         htmltext = self.create_description_chapter_body(htmltext, node)
         if first_page:
             htmltext = self.create_description_story_body(htmltext, node, config)
@@ -759,7 +763,7 @@ class Chyoa:
             if node.value.meta.translate_from:
                 properties = properties + f'| <b>translate from</b>: {node.value.meta.translate_from} '
                 if node.value.meta.translate_with:
-                    properties = properties + f'with {node.value.meta.translate_with} '
+                    properties = properties + f'; {node.value.meta.translate_with} '
         if node.value.meta.url:
             properties = properties + f'| <b>Url</b>: <a href="{node.value.meta.url}" target="_blank">{node.value.meta.url}</a> '
         properties = properties + "</div>"
