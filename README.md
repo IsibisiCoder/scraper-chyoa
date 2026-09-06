@@ -47,6 +47,12 @@ This example can also be found in the sample file `personal_settings_story_(4711
 - Simple formatting, such as <b></b> <i></i> or <u></u>, can also be included in the values. <br> can be used for line breaks. Please note that this must be valid HTML. As the values are written into the HTML as meta tags, it is generally not advisable to include arbitrary HTML here.
 - The tags <b></b>, <i></i>, <u></u> and <br> are removed by spaces before being written into the HTML’s meta structure; however, other HTML tags are not.  
 
+The corresponding 'personal_settings' file can also be created automatically.
+If the 'create_always_personal_settings_file' configuration is set to True, the file is created.  
+The file specified in the 'default_file' configuration serves as the template.
+Only the filename is specified here, without '_mytags.json'.  
+For example, 'default' for 'default_mytags.json' (which is included).
+
 ## Personal Images to Replace
 
 It’s always frustrating when images can no longer be loaded from the Internet. It’s even more frustrating when those images are still available from a previous download, but you want to reload the story - for example, because a new chapter has been added.  
@@ -140,9 +146,6 @@ A sample JSON file is included and looks like this:
   "chapter_class": "chapter-content",
   "htmltag": "div",
   "folder": "story",
-  "foldername_image": "image",
-  "foldername_personal_tags": "personal_tags",
-  "suffix_personal_tags": "mytags",
   "storyname_with_id": true,
   "multiple_pages": true,
   "whole_story_one_page": false,
@@ -154,18 +157,45 @@ A sample JSON file is included and looks like this:
   "directory_exists_skip_download": true,
   "waiting_time_between_downloads_of": 2,
   "waiting_time_between_downloads_until": 5,
-  "http_header_user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0",
-  "http_header_referer": "https://www.google.com",
-  "http_img_alt_text": "Image",
-  "http_img_alt_text_cover": "Cover Image",
-  "create_epub": true,
-  "include_url_in_epub": true,
-  "include_meta_in_epub": true,
   "ignore_links": ["/new?type=", "Add a new chapter", "Write a chapter", "Link a chapter", "Customize choices"],
-  "image_prefix": false,
-  "images_ignore_domain_url": [
-    "https://www.DOMAIN.org"
-  ],
+  "http_header": {
+    "http_header_user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0",
+    "http_header_referer": "https://google.com"
+  },
+  "image": {
+    "http_img_alt_text": "Image",
+    "http_img_alt_text_cover": "Cover Image",
+    "foldername_image": "image",
+    "connect_always_images": false,
+    "foldername_images_shadow_copy": "personal_settings/images",
+    "create_invalid_image_tags": false,
+    "connect_invalid_image_empty_image": false,
+    "empty_image": "empty_image.png",
+    "images_ignore_domain_url": [
+      "https://www.DOMAIN.org",
+      "https://www.DOMAIN2.org"
+    ]
+  },
+  "epub": {
+    "create_epub": true,
+    "image_prefix": false,
+    "include_url_in_epub": true,
+    "include_meta_in_epub": true
+  },
+  "personal_settings": {
+    "foldername_personal_settings": "personal_settings",
+    "suffix_personal_settings": "mytags",
+    "default_file": "default",
+    "create_always_personal_settings_file": false
+  },
+  "translation": {
+    "translate": false,
+    "translate_language": "",
+    "llm_system": "ollama",
+    "llm_model": "",
+    "llm_question": "Translate the following text into {LANGUAGE} and return only the translation",
+    "llm_api": ""
+  },
   "login": {
     "login_url": "https://chyoa.com/auth/login",
     "username": "Yourusername",
@@ -176,6 +206,7 @@ A sample JSON file is included and looks like this:
     "https://chyoa.com/story/sample2.52900"
   ]
 }
+
 ```
 
 The following values must be adjusted:  
@@ -184,6 +215,8 @@ Value|Example|Meaning
 folder|c:/story|This is the main folder where all stories are stored. For each story, another folder with the name of the story is created in this folder.
 foldername_image|image|All images are stored in this subfolder. There is a subfolder `image` for each story. It is possible to change the name, but this has not been tested.
 foldername_personal_tags|personal_tags|Name of the folder containing the JSON files for your personal descriptions
+create_always_personal_settings_file|false oder true|Should the file for `personal_settings` be created automatically? If yes, an existing template file must be specified in 'default_file'
+default_file|default|Template file for `personal_settings`. The suffix `_mytags.json` must not be included.
 multiple_pages|false or true|one HTML page will be created per chapter
 whole_story_one_page|false or true|All chapters be saved in a shared HTML page
 override_html_sites|false or true|If, when saving the HTML page, it is determined that this page already exists, this option determines whether the existing page is overwritten. This can be the case with recursively linked stories (but should not be). However, this is always the case when saving the map file and the start file of the story.
@@ -321,6 +354,12 @@ Das Beispiel findet man auch in der Beispiel-Datei `personal_settings_story_(471
 - In den Values kann auch eine einfache Formatierung, wie <b></b> <i></i> oder <u></u> geschrieben werden. Für Zeilenumbrüche ist <br> möglich. Hierbei ist zu beachten, dass es sich um ein gültiges Html handeln muss. Da die Values als Meta-Tags in das Html geschrieben werden, ist es eher davon abzuraten, beliebiges Html hier zu schrieben.
 - Die Formatierungen <b></b>, <i></i>, <u></u> oder <br> werden vor dem Schreiben in die Meta-Struktur des Html durch Leerzeichen entfernt, andere Html-Tags jedoch nicht.
 
+Die entsprechende 'personal_settings-Datei' kann auch automatisch angelegt werden.
+Wird die Konfiguration 'create_always_personal_settings_file' auf True gesetzt, wird die Datei erzeugt.  
+Als Vorlage dient hierbei die in der Konfiguration 'default_file' hinterlegte Datei.
+Hierbei wird nur der Dateiname ohne '_mytags.json' angegegen.  
+Beispielsweise 'default' für 'default_mytags.json' (die mitgeliefert wird).
+
 ## persönliche auszutauschende Bilder
 
 Sind Bilder nicht mehr aus dem Internet geladen werden können, ist das immer ärgerlich. Wenn diese Bilder aus einem früheren Download noch vorhanden sind, man aber die Story neu laden möchte, weil z.B. ein neues Kapitel dazugekommen ist, ist das noch ärgerlicher.  
@@ -383,9 +422,6 @@ Eine Beispiel json-Datei ist enthalten und sieht wie folgt aus:
   "chapter_class": "chapter-content",
   "htmltag": "div",
   "folder": "story",
-  "foldername_image": "image",
-  "foldername_personal_tags": "personal_tags",
-  "suffix_personal_tags": "mytags",
   "storyname_with_id": true,
   "multiple_pages": true,
   "whole_story_one_page": false,
@@ -397,18 +433,45 @@ Eine Beispiel json-Datei ist enthalten und sieht wie folgt aus:
   "directory_exists_skip_download": true,
   "waiting_time_between_downloads_of": 2,
   "waiting_time_between_downloads_until": 5,
-  "http_header_user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0",
-  "http_header_referer": "https://www.google.com",
-  "http_img_alt_text": "Image",
-  "http_img_alt_text_cover": "Cover Image",
-  "create_epub": true,
-  "include_url_in_epub": true,
-  "include_meta_in_epub": true,
   "ignore_links": ["/new?type=", "Add a new chapter", "Write a chapter", "Link a chapter", "Customize choices"],
-  "image_prefix": false,
-  "images_ignore_domain_url": [
-    "https://www.DOMAIN.org"
-  ],
+  "http_header": {
+    "http_header_user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0",
+    "http_header_referer": "https://google.com"
+  },
+  "image": {
+    "http_img_alt_text": "Image",
+    "http_img_alt_text_cover": "Cover Image",
+    "foldername_image": "image",
+    "connect_always_images": false,
+    "foldername_images_shadow_copy": "personal_settings/images",
+    "create_invalid_image_tags": false,
+    "connect_invalid_image_empty_image": false,
+    "empty_image": "empty_image.png",
+    "images_ignore_domain_url": [
+      "https://www.DOMAIN.org",
+      "https://www.DOMAIN2.org"
+    ]
+  },
+  "epub": {
+    "create_epub": true,
+    "image_prefix": false,
+    "include_url_in_epub": true,
+    "include_meta_in_epub": true
+  },
+  "personal_settings": {
+    "foldername_personal_settings": "personal_settings",
+    "suffix_personal_settings": "mytags",
+    "default_file": "default",
+    "create_always_personal_settings_file": false
+  },
+  "translation": {
+    "translate": false,
+    "translate_language": "",
+    "llm_system": "ollama",
+    "llm_model": "",
+    "llm_question": "Translate the following text into {LANGUAGE} and return only the translation",
+    "llm_api": ""
+  },
   "login": {
     "login_url": "https://chyoa.com/auth/login",
     "username": "Yourusername",
@@ -427,6 +490,8 @@ Wert|Beispiel|Bedeutung
 folder|c:/story|Dieses ist der Hauptordner, in dem alle Stories gespeichert werden. Pro Story wird in diesem Ordner ein weiterer Ordner mit dem Namen der Story angelegt
 foldername_image|image|Alle Bilder werden in diesem Unterordner gespeichert. Pro Story gibt es einen Unterordner `image`. Eine Änderung des Namens ist möglich, wurde aber nicht getestet.
 foldername_personal_tags|personal_tags|Name des Ordners, in dem die JSON-Dateien für die eigenen persönlichen Beschreibungen
+create_always_personal_settings_file|false oder true|Soll die Datei für personal_settings automatisch angelegt werden. Wenn Ja, muss in 'default_file' eine vorhandene Vorlagen-Datei angegeben werden
+default_file|default|Vorlagendatei für die personal_settings. Der suffix _mytags.json darf nicht angegeben werden
 multiple_pages|false or true|one HTML page will be created per chapter
 whole_story_one_page|false or true|alle Kapitel werden in einer gemeinsame html-Seite gespeichert
 override_html_sites|false oder true|falls beim Speichern der html-Seite festgestellt wird, dass es diese Seite schon gibt, entscheidet diese Option darüber, ob die bestehende Seite überschrieben wird. Dieses kann bei rekursiv verlinkten Geschichten der Fall sein (sollte aber nicht). Bei der Speicherung der Map-Datei und der Startdatei der Geschichte ist das aber immer das Fall.

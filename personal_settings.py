@@ -2,6 +2,7 @@
 # (c) 2025-2026 by IsibisiCoder, MIT-License, https://github.com/IsibisiCoder
 
 import os
+import shutil
 import json
 
 class PersonalSettings:
@@ -19,7 +20,16 @@ class PersonalSettings:
         if not personal_settings_file:
             return None
         if not os.path.exists(personal_settings_file):
-            return None, None
+            if not self.config.create_always_personal_settings_file:
+                return None, None
+            if not self.config.personal_settings_default_file:
+                return None, None
+            default_filepath = f"{self.config.personal_settings_default_file}_{self.config.suffix_personal_settings}.json"
+            if os.path.isfile(default_filepath):
+                shutil.copy(default_filepath, personal_settings_file)
+            else:
+                print(f"              default personal settings file not found: {default_filepath}")
+                return None, None
 
         try:
             with open(personal_settings_file, 'r', encoding='utf-8-sig') as f:

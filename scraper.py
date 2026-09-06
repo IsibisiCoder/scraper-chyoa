@@ -71,6 +71,8 @@ def main():
     personal_settings = config.get("personal_settings")
     foldername_personal_settings = personal_settings.get("foldername_personal_settings", "personal_settings")
     suffix_personal_settings = personal_settings.get("suffix_personal_settings", "mytags")
+    create_always_personal_settings_file = personal_settings.get("create_always_personal_settings_file", False)
+    personal_settings_default_file = personal_settings.get("personal_settings_default_file", "default")
 
     epub = config.get("epub")
     create_epub = epub.get("create_epub", False)
@@ -120,6 +122,8 @@ def main():
         images_ignore_domain_url,
         foldername_personal_settings,
         suffix_personal_settings,
+        create_always_personal_settings_file,
+        personal_settings_default_file,
         create_epub,
         ignore_links,
         image_prefix,

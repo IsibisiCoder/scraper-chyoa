@@ -3,10 +3,10 @@
   "chapter_class": "chapter-content",
   "htmltag": "div",
   "folder": "story",
+  "storyname_with_id": true,
   "multiple_pages": true,
   "whole_story_one_page": false,
   "override_html_sites": true,
-  "storyname_with_id": false,
   "recursionlimit": 1500,
   "show_error_loading_image": true,
   "show_skip_loading_image": true,
@@ -36,7 +36,9 @@
   },
   "personal_settings": {
     "foldername_personal_settings": "personal_settings",
-    "suffix_personal_settings": "mytags"
+    "suffix_personal_settings": "mytags",
+    "default_file": "default",
+    "create_always_personal_settings_file": false
   },
   "translation": {
     "translate": false,
@@ -55,4 +57,4 @@
     "https://chyoa.com/story/sample1.12345",
     "https://chyoa.com/story/sample2.52900"
   ]
-},
+}

@@ -45,6 +45,8 @@ class Config:
             images_ignore_domain_url,
             foldername_personal_settings,
             suffix_personal_settings,
+            create_always_personal_settings_file,
+            personal_settings_default_file,
             create_epub=False,
             ignore_links=None,
             image_prefix=False,
@@ -84,6 +86,8 @@ class Config:
         # personal tags
         self.foldername_personal_settings = foldername_personal_settings
         self.suffix_personal_settings = suffix_personal_settings
+        self.create_always_personal_settings_file = create_always_personal_settings_file
+        self.personal_settings_default_file = personal_settings_default_file
 
         self.waiting_time_between_downloads_of = waiting_time_between_downloads_of
         self.waiting_time_between_downloads_until = waiting_time_between_downloads_until
