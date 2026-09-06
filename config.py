@@ -32,6 +32,10 @@ class Config:
             override_html_sites,
             folderpath_stories,
             foldername_image,
+            foldername_images_shadow_copy,
+            connect_invalid_image_empty_image,
+            empty_image,
+            create_invalid_image_tags,
             show_error_loading_image,
             show_skip_loading_image,
             show_chapter_name_loading_story,
@@ -72,9 +76,15 @@ class Config:
         # Foldername and path
         self.folderpath_stories = folderpath_stories
         self.foldername_image = foldername_image
+        self.foldername_images_shadow_copy = foldername_images_shadow_copy
+        self.foldername_story_with_id = ""
         self.show_error_loading_image = show_error_loading_image
         self.show_skip_loading_image = show_skip_loading_image
         self.show_chapter_name_loading_story = show_chapter_name_loading_story
+        # Images
+        self.create_invalid_image_tags = create_invalid_image_tags
+        self.connect_invalid_image_empty_image = connect_invalid_image_empty_image
+        self.empty_image = empty_image
 
         self.create_epub = create_epub
         self.ignore_links = ignore_links if ignore_links is not None else []
@@ -110,3 +120,6 @@ class Config:
             self.llm_system = Llm_system.from_string(llm_system)
         except ValueError as e:
             self.llm_system = Llm_system.OLLAMA
+
+def foldername_story_with_id(self, foldername_story_with_id):
+    self.foldername_story_with_id = foldername_story_with_id

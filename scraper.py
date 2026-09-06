@@ -66,6 +66,11 @@ def main():
     http_img_alt_text = image.get("http_img_alt_text", "Image")
     http_img_alt_text_cover = image.get("http_img_alt_text_cover", "Cover Image")
     foldername_image = image.get("foldername_image", "image")
+    foldername_images_shadow_copy = image.get("foldername_images_shadow_copy", "personal_settings/images")
+    connect_invalid_image_empty_image = image.get("connect_invalid_image_empty_image", False)
+    empty_image = image.get("empty_image", "empty_image.png")
+    create_invalid_image_tags = image.get("create_invalid_image_tags", False)
+
     images_ignore_domain_url = image.get("images_ignore_domain_url", [])
 
     personal_settings = config.get("personal_settings")
@@ -109,6 +114,10 @@ def main():
         override_html_sites,
         folderpath_stories,
         foldername_image,
+        foldername_images_shadow_copy,
+        connect_invalid_image_empty_image,
+        empty_image,
+        create_invalid_image_tags,
         show_error_loading_image,
         show_skip_loading_image,
         show_chapter_name_loading_story,

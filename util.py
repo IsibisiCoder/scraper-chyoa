@@ -70,26 +70,15 @@ def download_image(debug, config, images_replacement_url, filename_base_name, im
             print(f"                Ignore image url is in ignore list: {img_url}")
         return ""
     replacement_img_url, is_replacement = get_image_url_if_replacement_image_exists(images_replacement_url, img_url)
-    original_img_url = img_url
-    img_url = replacement_img_url
+    img_url_replace = replacement_img_url
     if is_replacement and config.show_skip_loading_image:
-        print(f"                Replacement image url is in replacement list, new url: {original_img_url}")
+        print(f"                Replacement image url is in replacement list, new url: {img_url}")
 
-    if img_url == "":
+    if img_url_replace == "" and not config.connect_invalid_image_empty_image:
         return ""
 
     os.makedirs(image_folderpath, exist_ok=True)
-    suffix = os.path.splitext(img_url)[1][1:]
-    if not suffix:
-        return ""
 
-    suffix = re.sub(r'[^a-zA-Z0-9áéíóàèìòîâûêäöüÄÖÜß\s]', "-", suffix)
-
-    if debug:
-        print(f"suffix: {suffix}")
-        print(f"imageFolderPath: {image_folderpath}")
-
-    #filename = get_unique_filename(debug, image_folderpath, filename_base_name, suffix)
     filename = get_filename_from_url_and_save(img_url, image_folderpath)
     filepath = os.path.join(image_folderpath, filename)
     filepath_relativ = os.path.join(image_folder_name_only, filename)
@@ -117,33 +106,59 @@ def download_image(debug, config, images_replacement_url, filename_base_name, im
             with open(filepath, "wb") as f:
                 for chunk in img_data.iter_content(chunk_size=8192):
                     f.write(chunk)
+
+            foldername_images_shadow_copy = f"{config.foldername_images_shadow_copy}/{config.foldername_story_with_id}"
+            os.makedirs(foldername_images_shadow_copy, exist_ok=True)
+            filepath_images_shadow_copy = os.path.join(foldername_images_shadow_copy, filename)
+            with open(filepath_images_shadow_copy, "wb") as f:
+                for chunk in img_data.iter_content(chunk_size=8192):
+                    f.write(chunk)
+
             if debug:
                 print(f"image saved: {filepath}")
         except requests.exceptions.HTTPError as err_http:
             if config.show_error_loading_image:
                 print(f"                HTTP-Error image: {img_url}: {err_http}")
-            filepath_relativ = ""
+            if config.connect_invalid_image_empty_image:
+                shutil.copy(src=config.empty_image, dst=filepath)
+            else:
+                filepath_relativ = ""
         except requests.exceptions.ConnectionError:
             if config.show_error_loading_image:
                 print(f"                ConnectionError image: Please check your connection or the url. {img_url}")
-            filepath_relativ = ""
+            if config.connect_invalid_image_empty_image:
+                shutil.copy(src=config.empty_image, dst=filepath)
+            else:
+                filepath_relativ = ""
         except requests.exceptions.Timeout:
             if config.show_error_loading_image:
                 print(f"                Timeout image: The website has an timeout: {img_url}")
-            filepath_relativ = ""
+            if config.connect_invalid_image_empty_image:
+                shutil.copy(src=config.empty_image, dst=filepath)
+            else:
+                filepath_relativ = ""
         except Exception as err:
             if config.show_error_loading_image:
                 print(f"                An unexpected error occurred while loading image: {img_url}: {err}")
-            filepath_relativ = ""
+            if config.connect_invalid_image_empty_image:
+                shutil.copy(src=config.empty_image, dst=filepath)
+            else:
+                filepath_relativ = ""
     else:
-        filepath_new_image = os.path.join(config.foldername_personal_settings, img_url)
+        print("replacement")
+        if img_url_replace == "":
+            print(f"empty image: {filepath_relativ}, {config.empty_image}={filepath}")
+            shutil.copy(src=config.empty_image, dst=filepath)
+            return filepath_relativ
+
+        filepath_new_image = os.path.join(config.foldername_personal_settings, img_url_replace)
         if os.path.isfile(filepath_new_image):
             shutil.copy(filepath_new_image, filepath)
             if debug:
-                print(f"              Image copied from local file: {img_url} to {filepath_relativ}")
+                print(f"              Image copied from local file: {img_url_replace} to {filepath_relativ}")
         else:
             if config.show_error_loading_image:
-                print(f"                Error copying image from local file: {filepath_new_image} to {filepath_relativ}. File does not exist; (Orig-file: {img_url}).")
+                print(f"                Error copying image from local file: {filepath_new_image} to {filepath_relativ}. File does not exist; (Orig-file: {img_url_replace}).")
             filepath_relativ = ""
 
     return filepath_relativ

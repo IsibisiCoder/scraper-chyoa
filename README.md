@@ -2,6 +2,8 @@
 Python script for saving chyoa stories in an interactive HTML webpage or for saving chapters in individual HTML webpages  
 This Python script allows you to download interactive stories from the Story website [chyoa](https://chyoa.com/).  
 
+TODO:
+foldername_images_shadow_copy
 
 ## features
 
@@ -78,7 +80,14 @@ Configuration is also done in the `personal_settings` files mentioned above, now
 }
  ```  
 
-If you only want to prevent the download and use a new local image instead, you simply need to set "replacement_url" to an empty string.
+If you only want to prevent the download and not replace it with a new local image, 
+you simply need to set 'replacement_url' to an empty string.  
+However, it is also possible to load a small, empty image in its place.  
+This has the advantage that you can replace the small, empty image with another image at any time,
+e.g., if the original image is still available or becomes available again later.  
+
+This is possible if you set "connect_invalid_image_empty_image" to true in the configuration.
+In that case, the default image (1x1 pixel) (configuration "empty_image") will be displayed in that location.  
 
 ## images_ignore_domain_url
 
@@ -214,6 +223,7 @@ Value|Example|Meaning
 --|--|--
 folder|c:/story|This is the main folder where all stories are stored. For each story, another folder with the name of the story is created in this folder.
 foldername_image|image|All images are stored in this subfolder. There is a subfolder `image` for each story. It is possible to change the name, but this has not been tested.
+connect_invalid_image_empty_image|false oder true|If an image cannot be loaded or if it was specified as "" in the replacement section, an empty image (specified under empty_image) is used instead when True is set
 foldername_personal_tags|personal_tags|Name of the folder containing the JSON files for your personal descriptions
 create_always_personal_settings_file|false oder true|Should the file for `personal_settings` be created automatically? If yes, an existing template file must be specified in 'default_file'
 default_file|default|Template file for `personal_settings`. The suffix `_mytags.json` must not be included.
@@ -383,9 +393,16 @@ Die Konfiguration erfolgt auch in den schon oben erwähnten personal_tags-Dateie
     }
   ]
 }
- ```  
+ ```
 
- Wenn der Download nur verhindert werden und kann neues lokales Bild eingesetzt werden soll, so muss man in 'replacement_url' nur eine leere Zeichenkette definieren.  
+ Wenn der Download nur verhindert werden und nicht durch ein neues lokales Bild eingesetzt werden soll, 
+ so muss man in 'replacement_url' nur eine leere Zeichenkette definieren.  
+Es ist aber auch möglich, an der Stelle ein leeres kleines Images zu laden.  
+Das hat den Vorteil, dass man das kleine, leere Bild jederzeit durch ein anderes Bild ersetzen kann,
+z.B. wenn das Originalbild noch vorhanden ist oder später wieder zur Verfügung steht.  
+
+Dieses ist möglich, wenn man in der Konfiguration 'connect_invalid_image_empty_image' true angibt.
+Dann wird das default-Bild (1x1 Pixel) (Konfiguration 'empty_image') an der Stelle dargestellt.  
 
 ## images_ignore_domain_url
 
@@ -489,6 +506,7 @@ Wert|Beispiel|Bedeutung
 --|--|--
 folder|c:/story|Dieses ist der Hauptordner, in dem alle Stories gespeichert werden. Pro Story wird in diesem Ordner ein weiterer Ordner mit dem Namen der Story angelegt
 foldername_image|image|Alle Bilder werden in diesem Unterordner gespeichert. Pro Story gibt es einen Unterordner `image`. Eine Änderung des Namens ist möglich, wurde aber nicht getestet.
+connect_invalid_image_empty_image|false oder true|Wenn ein Bild nicht geladen werden kann oder es mit "" im replacement-Abschnitt angegeben wurde, so wird mit True stattdessen ein leeres Images verwendet (angegeben unter empty_image)
 foldername_personal_tags|personal_tags|Name des Ordners, in dem die JSON-Dateien für die eigenen persönlichen Beschreibungen
 create_always_personal_settings_file|false oder true|Soll die Datei für personal_settings automatisch angelegt werden. Wenn Ja, muss in 'default_file' eine vorhandene Vorlagen-Datei angegeben werden
 default_file|default|Vorlagendatei für die personal_settings. Der suffix _mytags.json darf nicht angegeben werden

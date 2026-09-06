@@ -78,3 +78,8 @@ class Story:
         image_folderpath = os.path.join(self.folderpath_story, self.config.foldername_image)
         os.makedirs(image_folderpath, exist_ok=True)
         self.image_folderpath = image_folderpath
+
+    def create_folder_images_shadow_copy(self):
+        foldername_images_shadow_copy = self.config.foldername_images_shadow_copy
+        os.makedirs(foldername_images_shadow_copy, exist_ok=True)
+        self.foldername_images_shadow_copy = foldername_images_shadow_copy

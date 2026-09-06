@@ -23,6 +23,11 @@
     "http_img_alt_text": "Image",
     "http_img_alt_text_cover": "Cover Image",
     "foldername_image": "image",
+    "connect_always_images": false,
+    "foldername_images_shadow_copy": "personal_settings/images",
+    "create_invalid_image_tags": false,
+    "connect_invalid_image_empty_image": false,
+    "empty_image": "empty_image.png",
     "images_ignore_domain_url": [
       "https://www.DOMAIN.org",
       "https://www.DOMAIN2.org"

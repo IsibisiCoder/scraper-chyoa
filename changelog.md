@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+Added:   Images that cannot be loaded, or that are replaced with "" in the replacement list, can now be replaced with a link to a blank image instead.
 Fixed:   css delete list-item.hover
 Changed: Attention: Many configuration values in scraper-config.json have been reorganized. Please check and update your configuration values.
 

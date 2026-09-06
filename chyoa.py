@@ -51,9 +51,10 @@ class Chyoa:
                     foldername_story_with_id = f"{foldername_story}_({id_of_startsite})"
                 else:
                     foldername_story_with_id = foldername_story
+                config.foldername_story_with_id = foldername_story_with_id
 
                 personal_settings = PersonalSettings(debug, config)
-                personal_tags_of_story, images_replacement_url = personal_settings.read_personal_settings(foldername_story_with_id)
+                personal_tags_of_story, images_replacement_url = personal_settings.read_personal_settings()
 
                 story_id = 1
 
@@ -83,6 +84,7 @@ class Chyoa:
                     continue
                 root_story.create_folder(folder)
                 root_story.create_folder_image()
+                root_story.create_folder_images_shadow_copy()
                 if debug:
                     print(f"root.storyFolderpath: {root_story.folderpath_story}")
                     print(f"root.imageFolderPath: {root_story.image_folderpath}")

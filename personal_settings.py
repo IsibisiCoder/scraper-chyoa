@@ -11,10 +11,10 @@ class PersonalSettings:
         self.debug = debug
         self.config = config
 
-    def read_personal_settings(self, foldername):
+    def read_personal_settings(self):
         """read josn file with personal settings"""
 
-        personal_settings_file = f"{self.config.foldername_personal_settings}/{foldername}_{self.config.suffix_personal_settings}.json"
+        personal_settings_file = f"{self.config.foldername_personal_settings}/{self.config.foldername_story_with_id}_{self.config.suffix_personal_settings}.json"
         if self.debug:
             print(f"personal settings file: '{personal_settings_file}'")
         if not personal_settings_file:
