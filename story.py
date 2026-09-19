@@ -17,6 +17,7 @@ class Story:
             story_header2,
             filename_map,
             filename_total,
+            personal_settings,
             personal_tags,
             images_replacement_url):
         self.config = config
@@ -35,9 +36,11 @@ class Story:
         self.foldername_story = ""
         self.filename_map = filename_map
         self.filename_total = filename_total
+        self.personal_settings = personal_settings
         self.personal_tags = personal_tags
         self.images_replacement_url = images_replacement_url
-        self.image_folderpath  = ""
+        self.folderpath_image  = ""
+        self.folderpath_personal_settings = ""
         self.chapter_title = ""
         self.question = ""
         self.filename = ""
@@ -77,9 +80,14 @@ class Story:
     def create_folder_image(self):
         image_folderpath = os.path.join(self.folderpath_story, self.config.foldername_image)
         os.makedirs(image_folderpath, exist_ok=True)
-        self.image_folderpath = image_folderpath
+        self.folderpath_image = image_folderpath
 
     def create_folder_images_shadow_copy(self):
         foldername_images_shadow_copy = self.config.foldername_images_shadow_copy
         os.makedirs(foldername_images_shadow_copy, exist_ok=True)
         self.foldername_images_shadow_copy = foldername_images_shadow_copy
+
+    #def create_folder_personal_settings(self, foldername_story):
+    #    self.folderpath_personal_settings = os.path.join(self.config.foldername_personal_settings, foldername_story)
+    #    os.makedirs(self.config.foldername_personal_settings, exist_ok=True)
+    #    os.makedirs(self.folderpath_personal_settings, exist_ok=True)

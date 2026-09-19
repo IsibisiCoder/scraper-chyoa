@@ -11,7 +11,7 @@ class PersonalTags:
         self.config = config
 
     def read_personal_tags(self, foldername):
-        """read josn file with personal tags"""
+        """read json file with personal tags"""
 
         personal_tags_file = f"{self.config.foldername_personal_tags}/{foldername}_{self.config.suffix_personal_tags}.json"
         if self.debug:

@@ -71,6 +71,7 @@ class Chyoa:
                     story_header2 = story_header2,
                     filename_map = foldername_story + "-map.html",
                     filename_total = foldername_story + "-total.html",
+                    personal_settings = personal_settings,
                     personal_tags = personal_tags_of_story,
                     images_replacement_url = images_replacement_url
                 )
@@ -84,10 +85,11 @@ class Chyoa:
                     continue
                 root_story.create_folder(folder)
                 root_story.create_folder_image()
+#                root_story.create_folder_personal_settings(folder)
                 root_story.create_folder_images_shadow_copy()
                 if debug:
                     print(f"root.storyFolderpath: {root_story.folderpath_story}")
-                    print(f"root.imageFolderPath: {root_story.image_folderpath}")
+                    print(f"root.imageFolderPath: {root_story.folderpath_image}")
 
                 print(f"[story]         {story_title}")
                 print(f"[folder]        {root_story.folderpath_story}")
@@ -103,8 +105,9 @@ class Chyoa:
                 root_story.meta.author = author
                 filename = self.create_filename(debug, story_header2, story_title, config.folderpath_stories)
                 question = self.scrape_question(debug, soup, config)
-                story_content = self.scrape_content(debug, soup, images_replacement_url, root_story.image_folderpath, config)
-                image_filename, soup = self.scrape_story_cover(debug, config, soup, images_replacement_url, root_story.image_folderpath, config.foldername_image)
+
+                story_content = self.scrape_content(debug, config, root_story, soup)
+                image_filename, soup = self.scrape_story_cover(debug, config, root_story, soup)
 
                 startsite = f"{story_id:04d}"+"-"+filename
 
@@ -118,32 +121,32 @@ class Chyoa:
                     startsite = startsite,
                     text = story_content
                 )
-                root = Node(root_story)
+                root_node = Node(root_story)
 
                 sys.setrecursionlimit(config.recursion_limit)
-                story_id = self.get_links_from_site(debug, config, images_replacement_url, root, root, session, url, story_id, startsite, story_id)
+                story_id = self.get_links_from_site(debug, config, root_story, root_node, root_node, session, url, story_id, startsite, story_id)
                 if not story_id:
                     return
                 if debug:
                     print(f"Count: {story_id}")
 
                 # Find the links and replace the placeholders with the linked information
-                Node.check_all_chapters(root, root)
+                Node.check_all_chapters(root_node, root_node)
 
-                copy_css(debug, root.value.folderpath_story, "style.css")
+                copy_css(debug, root_node.value.folderpath_story, "style.css")
                 print("[saving]")
 
                 if config.multiple_pages:
-                    self.save_stories(debug, root_story.folderpath_story, root, config, True)
+                    self.save_stories(debug, config, root_story, root_node, True)
                 if config.whole_story_one_page:
-                    self.save_stories_to_one_file(debug, root_story.folderpath_story, root, config)
+                    self.save_stories_to_one_file(debug, config, root_story, root_node)
 
                 if config.multiple_pages:
-                    self.create_map(debug, root_story.folderpath_story, root_story.filename_map, root, config)
+                    self.create_map(debug, root_story.folderpath_story, root_story.filename_map, root_node, config)
 
                 if getattr(config, 'create_epub', False):
                     print("[Generate EPUB]")
-                    self.save_epub(debug, root_story.folderpath_story, root, config)
+                    self.save_epub(debug, config, root_story, root_node)
 
                 end = time.perf_counter()
                 duration = end - start
@@ -174,23 +177,23 @@ class Chyoa:
             print(f"HTTP-Error story link: {url}: {err_http}")
         return None, None
 
-    def get_links_from_site(self, debug, config, images_replacement_url, root, node, session, url, story_id, parent_filename, parent_id):
+    def get_links_from_site(self, debug, config, root_story, root, node, session, url, story_id, parent_filename, parent_id):
         soup, _ = self.get_soup(debug, session, config, url)
         if not soup:
             return None
 
-        linksfromsite, story_id = self.scrape_links(debug, config, session, soup, images_replacement_url, root, story_id, parent_filename, parent_id)
+        linksfromsite, story_id = self.scrape_links(debug, config, root_story, session, soup, root, story_id, parent_filename, parent_id)
         for link in linksfromsite:
             current_node = Node(link)
             node.add_child(current_node)
             if link.follow:
-                story_id = self.get_links_from_site(debug, config, images_replacement_url, root, current_node, session, link.url, story_id, current_node.value.filename, current_node.value.id)
+                story_id = self.get_links_from_site(debug, config, root_story, root, current_node, session, link.url, story_id, current_node.value.filename, current_node.value.id)
             else:
                 if debug:
                     print(f"Url: {link.url} / Parent {parent_filename} exists and links from url do not follow!")
         return story_id
 
-    def scrape_links(self, debug, config, session, soup, images_replacement_url, root, story_id, parent_filename, parent_id):
+    def scrape_links(self, debug, config, root_story, session, soup, root, story_id, parent_filename, parent_id):
         all_links = []
         content_navigable_all = soup.find_all(config.chapter_htmltag, class_=config.question_class)
 
@@ -248,8 +251,9 @@ class Chyoa:
                             None,
                             root.value.filename_map,
                             root.value.filename_total,
+                            None,
                             root.value.personal_tags,
-                            root.value.images_replacement_url
+                            None
                         )
                         current_link.set(
                             "",
@@ -280,8 +284,9 @@ class Chyoa:
                             contains_node.value.story_header2,
                             root.value.filename_map,
                             root.value.filename_total,
+                            None,
                             root.value.personal_tags,
-                            root.value.images_replacement_url
+                            None
                         )
                         current_link.set(
                             "", 
@@ -297,7 +302,7 @@ class Chyoa:
 
                     if not contains_url:
                         follow = True
-                        story_content = self.scrape_content(debug, soup_current_site, images_replacement_url, root.value.image_folderpath, config)
+                        story_content = self.scrape_content(debug, config, root_story, soup_current_site)
                         if config.show_chapter_name_loading_story:
                             print(f"Chapter {story_header1}")
 
@@ -314,8 +319,9 @@ class Chyoa:
                             story_header2,
                             root.value.filename_map,
                             root.value.filename_total,
+                            root.value.personal_settings,
                             root.value.personal_tags,
-                            root.value.images_replacement_url
+                            None
                         )
                         current_link.set(
                             "", 
@@ -424,14 +430,14 @@ class Chyoa:
             question = translate_text(config, question)
         return question
 
-    def scrape_images(self, debug, soup, config, images_replacement_url, image_folderpath):
+    def scrape_images(self, debug, config, root_story, soup):
         """scrape images"""
         for img in soup.find_all("img"):
             img_src = img.get("src")
             if img_src:
                 if debug:
                     print(f'image-src: {img_src}')
-                filename_image = download_image(debug, config, images_replacement_url, "chapter-image", image_folderpath, config.foldername_image, img_src)
+                filename_image = download_image(debug, config, root_story, img_src)
                 if filename_image != "":
                     img["src"] = filename_image
                     img_alt = img.get("alt")
@@ -444,7 +450,7 @@ class Chyoa:
                     img.decompose()
         return soup
 
-    def scrape_story_cover(self, debug, config, soup, images_replacement_url, image_folderpath, foldername_image):
+    def scrape_story_cover(self, debug, config, root_story, soup):
         """scrape cover"""
         filename_image = ""
         cover = soup.find('div', class_='cover')
@@ -454,8 +460,7 @@ class Chyoa:
             if img_src:
                 if debug:
                     print(f'cover image-src: {img_src}')
-                filename_image = download_image(debug, config, images_replacement_url, "story", image_folderpath,
-                                                foldername_image, img_src)
+                filename_image = download_image(debug, config, root_story, img_src)
                 img_alt = img.get("alt")
                 if img_alt == "" or img_alt is None:
                     img["alt"] = config.http_img_alt_text_cover
@@ -463,14 +468,14 @@ class Chyoa:
                 img.decompose()
         return filename_image, soup
 
-    def scrape_content(self, debug, soup, images_replacement_url, image_folderpath, config):
+    def scrape_content(self, debug, config, root_story, soup):
         """scrape the content"""
         content_navigable_all = soup.find_all(config.chapter_htmltag, class_=config.content_class)
         if not content_navigable_all:
             return "<!-- no content found -->"
 
         #save images and convert image name in html
-        soup = self.scrape_images(debug, content_navigable_all[0], config, images_replacement_url, image_folderpath)
+        soup = self.scrape_images(debug, config, root_story, content_navigable_all[0])
         content = soup.prettify() if content_navigable_all else "<!-- no content found -->"
 
         #TODO try translate, in work
@@ -484,52 +489,52 @@ class Chyoa:
             print(f"Story: {content[1:50]}")
         return content
 
-    def save_stories(self, debug, foldername, node, config, first_page):
+    def save_stories(self, debug, config, root_story, node, first_page):
         """save stories"""
         if not node.value.follow:
             return
         if debug:
             print(f"save Filename {node.value.filename} - {node.value.follow}")
-        html = self.create_html(debug, config, node, config.multiple_pages, first_page)
+        html = self.create_html(debug, config, root_story, node, config.multiple_pages, first_page)
         if first_page:
             first_page = False
-        save(foldername, node.value.filename, node, html, config.override_html_sites)
+        save(root_story.folderpath_story, node.value.filename, node, html, config.override_html_sites)
 
         if config.multiple_pages:
             for child in node.children:
-                self.save_stories(debug, foldername, child, config, first_page)
+                self.save_stories(debug, config, root_story, child, first_page)
 
-    def save_stories_to_one_file(self, debug, foldername, node, config):
+    def save_stories_to_one_file(self, debug, config, root_story, node):
         if debug:
             print(f"save to one filen {node.value.filename} - {node.value.follow}")
         if config.whole_story_one_page:
-            html = self.create_html(debug, config, node, False, True)
-            save(foldername, node.value.filename_total, node, html, config.override_html_sites)
+            html = self.create_html(debug, config, root_story, node, False, True)
+            save(root_story.folderpath_story, node.value.filename_total, node, html, config.override_html_sites)
 
-    def create_html(self, debug, config, node, multiple_pages, first_page):
+    def create_html(self, debug, config, root_story, node, multiple_pages, first_page):
         htmltext = []
         htmltext = self.create_html_head(config, htmltext, node, multiple_pages, first_page)
         htmltext = self.create_javascript(htmltext)
         if not multiple_pages:
             htmltext = self.create_map_body(debug, htmltext, node, multiple_pages, config)
-            htmltext = self.create_html_recursive(debug, htmltext, node, multiple_pages, False)
+            htmltext = self.create_html_recursive(debug, config, root_story, htmltext, node, multiple_pages, False)
         else:
-            htmltext = self.create_html_body(htmltext, node, multiple_pages, first_page, config)
+            htmltext = self.create_html_body(config, root_story, htmltext, node, multiple_pages, first_page)
         htmltext.append("</body></html>")
         return htmltext
 
-    def create_html_recursive(self, debug, htmltext, node, multiple_pages, first_page):
+    def create_html_recursive(self, debug, config, root_story, htmltext, node, multiple_pages, first_page):
         """get html content of all chapters"""
-        htmltext = self.create_html_body(htmltext, node, multiple_pages, first_page, config)
+        htmltext = self.create_html_body(config, root_story, htmltext, node, multiple_pages, first_page)
         if node.value.follow:
             htmltext.append('<hr>')
             for child in node.children:
-                htmltext = self.create_html_recursive(debug, htmltext, child, multiple_pages, first_page)
+                htmltext = self.create_html_recursive(debug, config, root_story, htmltext, child, multiple_pages, first_page)
                 if first_page:
                     first_page = False
         return htmltext
 
-    def create_html_body(self, htmltext, node, multiple_pages, first_page, config):
+    def create_html_body(self, config, root_story, htmltext, node, multiple_pages, first_page):
         """get html content of one chapter"""
         if first_page:
             htmltext = self.create_meta(htmltext, node, config)
@@ -830,7 +835,7 @@ class Chyoa:
                 return current_epub_item
         return None
 
-    def save_epub(self, debug, folderpath, root, config):
+    def save_epub(self, debug, config, root_story, root):
         book = epub.EpubBook()
         book.set_identifier(str(uuid.uuid4()))
         story_title = root.value.story_title or root.value.chapter_title
@@ -852,8 +857,8 @@ class Chyoa:
             book.add_metadata('DC', 'date', root.value.meta.published_time_short)
 
         # add cover if available
-        if root.value.story_image and os.path.exists(os.path.join(folderpath, root.value.story_image)):
-            with open(os.path.join(folderpath, root.value.story_image), "rb") as f:
+        if root.value.story_image and os.path.exists(os.path.join(root_story.folderpath_story, root.value.story_image)):
+            with open(os.path.join(root_story.folderpath_story, root.value.story_image), "rb") as f:
                 book.set_cover(root.value.story_image, f.read())
  
 
@@ -939,7 +944,7 @@ class Chyoa:
 
         # Images logic
         image_foldername = config.foldername_image
-        image_dir = os.path.join(folderpath, image_foldername)
+        image_dir = os.path.join(root_story.folderpath_image, image_foldername)
         if os.path.exists(image_dir):
             for img_name in os.listdir(image_dir):
                 # Skip the cover image if it's already set as the book cover
@@ -980,5 +985,5 @@ class Chyoa:
         safe_title = safe_title.replace(' ', '_')
         if not safe_title:
             safe_title = "story"
-        epub_filename = os.path.join(folderpath, f"{safe_title}.epub")
+        epub_filename = os.path.join(root_story.folderpath_story, f"{safe_title}.epub")
         epub.write_epub(epub_filename, book, {})

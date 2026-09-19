@@ -1,9 +1,12 @@
 # (c) 2025-2026 by IsibisiCoder, MIT-License, https://github.com/IsibisiCoder
+import filecmp
 import os
 from urllib.parse import parse_qs, urlparse
 import shutil
 import re
 import requests
+
+import personal_settings
 
 """
 create unique filename
@@ -53,13 +56,11 @@ def get_filename_from_url_and_save(url, folder):
 
 
 # save image, return local filename
-def download_image(debug, config, images_replacement_url, filename_base_name, image_folderpath, image_folder_name_only, img_url):
+def download_image(debug, config, root_story, img_url):
     # remove markdown syntax, if markdown detected
     if img_url.startswith("![](<") or img_url.startswith("[![](<")  or img_url.startswith("[]"):
         _, _, img_url = img_url.partition(')')
         img_url, _, _ = img_url.partition(')')
-        #if debug:
-        #  print(f"new url: {img_url}")
 
     img_url = img_url.split("?")[0].replace("<", "").replace(">", "")
     img_url = requests.utils.quote(img_url, safe=":/")
@@ -69,19 +70,20 @@ def download_image(debug, config, images_replacement_url, filename_base_name, im
         if config.show_skip_loading_image:
             print(f"                Ignore image url is in ignore list: {img_url}")
         return ""
-    replacement_img_url, is_replacement = get_image_url_if_replacement_image_exists(images_replacement_url, img_url)
+
+    replacement_img_url, is_replacement = get_image_url_if_replacement_image_exists(root_story.images_replacement_url, img_url)
     img_url_replace = replacement_img_url
-    if is_replacement and config.show_skip_loading_image:
-        print(f"                Replacement image url is in replacement list, new url: {img_url}")
+    if debug and is_replacement and config.show_skip_loading_image:
+        print(f"                image url is in replacement list, image-url: {img_url}")
 
     if img_url_replace == "" and not config.connect_invalid_image_empty_image:
         return ""
 
-    os.makedirs(image_folderpath, exist_ok=True)
+    os.makedirs(root_story.folderpath_image, exist_ok=True)
 
-    filename = get_filename_from_url_and_save(img_url, image_folderpath)
-    filepath = os.path.join(image_folderpath, filename)
-    filepath_relativ = os.path.join(image_folder_name_only, filename)
+    filename = get_filename_from_url_and_save(img_url, root_story.folderpath_image)
+    filepath = os.path.join(root_story.folderpath_image, filename)
+    filepath_relativ = os.path.join(config.foldername_image, filename)
     if debug:
         print(f"Image filepath: {filepath}")
         print(f"filepath relativ: {filepath_relativ}")
@@ -101,35 +103,43 @@ def download_image(debug, config, images_replacement_url, filename_base_name, im
             if status_code != 200:
                 if config.show_error_loading_image:
                     print(f"                Error downloading image: Status {status_code} - {img_url}")
+                    if config.connect_invalid_image_empty_image:
+                        shutil.copy2(src=config.empty_image, dst=filepath)
+                    else:
+                        filepath_relativ = ""
+                    if root_story.personal_settings:
+                        root_story.personal_settings.write_personal_settings_with_ignore_url(img_url)
                 return ""
             img_data.raise_for_status()
             with open(filepath, "wb") as f:
                 for chunk in img_data.iter_content(chunk_size=8192):
                     f.write(chunk)
-
-            foldername_images_shadow_copy = f"{config.foldername_images_shadow_copy}/{config.foldername_story_with_id}"
-            os.makedirs(foldername_images_shadow_copy, exist_ok=True)
-            filepath_images_shadow_copy = os.path.join(foldername_images_shadow_copy, filename)
-            with open(filepath_images_shadow_copy, "wb") as f:
-                for chunk in img_data.iter_content(chunk_size=8192):
-                    f.write(chunk)
-
             if debug:
                 print(f"image saved: {filepath}")
+
+            if config.foldername_images_shadow_copy:
+                dest_pfad = copy_shadow_image(config, filepath, filename)
+                if config.connect_always_images and root_story.personal_settings:
+                    root_story.personal_settings.write_personal_settings_with_ignore_url(img_url, dest_pfad)
+
         except requests.exceptions.HTTPError as err_http:
             if config.show_error_loading_image:
                 print(f"                HTTP-Error image: {img_url}: {err_http}")
             if config.connect_invalid_image_empty_image:
-                shutil.copy(src=config.empty_image, dst=filepath)
+                shutil.copy2(src=config.empty_image, dst=filepath)
             else:
                 filepath_relativ = ""
+            if root_story.personal_settings:
+                root_story.personal_settings.write_personal_settings_with_ignore_url(img_url)
         except requests.exceptions.ConnectionError:
             if config.show_error_loading_image:
                 print(f"                ConnectionError image: Please check your connection or the url. {img_url}")
             if config.connect_invalid_image_empty_image:
-                shutil.copy(src=config.empty_image, dst=filepath)
+                shutil.copy2(src=config.empty_image, dst=filepath)
             else:
                 filepath_relativ = ""
+            if root_story.personal_settings:
+                root_story.personal_settings.write_personal_settings_with_ignore_url(img_url)
         except requests.exceptions.Timeout:
             if config.show_error_loading_image:
                 print(f"                Timeout image: The website has an timeout: {img_url}")
@@ -137,31 +147,52 @@ def download_image(debug, config, images_replacement_url, filename_base_name, im
                 shutil.copy(src=config.empty_image, dst=filepath)
             else:
                 filepath_relativ = ""
+            if root_story.personal_settings:
+                root_story.personal_settings.write_personal_settings_with_ignore_url(img_url)
         except Exception as err:
             if config.show_error_loading_image:
                 print(f"                An unexpected error occurred while loading image: {img_url}: {err}")
             if config.connect_invalid_image_empty_image:
-                shutil.copy(src=config.empty_image, dst=filepath)
+                shutil.copy2(src=config.empty_image, dst=filepath)
             else:
                 filepath_relativ = ""
+            if root_story.personal_settings:
+                #print(f"p: {root_story.personal_settings.personal_settings_file}")
+                #root_story.personal_settings.write_personal_settings_with_ignore_url(img_url)
+                root_story.personal_settings.write_personal_settings_with_ignore_url(img_url)
     else:
-        print("replacement")
         if img_url_replace == "":
-            print(f"empty image: {filepath_relativ}, {config.empty_image}={filepath}")
-            shutil.copy(src=config.empty_image, dst=filepath)
+            shutil.copy2(src=config.empty_image, dst=filepath)
             return filepath_relativ
 
-        filepath_new_image = os.path.join(config.foldername_personal_settings, img_url_replace)
-        if os.path.isfile(filepath_new_image):
-            shutil.copy(filepath_new_image, filepath)
+        if os.path.isfile(img_url_replace):
+            shutil.copy2(img_url_replace, filepath)
             if debug:
                 print(f"              Image copied from local file: {img_url_replace} to {filepath_relativ}")
         else:
             if config.show_error_loading_image:
-                print(f"                Error copying image from local file: {filepath_new_image} to {filepath_relativ}. File does not exist; (Orig-file: {img_url_replace}).")
+                print(f"                Error copying image from local file: {img_url_replace} to {filepath_relativ}. File does not exist.")
             filepath_relativ = ""
 
     return filepath_relativ
+
+def copy_shadow_image(config, filepath, filename):
+    foldername_images_shadow = f"{config.foldername_images_shadow_copy}/{config.foldername_story_with_id}"
+    os.makedirs(foldername_images_shadow, exist_ok=True)
+    filepath_images_shadow = os.path.join(foldername_images_shadow, filename)
+
+    counter = 0
+    dest_pfad = os.path.join(foldername_images_shadow, filename)
+    base_name, file_suffix = os.path.splitext(filepath_images_shadow)
+    while os.path.exists(dest_pfad):
+        if filecmp.cmp(dest_pfad, filepath, shallow=False):
+            return dest_pfad
+        new_filename = f"{base_name}_{counter}{file_suffix}"
+        dest_pfad = os.path.join(foldername_images_shadow, new_filename)
+        counter += 1
+
+    shutil.copy(src=filepath, dst=dest_pfad)
+    return dest_pfad
 
 def get_image_url_if_replacement_image_exists(images_replacement_url, img_url):
     if not images_replacement_url:

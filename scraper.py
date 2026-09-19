@@ -66,6 +66,7 @@ def main():
     http_img_alt_text = image.get("http_img_alt_text", "Image")
     http_img_alt_text_cover = image.get("http_img_alt_text_cover", "Cover Image")
     foldername_image = image.get("foldername_image", "image")
+    connect_always_images = image.get("connect_always_images", False)
     foldername_images_shadow_copy = image.get("foldername_images_shadow_copy", "personal_settings/images")
     connect_invalid_image_empty_image = image.get("connect_invalid_image_empty_image", False)
     empty_image = image.get("empty_image", "empty_image.png")
@@ -77,7 +78,7 @@ def main():
     foldername_personal_settings = personal_settings.get("foldername_personal_settings", "personal_settings")
     suffix_personal_settings = personal_settings.get("suffix_personal_settings", "mytags")
     create_always_personal_settings_file = personal_settings.get("create_always_personal_settings_file", False)
-    personal_settings_default_file = personal_settings.get("personal_settings_default_file", "default")
+    personal_settings_default_file = personal_settings.get("default_file", "default")
 
     epub = config.get("epub")
     create_epub = epub.get("create_epub", False)
@@ -114,6 +115,7 @@ def main():
         override_html_sites,
         folderpath_stories,
         foldername_image,
+        connect_always_images,
         foldername_images_shadow_copy,
         connect_invalid_image_empty_image,
         empty_image,

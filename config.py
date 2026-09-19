@@ -32,6 +32,7 @@ class Config:
             override_html_sites,
             folderpath_stories,
             foldername_image,
+            connect_always_images,
             foldername_images_shadow_copy,
             connect_invalid_image_empty_image,
             empty_image,
@@ -84,6 +85,7 @@ class Config:
         # Images
         self.create_invalid_image_tags = create_invalid_image_tags
         self.connect_invalid_image_empty_image = connect_invalid_image_empty_image
+        self.connect_always_images = connect_always_images
         self.empty_image = empty_image
 
         self.create_epub = create_epub
