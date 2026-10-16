@@ -93,8 +93,8 @@ class Chyoa:
 
                 print(f"[story]         {story_title}")
                 print(f"[folder]        {root_story.folderpath_story}")
-                if personal_tags_of_story:
-                    print("[personal]      personal tags found")
+                #if personal_tags_of_story:
+                #    print("[personal]      personal tags found")
                 if images_replacement_url:
                     print("[personal]      personal settings - replacement url for images found")
                 print(f"[downloading]   {url}")
@@ -128,7 +128,7 @@ class Chyoa:
                 if not story_id:
                     return
                 if debug:
-                    print(f"Count: {story_id}")
+                    print(f"StoryID: {story_id}")
 
                 # Find the links and replace the placeholders with the linked information
                 Node.check_all_chapters(root_node, root_node)
@@ -156,15 +156,15 @@ class Chyoa:
                 print(f"[completed]     duration: {int(hours):02d}:{int(minutes):02d}:{seconds:05.2f}\n")
 
             except requests.RequestException as e:
-                print(f"Error loading {url}: {e}")
+                print(f"[ERROR]         Error loading {url}: {e}")
         print("[finished]")
 
     def get_soup(self, debug, session, config, url):
+        # A wait time to prevent the web server from becoming overloaded.
+        # Random pauses are inserted between two values to prevent the server from being locked out.
+        wait_time = random.uniform(config.waiting_time_between_downloads_of, config.waiting_time_between_downloads_until)
+        time.sleep(wait_time)
         try:
-            # A wait time to prevent the web server from becoming overloaded.
-            # Random pauses are inserted between two values to prevent the server from being locked out.
-            wait_time = random.uniform(config.waiting_time_between_downloads_of, config.waiting_time_between_downloads_until)
-            time.sleep(wait_time)
             response = session.get(url)
             # If a link in chyao points to a new page, an HTTP redirect (302) is performed.
             # To intercept and evaluate this redirect, the response-url must be returned as well
@@ -174,7 +174,9 @@ class Chyoa:
             soup = BeautifulSoup(response.text, 'html.parser')
             return soup, response_url
         except requests.exceptions.HTTPError as err_http:
-            print(f"HTTP-Error story link: {url}: {err_http}")
+            print(f"[ERROR]         HTTP-Error story link: {url}: {err_http}")
+        except requests.RequestException as e:
+            print(f"[ERROR]         Error loading site {url}: {e}")
         return None, None
 
     def get_links_from_site(self, debug, config, root_story, root, node, session, url, story_id, parent_filename, parent_id):

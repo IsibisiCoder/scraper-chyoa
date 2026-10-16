@@ -2,6 +2,7 @@
 # (c) 2025-2026 by IsibisiCoder, MIT-License, https://github.com/IsibisiCoder
 
 import json
+import re
 from datetime import datetime
 from translate import translate_text
 
@@ -111,7 +112,13 @@ class Meta:
         if script:
             # load json content
             try:
-                data = json.loads(script.string, strict=False)
+                raw_json_string = script.string
+
+                # Double ALL backslashes, EXCEPT if they are already part of a valid JSON escape sequence
+                # (Valid sequences are: \", \\, \/, \b, \f, \n, \r, \t, and \uXXXX)
+                fixed_json_string = re.sub(r'\\(?!["\\/bfnrtu])', r'\\\\', raw_json_string)
+
+                data = json.loads(fixed_json_string, strict=False)
 
                 self.language = ""
                 self.language_alternate_name = "en"
@@ -140,7 +147,7 @@ class Meta:
                     print(f"language: {self.language}")
                     print(f"likes: {self.likes}")
                     print(f"views: {self.views}")
-            except Exception as e:
+            except json.JSONDecodeError as e:
                 print("Typ:", type(e))
                 print("Typ-Name:", type(e).__name__)
                 print(f"Error: '{e}")

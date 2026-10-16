@@ -6,7 +6,7 @@
   "storyname_with_id": true,
   "multiple_pages": true,
   "whole_story_one_page": false,
-  "override_html_sites": true,
+  "override_html_sites": false,
   "recursionlimit": 1500,
   "show_error_loading_image": true,
   "show_skip_loading_image": true,
@@ -23,10 +23,10 @@
     "http_img_alt_text": "Image",
     "http_img_alt_text_cover": "Cover Image",
     "foldername_image": "image",
-    "connect_always_images": false,
+    "connect_always_images": true,
     "foldername_images_shadow_copy": "personal_settings/images",
-    "create_invalid_image_tags": false,
-    "connect_invalid_image_empty_image": false,
+    "create_invalid_image_tags": true,
+    "connect_invalid_image_empty_image": true,
     "empty_image": "empty_image.png",
     "images_ignore_domain_url": [
       "https://www.DOMAIN.org",
@@ -43,7 +43,7 @@
     "foldername_personal_settings": "personal_settings",
     "suffix_personal_settings": "mytags",
     "default_file": "default",
-    "create_always_personal_settings_file": false
+    "create_always_personal_settings_file": true
   },
   "translation": {
     "translate": false,

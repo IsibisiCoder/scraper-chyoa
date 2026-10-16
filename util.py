@@ -30,7 +30,7 @@ def get_unique_filename(debug, folder, base_name, extension):
         counter += 1
     return filename
 
-def get_filename_from_url_and_save(url, folder):
+def get_filename_from_url(url, folder):
     parsed = urlparse(url)
 
     filename = os.path.basename(parsed.path)
@@ -41,14 +41,18 @@ def get_filename_from_url_and_save(url, folder):
         if "file" in query_params:
             filename = query_params["file"][0]
 
-    # save image to disk
-    filepath = os.path.join(folder, str(filename))
-    prefix, suffix = os.path.splitext(str(filename))
-    suffix = re.sub(r'[^a-zA-Z0-9áéíóàèìòîâûêäöüÄÖÜß\s]', "-", suffix)
+    filename_without_suffix, suffix = os.path.splitext(str(filename))
+
+    # The file name can be up to 255 characters long, so it must be shortened here
+    short_filename_without_suffix = filename_without_suffix[:200]
+    short_filename_without_suffix = re.sub(r'[^a-zA-Z0-9áéíóàèìòîâûêäöüÄÖÜß\s]', "-", short_filename_without_suffix)
+    new_filepath = os.path.join(folder, short_filename_without_suffix + suffix)
+    filename = f"{short_filename_without_suffix}{suffix}"
+
     counter = 1
-    while os.path.exists(filepath):
-        filename = f"{prefix}_{counter:03d}.{suffix}"
-        filepath = os.path.join(folder, filename)
+    while os.path.exists(new_filepath):
+        filename = f"{short_filename_without_suffix}_{counter:03d}{suffix}"
+        new_filepath = os.path.join(folder, filename)
         counter += 1
 
     return str(filename)
@@ -81,21 +85,27 @@ def download_image(debug, config, root_story, img_url):
 
     os.makedirs(root_story.folderpath_image, exist_ok=True)
 
-    filename = get_filename_from_url_and_save(img_url, root_story.folderpath_image)
+    filename = get_filename_from_url(img_url, root_story.folderpath_image)
     filepath = os.path.join(root_story.folderpath_image, filename)
     filepath_relativ = os.path.join(config.foldername_image, filename)
     if debug:
         print(f"Image filepath: {filepath}")
         print(f"filepath relativ: {filepath_relativ}")
+        print(f"laenge: {len(filename)}")
 
     if not is_replacement:
         if debug:
             print(f"              downloading image url: {img_url}")
         status_code = 200
         try:
+            #headers = {
+            #    "User-Agent": config.http_header_user_agent,
+            #   "Referer": config.http_header_referer
+            #}
             headers = {
-                "User-Agent": config.http_header_user_agent,
-                "Referer": config.http_header_referer
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "Accept-Language": "de-DE,de;q=0.9,en-US;q=0.8,en;q=0.7",
+                "Referer": "https://google.com"
             }
 
             img_data = requests.get(img_url, stream=True, timeout=30, allow_redirects=False, headers=headers)

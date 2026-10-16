@@ -19,7 +19,8 @@ foldername_images_shadow_copy
 * Properties are saved e.g. description, author, published_time, category, language, tag
 * You can define custom properties for the story, which are then added to the HTML file when the story is retrieved
 * Images can be replaced with other images (URLs) or local images. This is useful, for example, when the original images can no longer be loaded (e.g., because the image is no longer available on the Internet), but the original images are still available from an older download.
-* You can prevent images from being downloaded from specified web addresses. This is useful, for example, when an image hosting service is no longer available (the domain is no longer accessible). This setting saves download time, since the download timeout always takes time.
+* You can prevent images from being downloaded from a local storage. This is useful, for example, when an image hosting service is no longer available (the domain is no longer accessible). This setting saves download time, since the download timeout always takes time.
+* The downloaded images can be cached locally. The next time you view them, the images will not be reloaded.
 
 ## personal tags
 
@@ -175,10 +176,10 @@ A sample JSON file is included and looks like this:
     "http_img_alt_text": "Image",
     "http_img_alt_text_cover": "Cover Image",
     "foldername_image": "image",
-    "connect_always_images": false,
+    "connect_always_images": true,
     "foldername_images_shadow_copy": "personal_settings/images",
-    "create_invalid_image_tags": false,
-    "connect_invalid_image_empty_image": false,
+    "create_invalid_image_tags": true,
+    "connect_invalid_image_empty_image": true,
     "empty_image": "empty_image.png",
     "images_ignore_domain_url": [
       "https://www.DOMAIN.org",
@@ -195,7 +196,7 @@ A sample JSON file is included and looks like this:
     "foldername_personal_settings": "personal_settings",
     "suffix_personal_settings": "mytags",
     "default_file": "default",
-    "create_always_personal_settings_file": false
+    "create_always_personal_settings_file": true
   },
   "translation": {
     "translate": false,
@@ -256,6 +257,34 @@ e.g.
 python scraper.py scraper_config_sample.json
 ```
 
+## FAQ
+
+Q: I'm getting the following error message: `RecursionError: maximum recursion depth exceeded`  
+A: The stories are structured recursively and are also read in recursively.
+Each recursive read operation consumes a lot of memory, and there is a risk of a “memory overflow.”
+Python offers built-in protection for this, but you can
+override the recursion depth at your own risk. In the default settings, the value is already
+overridden with a higher value: ```“recursionlimit”: 1500```. For some very large stories
+(e.g., over 6,000 chapters), however, this value is still too low. You can then increase the value at your own risk.
+
+Q: When I try to retrieve the data, I get the following error message: `('Connection aborted.', ConnectionResetError(104, 'Connection reset by peer'))`  
+A: Websites like chyoa prevent automated scripts and bots from accessing them.
+If a web server detects that it is not a human using a browser but an automated script,
+the connection is terminated with the message mentioned above.
+For this reason, various settings are used to simulate human-like clicking behavior
+(e.g., via the `http_header` setting, which mimics a browser).
+This also includes the settings `waiting_time_between_downloads_of` and `waiting_time_between_downloads_until`.
+These settings introduce a random delay between page requests.
+The default values of 2 and 5 have proven effective for many pages; however, with long articles,
+the process still sometimes aborts, in which case these values must be increased, e.g., to 3 and 7.  
+
+Q: I'm getting the following error message: `HTTP-Error story link: https://chyoa.com/chapter/xyz.12345678: 404 Client Error: Not Found for url`  
+A: A link on a story page leads to a page that cannot be loaded, or
+that does not exist. Often, this is a link to an existing page that chyoa has created using a
+so-called redirect, and which does not work—even in the browser itself.
+This is therefore not a script error, but rather a faulty link within the story.
+
+
 ## Note
 
 Some stories under "What's Next" link to existing chapters in a different sequence (recursion). To prevent this from becoming an infinite loop, the link is broken at this point. The console output displays the following message:  
@@ -304,6 +333,7 @@ Dieses Python-Script bietet die Möglich, interaktive Stories von der Story-Webs
 * Es können eigene Eigenschaften der Geschichte definitiert werden, die dann beim Abruf der Geschichte in die Html-Datei dazugeschrieben werden
 * Es können Bilder gegen andere Bilder (urls) oder lokale Bilder ausgetauscht werden. Das ist z.B. dann sinnvoll, wenn die original Bilder nicht mehr geladen werden können (z.B. weil das Bild nicht mehr im Internet vorhanden ist), die ursprünglichen Bilder aber aus einem älteren Download noch vorliegen.
 * Das Herunterladen von Bildern aus konfigurierten Internetadressen kann verhindert werden. Das ist z.B. dann sinnvoll, wenn es einen Image-Hoster nicht mehr gibt (domain ist nicht mehr erreichbar). Diese Konfiguration spart dann Downloadzeit, da der Timeout beim Download immer Zeit in Anspruch nimmt.
+* Die heruntergeladenen Bilder können lokal zwischengespeichert werden. Bei einem erneuten Abruf werden die Bilder dann nicht mehr neu geladen.
 
 ## Installation
 
@@ -420,7 +450,7 @@ Beispiel 1:
 Url: https://www.my.org/image1.jpg
 Config: https://www.my.org
 
-Bild wird igniert.  
+Bild wird ignoriert.  
 
 Beispiel 2:  
 Url: https://www.my.org/image1.jpg
@@ -459,10 +489,10 @@ Eine Beispiel json-Datei ist enthalten und sieht wie folgt aus:
     "http_img_alt_text": "Image",
     "http_img_alt_text_cover": "Cover Image",
     "foldername_image": "image",
-    "connect_always_images": false,
+    "connect_always_images": true,
     "foldername_images_shadow_copy": "personal_settings/images",
-    "create_invalid_image_tags": false,
-    "connect_invalid_image_empty_image": false,
+    "create_invalid_image_tags": true,
+    "connect_invalid_image_empty_image": true,
     "empty_image": "empty_image.png",
     "images_ignore_domain_url": [
       "https://www.DOMAIN.org",
@@ -479,7 +509,7 @@ Eine Beispiel json-Datei ist enthalten und sieht wie folgt aus:
     "foldername_personal_settings": "personal_settings",
     "suffix_personal_settings": "mytags",
     "default_file": "default",
-    "create_always_personal_settings_file": false
+    "create_always_personal_settings_file": true
   },
   "translation": {
     "translate": false,
@@ -537,6 +567,33 @@ e.g.
 ```
 python scraper.py scraper_config_sample.json
 ```
+
+## FAQ
+
+Q: Ich bekomme die Fehlermeldung `RecursionError: maximum recursion depth exceeded`  
+A: Die Geschichten sind rekursiv aufgebaut und werden auch rekursiv eingelesen.
+Jedes rekursive Einlesen verbraucht viel Speicher und es besteht die Gefahr, dass der Speicher 'überläuft'.
+Python bietet hierzu einen eingebauten Schutz, deren Rekursionstiefe man aber
+auf eigene Gefahr überschreiben kann. In den default-Einstellungen wird Wert bereits
+mit einem höheren Wert überschrieben ```"recursionlimit": 1500```. Bei einigen sehr großen Geschichten
+(z.B. über 6000 Chapter) ist der Wert aber immer noch zu niedrig. Der Wert kann dann auf eigenes Risiko erhöht werden.  
+
+Q: Ich bekomme beim Abruf die Fehlermeldung `('Connection aborted.', ConnectionResetError(104, 'Connection reset by peer'))`  
+A: Webseiten wie chyoa verhindern den Zugriff von automatisierten Scripten und Robotern.
+Wenn ein Webserver denkt, hier sitzt kein Mensch vor einem Browser, sondern ein automatisiertes Script,
+wird die Verbindung mit der o.g. Meldung abgebrochen. 
+Deshalb wird versucht, über diverse Einstellungen ein menschenähnliches Klickverhalten
+zu simulieren (z.B. über die Einstellung `http_header`, die einen Browser vortäuschen).
+Dazu gehören auch die Einstellungen `waiting_time_between_downloads_of` und `waiting_time_between_downloads_until`.
+Hierbei wird zwischen den Seitenabrufen eine zufällige Wartezeit verstrichen lassen.
+Die default-Werte von 2 und 5 haben sich für viele Seiten bewährt, bei großen Geschichten
+kam es trotzdem zu einem Abbruch, dann müssen diese Werte erhöht werden, z.B. auf 3 und 7.
+
+Q: Ich bekomme ich Fehlermeldung `HTTP-Error story link: https://chyoa.com/chapter/xyz.12345678: 404 Client Error: Not Found for url`  
+A: Ein Link auf einer Geschichtenseite verlinkt zu eines Seite, die nicht geladen werden kann, oder
+die nicht vorhanden ist. Häufig ist das ein LINK zu einer bestehenden Seite, die chyoa über eine
+so genannte Weiterleitung realisiert hat und die - auch im Browser selber - nicht funktioniert. 
+Es handelt sich also nicht um ein Fehler im Script, sondern die Verlinkung in der Geschichte ist fehlerhaft.  
 
 ## Hinweise
 
