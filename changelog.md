@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 Added:   Images that cannot be loaded, or that are replaced with "" in the replacement list, can now be replaced with a link to a blank image instead.  
+Added:   New script to update personal tags (tools/update-html-meta.py)   
 Fixed:   css delete list-item.hover  
 Fixed:   Incorrect suffix for images if the filename already exists  
 Fixed:   Error in the JSON script within the HTML (e.g., incorrect backslash)  

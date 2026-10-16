@@ -1,5 +1,4 @@
-"""Update chapter, map and total HTML personal metadata from its personal settings JSON file. created by github copilot """
-
+# Update chapter, map and total HTML personal metadata from its personal settings JSON file. created by github copilot
 import argparse
 import json
 import re
@@ -11,13 +10,13 @@ PERSONAL_TAGS_SUFFIX = "_mytags.json"
 CHAPTER_PREFIX = re.compile(r"^\d{4}[-_]")
 STORY_FOLDER = re.compile(r"^(.+?)_\(\d+\)_\(\d{4}-\d{2}-\d{2}\)")
 PERSONAL_TAGS_DIV = re.compile(
-    r"<div\b(?=[^>]*\sclass\s*=\s*(['\"])[^'\"]*\bpersonal-tags\b[^'\"]*\1)"
+    r"<div\b(?=[^>]*\sclass\s*=\s*(['\"])\b[^'\"]*\bpersonal-tags\b[^'\"]*\1)"
     r"[^>]*>.*?</div\s*>",
     re.IGNORECASE | re.DOTALL,
 )
 META_TAG = re.compile(r"<meta\b[^>]*>", re.IGNORECASE)
 META_NAME = re.compile(
-    r"(?:^|\s)name\s*=\s*(?:([\"'])(.*?)\1|([^\s/>]+))",
+    r"(?:^|\s)name\s*=\s*(?:(['\"])(.*?)\1|([^\s/>]+))",
     re.IGNORECASE | re.DOTALL,
 )
 PERSONAL_TAG_LABEL = re.compile(r"<b\b[^>]*>(.*?)</b\s*>\s*:", re.IGNORECASE | re.DOTALL)
@@ -26,21 +25,83 @@ HTML_ENTITIES = {"quot": '"', "apos": "'", "nbsp": "\xa0"}
 HTML_ATTRIBUTE_ENTITIES = {'"': "&quot;", "'": "&#x27;"}
 
 
-def _settings_file(html_path, settings_dir):
-    folder_match = STORY_FOLDER.match(html_path.parent.name)
-    names = []
-    if folder_match:
-        names.append(folder_match.group(1))
+def _resolve_config_path(config_path):
+    config_path = Path(config_path)
+    if config_path.is_absolute():
+        return config_path
+    candidates = [Path.cwd() / config_path, Path(__file__).resolve().parents[1] / config_path]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return candidates[0]
+
+
+def _settings_dir_from_config(config_path):
+    with config_path.open("r", encoding="utf-8-sig") as config_file:
+        config = json.load(config_file)
+
+    if not isinstance(config, dict):
+        raise ValueError(f"The config file {config_path} must contain a JSON object")
+
+    personal_settings = config.get("personal_settings", {})
+    if not isinstance(personal_settings, dict):
+        raise ValueError(f"'personal_settings' in {config_path} must be a JSON object")
+
+    foldername_personal_settings = personal_settings.get("foldername_personal_settings", "personal_settings")
+    if not foldername_personal_settings:
+        raise ValueError(f"'personal_settings.foldername_personal_settings' in {config_path} must not be empty")
+
+    settings_dir = Path(foldername_personal_settings)
+    if not settings_dir.is_absolute():
+        settings_dir = config_path.parent / settings_dir
+
+    storyname_with_id = config.get("storyname_with_id", False)
+    if not isinstance(storyname_with_id, bool):
+        storyname_with_id = bool(storyname_with_id)
+    return settings_dir.resolve(), storyname_with_id
+
+
+def _story_name_candidates(html_path, storyname_with_id):
+    candidates = []
+    folder_name = html_path.parent.name
+    base_name = folder_name
+
+    date_match = re.search(r"(?:_|\()?(\d{4}-\d{2}-\d{2})\)?$", base_name)
+    if date_match:
+        base_name = base_name[:date_match.start()].rstrip("_")
+
+    id_match = re.search(r"(?:_|\()?(\d+)\)?$", base_name)
+    if id_match:
+        story_id = id_match.group(1)
+        base_name = base_name[:id_match.start()].rstrip("_")
+        if storyname_with_id:
+            candidates.extend([f"{base_name}_({story_id})", f"{base_name}({story_id})"])
+
+    if base_name:
+        candidates.append(base_name)
+
+    candidates.extend([
+        folder_name,
+        re.sub(r"\(\d{4}-\d{2}-\d{2}\)$", "", folder_name),
+        re.sub(r"[_\(\)]*\(\d+\)$", "", folder_name),
+    ])
 
     chapter_name = CHAPTER_PREFIX.sub("", html_path.stem, count=1)
-    names.append(chapter_name)
+    if chapter_name:
+        candidates.append(chapter_name)
 
-    for name in dict.fromkeys(names):
+    return list(dict.fromkeys(candidates))
+
+
+def _settings_file(html_path, settings_dir, storyname_with_id=False):
+    names = _story_name_candidates(html_path, storyname_with_id)
+
+    for name in names:
         candidate = settings_dir / f"{name}{PERSONAL_TAGS_SUFFIX}"
         if candidate.is_file():
             return candidate
 
-    expected = ", ".join(f"{name}{PERSONAL_TAGS_SUFFIX}" for name in dict.fromkeys(names))
+    expected = ", ".join(f"{name}{PERSONAL_TAGS_SUFFIX}" for name in names)
     raise FileNotFoundError(
         f"No personal settings JSON found in {settings_dir} (tried: {expected})"
     )
@@ -120,11 +181,11 @@ def _update_meta_tags(source, tags, old_tag_names):
     return source
 
 
-def update_html(html_path, settings_dir):
+def update_html(html_path, settings_dir, storyname_with_id=False):
     source_bytes = html_path.read_bytes()
     has_bom = source_bytes.startswith(b"\xef\xbb\xbf")
     source = source_bytes.decode("utf-8-sig")
-    settings_path = _settings_file(html_path, settings_dir)
+    settings_path = _settings_file(html_path, settings_dir, storyname_with_id)
     tags = _read_personal_tags(settings_path)
 
     old_div_match = PERSONAL_TAGS_DIV.search(source)
@@ -174,17 +235,26 @@ def _related_html_files(html_path):
 
 
 def main():
+    default_config_path = Path(__file__).resolve().parents[1] / "scraper_config.json"
     parser = argparse.ArgumentParser(
         description="Update personal metadata in a chapter HTML file and in the *map- and *total HTML files."
     )
     parser.add_argument("html_file", type=Path, help="HTML file to update")
     parser.add_argument(
+        "-c",
+        "--config",
+        type=Path,
+        default=default_config_path,
+        help="config JSON file; reads personal_settings.foldername_personal_settings from it",
+    )
+    parser.add_argument(
         "--settings-dir",
         type=Path,
-        default=Path(__file__).resolve().parent / "personal_settings",
-        help="directory containing *_mytags.json files",
+        default=None,
+        help=argparse.SUPPRESS,
     )
     args = parser.parse_args()
+
     html_path = args.html_file
     if not html_path.is_absolute() and not html_path.is_file():
         script_relative_path = Path(__file__).resolve().parent / html_path
@@ -193,9 +263,18 @@ def main():
     if not html_path.is_file():
         parser.error(f"HTML file not found: {html_path}")
 
+    if args.settings_dir is not None:
+        settings_dir = args.settings_dir
+        storyname_with_id = False
+    else:
+        config_path = _resolve_config_path(args.config)
+        if not config_path.is_file():
+            parser.error(f"Config file not found: {config_path}")
+        settings_dir, storyname_with_id = _settings_dir_from_config(config_path)
+
     try:
         for related_path in _related_html_files(html_path):
-            update_html(related_path, args.settings_dir)
+            update_html(related_path, settings_dir, storyname_with_id)
             print(f"Updated HTML metadata in {related_path}")
     except (OSError, json.JSONDecodeError, ValueError) as error:
         parser.error(str(error))

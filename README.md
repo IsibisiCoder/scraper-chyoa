@@ -56,6 +56,24 @@ The file specified in the 'default_file' configuration serves as the template.
 Only the filename is specified here, without '_mytags.json'.  
 For example, 'default' for 'default_mytags.json' (which is included).
 
+### Update personal tags
+
+If you've read all or part of the story, you might want to change the metadata later.
+To do this, edit the values in the file mentioned above in `personal_settings`.
+To update these values in the HTML files as well, you can use another Python script:
+
+```shell
+python tools/update-html-meta.py  “PATH/STORY_FOLDER/0001-STORY_NAME.html” -c scraper_config.json
+```
+You pass the path and the name of the story’s first chapter, i.e., `0001_NAME.html`.
+The folder name may include the StoryId, depending on what you’ve configured under `storyname_with_id` in the config file.
+The -c parameter allows you to specify your personal config file. If no parameter is specified here, `scraper_config.json` is used as the filename.
+
+The following three HTML files are now updated:
+* 0001-STORYNAME.html
+* STORYNAME-map.html
+* STORYNAME-total.html
+
 ## Personal Images to Replace
 
 It’s always frustrating when images can no longer be loaded from the Internet. It’s even more frustrating when those images are still available from a previous download, but you want to reload the story - for example, because a new chapter has been added.  
@@ -399,6 +417,24 @@ Wird die Konfiguration 'create_always_personal_settings_file' auf True gesetzt, 
 Als Vorlage dient hierbei die in der Konfiguration 'default_file' hinterlegte Datei.
 Hierbei wird nur der Dateiname ohne '_mytags.json' angegegen.  
 Beispielsweise 'default' für 'default_mytags.json' (die mitgeliefert wird).
+
+### Update der persönliche Tags
+
+Wenn man die Geschichte ganz oder Teilweise gelesen hat, möchte man die Metadaten auch gerne nachträglich ändern.  
+Dazu editiert man die Werte der oben erwähnte Datei in der personal_settings.
+Um nun diese Werte auch in den Html-Dateien zu aktualisieren, kann ein weiteres python-Script benutzen:  
+
+```shell
+python tools/update-html-meta.py  "PATH/STORY_FOLDER/0001-STORY_NAME.html" -c scraper_config.json
+```
+Übergeben wird der Pfad und der Name des ersten Kapitels der Geschichte, also `0001_NAME.html`.  
+Der Ordnername kann die StoryId beinhalten, je nachdem was man in der config unter `storyname_with_id` konfiguriert hat.  
+Mit dem Parameter -c kann man die persönliche config-Datei angeben. Wird hier kein Parameter angegeben, wird als Dateiname `scraper_config.json` verwendet.  
+
+Aktualisiert werden nun die drei Html-Dateien:
+* 0001-STORYNAME.html
+* STORYNAME-map.html
+* STORYNAME-total.html
 
 ## persönliche auszutauschende Bilder
 

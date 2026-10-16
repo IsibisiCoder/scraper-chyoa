@@ -171,6 +171,8 @@ def read_html_files(directory) -> tuple[
 
 
 def main():
+    print("do not use the script")
+    return
     parser = argparse.ArgumentParser(
         description="Combine numbered chapter HTML files into one story file."
     )
