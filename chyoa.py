@@ -390,7 +390,8 @@ class Chyoa:
             story_header1 = ""
             story_header2 = ""
 
-        meta = soup.find('div', class_='meta')
+        metaDiv = soup.find('div', class_='meta')
+        meta = metaDiv.find('p')
         if not meta:
             return "", "", "", ""
 
