@@ -12,7 +12,7 @@ from chyoa import Chyoa
 #call: python scraper.py scraper_config.json <url>
 def main():
     """main"""
-    version = "scraper-chyoa V1.3.1alpha"
+    version = "scraper-chyoa V1.4.0"
     print(f"{version}, MIT-License")
 
     debug = os.environ.get("DEBUG", False)

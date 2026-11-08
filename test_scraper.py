@@ -6,7 +6,7 @@ from scraper import read_config
 
 class TestScraper:
     def test_read_config(self):
-        version = "scraper-chyoa V1.3.1"
+        version = "scraper-chyoa V1.4.0"
         config_file = {
             "question_class": "question-content",
             "chapter_class": "chapter-content",
