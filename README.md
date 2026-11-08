@@ -2,9 +2,6 @@
 Python script for saving chyoa stories in an interactive HTML webpage or for saving chapters in individual HTML webpages  
 This Python script allows you to download interactive stories from the Story website [chyoa](https://chyoa.com/).  
 
-TODO:
-foldername_images_shadow_copy
-
 ## features
 
 * Saving a chapter as a separate HTML page
@@ -107,6 +104,22 @@ e.g., if the original image is still available or becomes available again later.
 
 This is possible if you set "connect_invalid_image_empty_image" to true in the configuration.
 In that case, the default image (1x1 pixel) (configuration "empty_image") will be displayed in that location.  
+
+## Caching Images
+
+As described above in `Personal Images to Replace`, images from the Internet may sometimes no longer be available for download.
+It would be very convenient if you still had the images from a previous download and they were stored in a central location.
+You can now configure exactly that.
+During the first download, the images are now automatically saved in a central folder and recorded in the `personal_settings` file.
+If you reload the history after an update, the images will no longer be loaded from the Internet but from the central folder. This saves a tremendous amount of time, since loading images from the Internet always takes a very long time—or the images may not even be available.
+The following values must be set in the configuration:
+
+```json
+“connect_always_images” = true
+“foldername_images_shadow_copy” = folder name, e.g., personal_settings/images
+‘foldername_personal_settings’: “personal_settings”,
+“create_always_personal_settings_file”: true
+```
 
 ## images_ignore_domain_url
 
@@ -243,6 +256,8 @@ Value|Example|Meaning
 folder|c:/story|This is the main folder where all stories are stored. For each story, another folder with the name of the story is created in this folder.
 foldername_image|image|All images are stored in this subfolder. There is a subfolder `image` for each story. It is possible to change the name, but this has not been tested.
 connect_invalid_image_empty_image|false oder true|If an image cannot be loaded or if it was specified as "" in the replacement section, an empty image (specified under empty_image) is used instead when True is set
+connect_always_images|true/false|If true, the images will no longer be loaded from the Internet, but from the ‘foldername_images_shadow_copy’ folder 
+foldername_images_shadow_copy|personal_settings/images|Name of the folder where all images are saved
 foldername_personal_tags|personal_tags|Name of the folder containing the JSON files for your personal descriptions
 create_always_personal_settings_file|false oder true|Should the file for `personal_settings` be created automatically? If yes, an existing template file must be specified in 'default_file'
 default_file|default|Template file for `personal_settings`. The suffix `_mytags.json` must not be included.
@@ -300,7 +315,16 @@ Q: I'm getting the following error message: `HTTP-Error story link: https://chyo
 A: A link on a story page leads to a page that cannot be loaded, or
 that does not exist. Often, this is a link to an existing page that chyoa has created using a
 so-called redirect, and which does not work—even in the browser itself.
-This is therefore not a script error, but rather a faulty link within the story.
+This is therefore not a script error, but rather a faulty link within the story.  
+
+Q: When I try to load the page, I get an error message that ends with something like
+```script
+story_id = story_id + 1
+TypeError: unsupported operand type(s) for +: 'NoneType’ and ‘int’
+```  
+
+A: There could be many reasons for this error. An error may have occurred in the history related to so-called links. However, it’s also possible that too many images were downloaded previously, or that the download was interrupted due to an error.  
+For me, for example, the error occurred when the loading process was interrupted for at least four images due to an error (e.g., “not found”). After excluding those images via `personal_settings`, the story loaded successfully.
 
 
 ## Note
@@ -470,6 +494,23 @@ z.B. wenn das Originalbild noch vorhanden ist oder später wieder zur Verfügung
 Dieses ist möglich, wenn man in der Konfiguration 'connect_invalid_image_empty_image' true angibt.
 Dann wird das default-Bild (1x1 Pixel) (Konfiguration 'empty_image') an der Stelle dargestellt.  
 
+## Bilder zwischenspeichern
+
+Wie oben in `persönliche auszutauschende Bilder` beschrieben, können Bilder aus dem Internet ggf. nicht mehr geladen werden.  
+Es wäre nun sehr praktisch, wenn man die Bilder aus einem früheren Download noch hätte, und die an einem zentralen Speicherort abgelegt werden würden.  
+Genau das kann man nun konfigurieren.  
+Beim ersten Downlaod werden die Bilder nun zusätzlich automatisch in einem zentralen Ordner gespeichert und in der `personal_settings`-Datei eingetragen.  
+Lädt man nun die Geschichte nach einem Update erneut, werden die Bilder nicht mehr aus dem Internet geladen, sondern aus dem zentralen Ordner. Das spart enorm viel Zeit, da die Ladezeit der Bilder aus dem Internet immer sehr lange dauert bzw. die Bilder gar nicht vorhanden sind.  
+Hier müssen die Werte in folgenden Konfigurationen gesetzt sein:  
+
+```json
+"connect_always_images" = true
+"foldername_images_shadow_copy" = Ordnername, z.B. personal_settings/images
+"foldername_personal_settings": "personal_settings",
+"create_always_personal_settings_file": true
+```
+
+
 ## images_ignore_domain_url
 
 Sind Bilder nicht mehr aus dem Internet geladen werden können, ist das immer ärgerlich. Aber diese Ladeversuche kosten auch jedesmal viel Zeit. Bei vielen Bildern kann sich so die Ladezeit der Geschichte enorm verzögern.  
@@ -573,6 +614,8 @@ Wert|Beispiel|Bedeutung
 folder|c:/story|Dieses ist der Hauptordner, in dem alle Stories gespeichert werden. Pro Story wird in diesem Ordner ein weiterer Ordner mit dem Namen der Story angelegt
 foldername_image|image|Alle Bilder werden in diesem Unterordner gespeichert. Pro Story gibt es einen Unterordner `image`. Eine Änderung des Namens ist möglich, wurde aber nicht getestet.
 connect_invalid_image_empty_image|false oder true|Wenn ein Bild nicht geladen werden kann oder es mit "" im replacement-Abschnitt angegeben wurde, so wird mit True stattdessen ein leeres Images verwendet (angegeben unter empty_image)
+connect_always_images|true/false|Wenn true, werden die Bilder nicht mehr aus dem Internet, sondern aus dem Ordner 'foldername_images_shadow_copy' geladen 
+foldername_images_shadow_copy|personal_settings/images|Name des Ordners, in dem alle Bilder gespeichert werden
 foldername_personal_tags|personal_tags|Name des Ordners, in dem die JSON-Dateien für die eigenen persönlichen Beschreibungen
 create_always_personal_settings_file|false oder true|Soll die Datei für personal_settings automatisch angelegt werden. Wenn Ja, muss in 'default_file' eine vorhandene Vorlagen-Datei angegeben werden
 default_file|default|Vorlagendatei für die personal_settings. Der suffix _mytags.json darf nicht angegeben werden
@@ -630,6 +673,16 @@ A: Ein Link auf einer Geschichtenseite verlinkt zu eines Seite, die nicht gelade
 die nicht vorhanden ist. Häufig ist das ein LINK zu einer bestehenden Seite, die chyoa über eine
 so genannte Weiterleitung realisiert hat und die - auch im Browser selber - nicht funktioniert. 
 Es handelt sich also nicht um ein Fehler im Script, sondern die Verlinkung in der Geschichte ist fehlerhaft.  
+
+Q: When I try to load the page, I get an error message that ends with something like
+```script
+story_id = story_id + 1
+TypeError: unsupported operand type(s) for +: 'NoneType’ and ‘int’
+```  
+
+A: Der Fehler kann viele Ursachen haben. Es kann ein Fehler auf der Geschichte mit so genannten Links aufgetreten sein. Es kann aber auch sein, dass vorher zuviele Bilder herunter geladen wurden bzw. das Laden wurde mit einem Fehler beendet.    
+Bei mir ist der Fehler z.B. aufgetreten, als das Laden bei mind. vier Bilder mit einem Fehler (z.B. nicht gefunden) abgebrochen ist. Nachdem die Bilder über die `personal_settings` ausgeschlossen wurden, funktionierte das Laden der Geschichte.
+
 
 ## Hinweise
 

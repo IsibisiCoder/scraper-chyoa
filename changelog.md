@@ -1,6 +1,9 @@
 # Changelog
 
 ## [Unreleased]
+
+## [1.4.0] - 2026-11-08
+
 Added:   Images that cannot be loaded, or that are replaced with "" in the replacement list, can now be replaced with a link to a blank image instead.  
 Added:   New script to update personal tags (tools/update-html-meta.py)   
 Fixed:   author and filename has been corrected (html tag had changed)
