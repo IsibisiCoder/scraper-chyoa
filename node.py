@@ -6,8 +6,12 @@ class Node:
         self.children = []
 
     def add_child(self, child_node):
+        if child_node.parent is not None:
+            child_node.parent.children.remove(child_node)
+
         child_node.parent = self
-        self.children.append(child_node)
+        if child_node not in self.children:
+            self.children.append(child_node)
 
     def contains(node, url):
         if node.value.url == url and not node.value.redirect:
@@ -43,3 +47,39 @@ class Node:
                     chapter.value.parent_id = contains_node.value.parent_id
                     chapter.value.text = contains_node.value.text
         return
+
+    @staticmethod
+    def new_contains(debug, queue, url):
+        for node in queue:
+            if node.value.chapter.url == url:
+                if debug:
+                    print(f'Search for {url}')
+                    print(f'found Node: {node.value.id} / {node.value.url}')
+                    return node
+            if debug:
+                print(f'Child: false => {url}')
+        return None
+
+
+    @staticmethod
+    def new_check_all_chapters(debug, queue):
+        for node in queue:
+            for link in node.value.links:
+                if not link.redirect:
+                    continue
+                if debug:
+                    print(f'Redirect, searching for {link.url} (Chapter: {node.value.chapter.chapter_id}-{node.value.chapter.counter})')
+                contains_node = node.new_contains(debug, queue, link.url)
+                if contains_node:
+                    node.value.chapter.value.id = contains_node.value.id
+                    node.value.chapter.value.story_header1 = contains_node.value.story_header1
+                    node.value.chapter.value.story_header2 = contains_node.value.story_header2
+                    node.value.chapter.value.question = contains_node.value.question
+                    node.value.chapter.value.filename = contains_node.value.filename
+                    node.value.chapter.value.parent_filename = contains_node.value.parent_filename
+                    node.value.chapter.value.parent_id = contains_node.value.parent_id
+                    node.value.chapter.value.text = contains_node.value.text
+
+        return
+
+#for node in queue:

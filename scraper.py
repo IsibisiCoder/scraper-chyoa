@@ -7,7 +7,7 @@ import json
 import requests
 import login
 from config import Config
-from chyoa import Chyoa
+from chyoa_new import Chyoa
 
 #call: python scraper.py scraper_config.json <url>
 def main():

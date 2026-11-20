@@ -6,43 +6,29 @@ class Story:
     def __init__(
             self,
             config,
-            story_id,
-            url,
-            meta,
-            linktext,
-            follow,
-            redirect,
-            story_title,
-            story_header1,
-            story_header2,
-            filename_map,
-            filename_total,
-            personal_settings,
-            personal_tags,
-            images_replacement_url):
+            url):
         self.config = config
-        self.id = story_id
         self.url = url
-        self.meta = meta
-        self.linktext = linktext
-        self.follow=follow
-        self.redirect=redirect
-        self.story_title = story_title
-        self.story_header1 = story_header1
-        self.story_header2 = story_header2
+        self.story_title = ""
+        self.story_header1 = ""
+        self.story_header2 = ""
+        self.follow = True,
+        self.redirect = False,
         self.published_time = ""
         self.modified_time = ""
+        self.meta = ""
         self.folderpath_story = ""
         self.foldername_story = ""
-        self.filename_map = filename_map
-        self.filename_total = filename_total
-        self.personal_settings = personal_settings
-        self.personal_tags = personal_tags
-        self.images_replacement_url = images_replacement_url
+        self.filename_map = ""
+        self.filename_total = ""
+        self.personal_settings = None
+        self.personal_tags = None
+        self.images_replacement_url = ""
+        self.foldername_story_with_id = ""
         self.folderpath_image  = ""
         self.folderpath_personal_settings = ""
+        self.foldername_images_shadow_copy = ""
         self.chapter_title = ""
-        self.question = ""
         self.filename = ""
         self.parent_filename = ""
         self.parent_id = ""
@@ -51,16 +37,33 @@ class Story:
         self.story_image = ""
         self.created = ""
 
+    def set_header(self,
+                   story_title,
+                   story_header1,
+                   story_header2):
+        self.story_title = story_title
+        self.story_header1 = story_header1
+        self.story_header2 = story_header2
 
-    def set(self, story_image, chapter_title, question, filename, parent_filename, parent_id, startsite, text):
-        self.chapter_title = chapter_title
-        self.question = question
-        self.filename = filename
-        self.parent_filename = parent_filename
-        self.parent_id = parent_id
-        self.text = text
-        self.start_site = startsite
+    def set_content(self,
+            meta,
+            foldername_story_with_id,
+            filename_map,
+            filename_total):
+        self.meta = meta
+        self.foldername_story_with_id = foldername_story_with_id
+        self.filename_map = filename_map
+        self.filename_total = filename_total
+
+    def set_personal_settings(self, personal_settings, personal_tags, images_replacement_url):
+        self.personal_settings = personal_settings
+        self.personal_tags = personal_tags
+        self.images_replacement_url = images_replacement_url
+
+    def set(self, story_image, filename, startsite):
         self.story_image = story_image
+        self.filename = filename
+        self.start_site = startsite
 
 
     def create_folder(self, foldername_story):
