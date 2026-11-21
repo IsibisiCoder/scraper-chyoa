@@ -1,41 +1,69 @@
 # (c) 2025-2026 by IsibisiCoder, MIT-License, https://github.com/IsibisiCoder
-import sys
+from urllib.parse import urljoin, urlsplit
+from bs4 import BeautifulSoup
 
-# load login from configfile and login in chyoa-site
+
 def login(debug, session, config):
+    """Log in to CHYOA using the configured credentials and shared session."""
     login_data = config.login
     if not login_data:
-        print("no login defined.")
+        if debug:
+            print("No login configured.")
+        return
 
-    login_with_username_and_password = False
+    login_url = login_data.get("login_url")
+    username = login_data.get("username")
+    password = login_data.get("password")
+    if not login_url:
+        raise ValueError("No login URL configured.")
+    if not username or not password:
+        raise ValueError("Both username and password must be configured.")
 
-    if login_data:
-        login_url = login_data.get("login_url")
-        if not login_url:
-            print("no login-url defined.")
+    login_page = session.get(login_url)
+    login_page.raise_for_status()
+    soup = BeautifulSoup(login_page.text, "html.parser")
+    form = soup.find("form", method=lambda value: value and value.lower() == "post")
+    if form is None:
+        raise ValueError("The login page does not contain a POST form.")
 
-        if login_url:
-            username = login_data.get("username")
-            password = login_data.get("password")
-            if username and password:
-                login_with_username_and_password = True
-                if debug:
-                    print(f"Username '{username}'")
-                    print(f"Password '{password}'")
+    username_field = next(
+        (
+            field
+            for field in form.select("input[name]")
+            if field.get("name", "").lower() in {"username", "auth_username", "email"}
+        ),
+        None,
+    )
+    password_field = form.select_one('input[type="password"][name]')
+    if username_field is None or password_field is None:
+        raise ValueError("The login form is missing its username or password field.")
 
-        if login_with_username_and_password:
-            login_payload = {
-                'username': username,
-                'password': password
-            }
+    payload = {
+        field["name"]: field.get("value", "")
+        for field in form.select('input[type="hidden"][name]')
+    }
+    payload[username_field["name"]] = username
+    payload[password_field["name"]] = password
 
-            print(f"Sign up at {login_url} ...")
-            login_response = session.post(login_url, data=login_payload)
+    post_url = urljoin(login_page.url, form.get("action") or login_page.url)
+    origin = "{uri.scheme}://{uri.netloc}".format(uri=urlsplit(login_page.url))
+    login_response = session.post(
+        post_url,
+        data=payload,
+        headers={"Referer": login_page.url, "Origin": origin},
+    )
+    login_response.raise_for_status()
 
-            if login_response.status_code != 200:
-                print(f"Login failed! Status code: {login_response.status_code}")
-                sys.exit(1)
+    if debug:
+        # test the success login in the settings
+        settings_url = urljoin(login_page.url, "/settings")
+        settings_response = session.get(settings_url)
+        settings_response.raise_for_status()
+        login_path = urlsplit(login_url).path.rstrip("/")
+        settings_path = urlsplit(settings_response.url).path.rstrip("/")
+        if settings_path == login_path:
+            raise RuntimeError("Login failed: CHYOA redirected the session back to the login page.")
+        if username.casefold() not in settings_response.text.casefold():
+            raise RuntimeError("Login could not be verified: the configured username is missing from settings.")
 
-            print("Login successful.")
-
-    return
+    print("Login successful.")
