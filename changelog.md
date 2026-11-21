@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-11-21
+Fixed:   [Issue 6](https://github.com/IsibisiCoder/scraper-chyoa/issues/6): The website has switched to a revised and significantly stricter registration policy. The login has been updated and is now working again.
+
+
 ## [1.4.0] - 2026-11-08
 
 Added:   Images that cannot be loaded, or that are replaced with "" in the replacement list, can now be replaced with a link to a blank image instead.  

@@ -1,0 +1,1 @@
+The system context is maintained in the AGENT.md file
