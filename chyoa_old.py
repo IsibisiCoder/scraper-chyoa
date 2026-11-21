@@ -10,11 +10,9 @@ import uuid
 from ebooklib import epub
 import requests
 from bs4 import BeautifulSoup
-from collections import deque
 
 import config
 from story import Story
-from chapter import Chapter
 from meta import Meta
 from node import Node
 from util import get_unique_filename, download_image, save, copy_css
@@ -31,140 +29,99 @@ class Chyoa:
             try:
                 start = time.perf_counter()
 
-                story = Story(config, url)
-
-                root_chapter = Chapter(config, url, 1, 1)
-                self.get_story(debug, session, config, story, root_chapter, url)
-
-                if root_chapter.soup is None:
+                soup, _ = self.get_soup(debug, session, config, url)
+                if not soup:
                     continue
+
+                story_header1, story_header2, foldername_story = self.scrape_story_title(debug, soup, config)
+                if len(foldername_story) > 100:
+                    foldername_story = foldername_story[0:100]
+                story_title = story_header2
+
+                meta = Meta(debug)
+                meta.scrape_meta_properties(soup, config)
+                meta.scrape_json(soup, config)
+                meta.set_translation_information(config)
+                meta.url = url
+
+                foldername_story = foldername_story.strip("-")
+                # Determine the ID of the home page from the URL (the number after the period)
+                id_of_startsite = url.split(".")[-1]
+                if id_of_startsite:
+                    foldername_story_with_id = f"{foldername_story}_({id_of_startsite})"
+                else:
+                    foldername_story_with_id = foldername_story
+                config.foldername_story_with_id = foldername_story_with_id
 
                 personal_settings = PersonalSettings(debug, config)
                 personal_tags_of_story, images_replacement_url = personal_settings.read_personal_settings()
-                story.set_personal_settings(personal_settings, personal_tags_of_story, images_replacement_url)
 
+                story_id = 1
 
+                root_story = Story(
+                    config = config,
+                    story_id = story_id,
+                    url = url,
+                    meta = meta,
+                    linktext = "",
+                    follow = True,
+                    redirect = False,
+                    story_title = story_title,
+                    story_header1 = story_header1,
+                    story_header2 = story_header2,
+                    filename_map = foldername_story + "-map.html",
+                    filename_total = foldername_story + "-total.html",
+                    personal_settings = personal_settings,
+                    personal_tags = personal_tags_of_story,
+                    images_replacement_url = images_replacement_url
+                )
 
                 # create folder with modified_time
-                folder = story.foldername_story_with_id
-                if root_chapter.meta.modified_time_short != '':
-                    folder = folder + f'_({root_chapter.meta.modified_time_short})'
-                if config.directory_exists_skip_download and story.check_folder_if_exists(folder):
-                    print(f"[skip story]    {story.story_title}")
+                folder = foldername_story_with_id
+                if meta.modified_time_short != '':
+                    folder = folder + f'_({meta.modified_time_short})'
+                if config.directory_exists_skip_download and root_story.check_folder_if_exists(folder):
+                    print(f"[skip story]    {story_title}")
                     continue
-                story.create_folder(folder)
-                story.create_folder_image()
+                root_story.create_folder(folder)
+                root_story.create_folder_image()
 #                root_story.create_folder_personal_settings(folder)
-                story.create_folder_images_shadow_copy()
+                root_story.create_folder_images_shadow_copy()
                 if debug:
-                    print(f"root.storyFolderpath: {story.folderpath_story}")
-                    print(f"root.imageFolderPath: {story.folderpath_image}")
+                    print(f"root.storyFolderpath: {root_story.folderpath_story}")
+                    print(f"root.imageFolderPath: {root_story.folderpath_image}")
 
-                print(f"[story]         {story.story_title}")
-                print(f"[folder]        {story.folderpath_story}")
+                print(f"[story]         {story_title}")
+                print(f"[folder]        {root_story.folderpath_story}")
                 #if personal_tags_of_story:
                 #    print("[personal]      personal tags found")
                 if images_replacement_url:
                     print("[personal]      personal settings - replacement url for images found")
                 print(f"[downloading]   {url}")
+                if config.translate:
+                    print("[translate]")
 
-                #chapter_title, author,  _, _ = self.scrape_chapter_title_story_header(debug, soup, config)
-                #story.meta.author = root_chapter.meta.author
-                filename = self.create_filename(debug, story.story_header2, story.story_title, config.folderpath_stories)
+                chapter_title, author,  _, _ = self.scrape_chapter_title_story_header(debug, soup, config)
+                root_story.meta.author = author
+                filename = self.create_filename(debug, story_header2, story_title, config.folderpath_stories)
+                question = self.scrape_question(debug, soup, config)
 
-                #story_content = self.scrape_content(debug, config, story, soup)
-                image_filename, soup = self.scrape_story_cover(debug, config, story, root_chapter.soup)
+                story_content = self.scrape_content(debug, config, root_story, soup)
+                image_filename, soup = self.scrape_story_cover(debug, config, root_story, soup)
 
-                startsite = f"{root_chapter.chapter_id:04d}-{root_chapter.counter:04d}-{filename}"
+                startsite = f"{story_id:04d}"+"-"+filename
 
-                story.set(
+                root_story.set(
                     story_image = image_filename,
-                    filename = "",
-                    startsite = startsite
+                    chapter_title = chapter_title,
+                    question = question,
+                    filename = f"{story_id:04d}"+"-"+filename,
+                    parent_filename = "",
+                    parent_id = "",
+                    startsite = startsite,
+                    text = story_content
                 )
-                #root_node = Node(root_story)
-
-                chapter_id = 1
-                counter = 1
-                new_root_node = Node(root_chapter)
-                queue = deque([new_root_node])
-                queue_to_collect = deque([new_root_node])
-                #self.new_scrape_links(debug, config, soup, chapter_id+1, new_root_node, queue, queue_to_collect)
-
-                while queue_to_collect:
-                    current_node = queue_to_collect.popleft()
-
-                    if current_node is None or current_node.value is None:
-                        continue
-
-                    print(f"Chapter {current_node.value.chapter_id}-{current_node.value.counter}-{current_node.value.url}")
-
-                    # check content
-                    if current_node.value.soup is None and current_node.value.url is not None:
-                        # load content of the current node
-                        self.new_get_chapter_soup(debug, session, config, current_node)
-                        self.new_scape_meta(debug, config, current_node)
-
-                    # check links / children
-                    if current_node.value.soup is not None and not current_node.value.links_checked:
-                        self.new_scrape_links(debug, config, current_node, queue, queue_to_collect)
-                    filename = self.create_filename(debug, current_node.value.header1, current_node.value.title, config.folderpath_stories).strip()
-                    filename_complete = f"{current_node.value.chapter_id:04d}-{current_node.value.counter:04d}-{current_node.value.title.replace(" ", "_").strip()}-{filename}"
-                    current_node.value.set_filename(filename_complete)
-
-                new_root_node.new_check_all_chapters(debug, queue)
-
-                copy_css(debug, story.folderpath_story, "style.css")
-                print("[saving]")
-
-                if config.multiple_pages:
-                    self.new_save_stories(debug, config, story, queue)
-                #if config.whole_story_one_page:
-                #    self.save_stories_to_one_file(debug, config, root_story, root_node)
-                #if config.multiple_pages:
-                #    self.create_map(debug, root_story.folderpath_story, root_story.filename_map, root_node, config)
-
-
-
-                filepath = os.path.join(story.folderpath_story, "test-temp.txt")
-
-                print("-----------------------------------------")
-                with open(filepath, 'w', encoding='utf-8') as f:
-                    f.write(f"Story: {story.story_title}\n")
-                    for node in queue:
-                        print("-----------------------------------------")
-                        print(f"Chapter {node.value.chapter_id}-{node.value.counter}-{node.value.title} => {node.value.url}")
-                        print(f"filename: {node.value.filename}")
-                        if node.value.links:
-                            for link in node.value.links:
-                                print(f"link_text: {link.link_text}")
-                                print(f"URL: {link.url}")
-                                print(f"Redirect: {link.redirect}")
-
-                        f.write(f"Chapter: {node.value.title}\n")
-                        f.write(f"Filename: {node.value.filename}\n")
-                        f.write(f"URL: {node.value.url}\n")
-                        f.write(f"headers1: {node.value.header1}\n")
-                        f.write(f"headers2: {node.value.header2}\n")
-                        f.write(f"Question: {node.value.question}\n")
-                        f.write("Links\n")
-                        if node.value.links:
-                            for link in node.value.links:
-                                f.write(f"link_text: {link.link_text}\n")
-                                f.write(f"URL: {link.url}\n")
-                        if node.value.meta is not None:
-                            f.write(f"{node.value.meta.author}\n")
-                            f.write(f"{node.value.meta.published_time}\n")
-                            f.write(f"{node.value.meta.modified_time}\n")
-
-                        f.write(f"Soap: {node.value.soup}\n")
-
-                #print(f"Root-ch {new_root_node.value.chapter_id}-{new_root_node.value.counter}-{new_root_node.value.link_text} => {new_root_node.value.url}")
-                #for node in new_root_node.children:
-                #    print(f"Chapter {node.value.chapter_id}-{node.value.counter}-{node.value.link_text} => {node.value.url}")
-
-
-                return
+                root_node = Node(root_story)
 
                 sys.setrecursionlimit(config.recursion_limit)
                 story_id = self.get_links_from_site(debug, config, root_story, root_node, root_node, session, url, story_id, startsite, story_id)
@@ -202,233 +159,6 @@ class Chyoa:
                 print(f"[ERROR]         Error loading {url}: {e}")
         print("[finished]")
 
-    # scrape new beginning
-
-    def get_story(self, debug, session, config, story, chapter, url):
-        soup, _ = self.get_soup(debug, session, config, url)
-        if not soup:
-            return
-
-        meta = Meta(debug)
-        meta.scrape_meta_properties(soup, config)
-        meta.scrape_json(soup, config)
-        meta.url = url
-
-        story_header1, story_header2, foldername_story = self.scrape_story_headers(debug, soup, config)
-        story.set_header(story_header2, story_header1, story_header2)
-
-        chapter_title, author, _, _ = self.scrape_chapter_title_story_header(debug, soup, config)
-        question = self.scrape_question(debug, soup, config)
-        chapter.set_question(question)
-
-        chapter.set_content(soup, chapter_title, story_header1, story_header2, meta)
-        self.new_scrape_content(debug, config, chapter, soup)
-
-        if len(foldername_story) > 100:
-            foldername_story = foldername_story[0:100]
-
-        foldername_story = foldername_story.strip("-")
-        # Determine the ID of the home page from the URL (the number after the period)
-        id_of_startsite = url.split(".")[-1]
-        if id_of_startsite:
-            foldername_story_with_id = f"{foldername_story}_({id_of_startsite})"
-        else:
-            foldername_story_with_id = foldername_story
-
-        story.set_content(meta, foldername_story_with_id, foldername_story + "-map.html", foldername_story + "-total.html")
-        return
-
-    def new_get_chapter_soup(self, debug, session, config, current_node):
-        soup, response_url = self.get_soup(debug, session, config, current_node.value.url)
-        #if not soup:
-        #    return
-
-        if current_node.value.url != response_url:
-            if current_node.parent is not None and current_node.parent.value is not None:
-                current_node.parent.value.set_redirect(True, current_node.value.url)
-                print(f"[redirect]      {current_node.value.url} => {response_url}")
-        #current_node.value.set_redirect(redirect)
-        current_node.value.set_soup(soup)
-        return
-
-    def new_scrape_content(self, debug, config, chapter, soup):
-        """scrape only the content"""
-        content_navigable_all = soup.find_all(config.chapter_htmltag, class_=config.content_class)
-        if not content_navigable_all:
-            content = "<!-- no content found -->"
-        content = soup.prettify() if content_navigable_all else "<!-- no content found -->"
-        chapter.content = content
-
-        if debug:
-            print(f"chapter: {content[1:50]}")
-
-        return
-
-    def new_scape_meta(self, debug, config, current_node):
-        meta = Meta(debug)
-        meta.scrape_meta_properties(current_node.value.soup, config)
-        meta.scrape_json(current_node.value.soup, config)
-
-        chapter_title, author, story_header1, story_header2 = self.scrape_chapter_title_story_header(debug, current_node.value.soup, config)
-        meta.author = author
-
-        question = self.scrape_question(debug, current_node.value.soup, config)
-
-        current_node.value.set_header(chapter_title, story_header1, story_header2, meta)
-        current_node.value.set_question(question)
-
-    def new_scrape_links(self, debug, config, current_node, queue, queue_to_collect):
-        chapter_id = current_node.value.chapter_id + 1
-        counter = 0
-        content_navigable_all = current_node.value.soup.find_all(config.chapter_htmltag, class_=config.question_class)
-        for c in content_navigable_all:
-            for a_tag in c.find_all("a"):
-                counter = counter + 1
-                a_href = a_tag.get("href")
-                a_text = a_tag.get_text(strip=True)
-
-                # Filter out links based on config.ignore_links
-                check_link_text = False
-                if getattr(config, 'ignore_links', None):
-                    check_link_text = any(ignore in a_text for ignore in config.ignore_links) or any(ignore in a_href for ignore in config.ignore_links)
-                if not check_link_text:
-                    if debug:
-                        print(f"chapter {chapter_id}-{counter}-{a_text} => {a_href}")
-                    chapter = Chapter(config, a_href, chapter_id, counter)
-                    current_node.value.add_link(a_text, a_href)
-
-                    new_node = Node(chapter)
-                    current_node.add_child(new_node)
-                    queue.append(new_node)
-                    queue_to_collect.append(new_node)
-
-        current_node.value.set_links_checked(True)
-        return
-
-    def new_save_stories(self, debug, config, story, queue):
-        """save stories"""
-        for node in queue:
-            if debug:
-                print(f"save Filename {node.value.filename} - {node.value.chapter.chaper_id}-{node.value.chapter.counter}")
-            html = self.new_create_html(debug, config, story, node)
-            save(story.folderpath_story, node.value.filename, node, html, config.override_html_sites)
-
-    def new_create_html(self, debug, config, story, node):
-        htmltext = []
-        htmltext = self.new_create_html_head(config, htmltext, story, node)
-        htmltext = self.create_javascript(htmltext)
-        htmltext = self.new_create_html_body(config, story, htmltext, node)
-        htmltext.append("</body></html>")
-        return htmltext
-
-    def new_create_html_head(self, config, htmltext, story, node):
-        """create html body with title"""
-        htmltext.append("<!DOCTYPE html>\n")
-        htmltext.append(f'<html><head><meta charset="utf-8"><meta name="generator" content="{config.version}">\n')
-        htmltext.append(f"<title>{story.story_title}</title>\n")
-        htmltext.append('<link rel="stylesheet" href="style.css">\n')
-        htmltext.append("</head><body>\n")
-        if story.story_image:
-            htmltext.append(f'<div class="cover"><img src="{story.story_image}" alt="Image of {story.story_title}" /></div>\n')
-        if story.story_title:
-            htmltext.append(f'<h1 class="storytitle">{story.story_title}</h1>\n')
-        return htmltext
-
-    def new_create_html_body(self, config, story, htmltext, node):
-        """get html content of one chapter"""
-        htmltext = self.new_create_meta(htmltext, story, node, config)
-
-        htmltext.append('\n<aside><div class="description">')
-        htmltext = self.create_description_chapter_body(htmltext, node)
-        htmltext = self.create_description_story_body(htmltext, node, config)
-        htmltext = self.new_create_personal_tags_story_body(htmltext, story, node)
-        htmltext.append('</div></aside>\n')
-
-        htmltext.append(f'<p id={str(node.value.chapter_id)} class="storyheader2">')
-        if story.story_header2 and node.value.story_header2.strip():
-            htmltext.append(f'{story.story_header2}')
-        htmltext.append('</p>')
-        if story.story_header1 and story.story_header1.strip():
-            htmltext.append(f'<div class="storyheader1">{story.story_header1}</div>')
-
-        htmltext.append(f'<div class="chapterheader">{node.value.title.strip()}')
-        if node.value.meta.author.strip():
-            htmltext.append(f" by {node.value.meta.author}")
-            if node.value.meta.published_time_short != "" or node.value.meta.modified_time_short != "":
-                htmltext.append('<span class="publisheddate">')
-                published_time = ""
-                if node.value.meta.published_time_short != "":
-                    published_time = f" created on {node.value.meta.published_time_short}"
-                if node.value.meta.published_time_short != "" and node.value.meta.modified_time_short != "":
-                    published_time = f"{published_time}, "
-                if node.value.meta.modified_time_short != "":
-                    published_time = f"{published_time}updated on {node.value.meta.modified_time_short}"
-                htmltext.append(published_time)
-                htmltext.append('</span>')
-        htmltext.append("</div>")
-
-        htmltext.append('<hr>')
-        htmltext.append(f'<section>{node.value.content}</section>')
-        htmltext.append('<hr>')
-        htmltext.append(f'<div class="question-header">{node.value.question}</div>')
-        htmltext.append('<div class="question-content">')
-        for links in node.value.links:
-            htmltext.append(f'<div class="list-item anker-text"><a href="{links.url}">{links.linktext}</a></div>')
-        htmltext.append('<br><hr>')
-        #if node.parent.value.filename:
-            #if multiple_pages:
-            #htmltext.append(f'<div class="list-item-previous"><a href="{node.parent.value.filename}" class="anker-text-map-start">Previous Chapter</a></div>')
-            #else:
-            #    htmltext.append(f'<div class="list-item-previous"><a href="#{node.value.parent_id}" class="anker-text-map-start">Previous Chapter</a></div>')
-        #if queue[0].value.filename:
-            #if multiple_pages:
-            #htmltext.append(f'<div class="list-item-previous"><a href="{queue[0].value.filename}" class="anker-text-map-start">Start Over</a></div>')
-            #else:
-            #    htmltext.append('<div class="list-item-previous"><a href="#" class="anker-text-map-start">Start Over</a></div>')
-        #if node.value.filename_map and multiple_pages:
-        #    htmltext.append(f'<div class="list-item-previous"><a href="{node.value.filename_map}" class="anker-text-map-start">Map</a></div>')
-        htmltext.append("</div>\n")
-        return htmltext
-
-    def new_create_personal_tags_story_body(self, htmltext, story, node):
-        if story.personal_tags:
-            htmltext.append('<div class="personal-tags">')
-            for key, value in story.personal_tags.items():
-                if not value:
-                    continue
-                htmltext.append(f'| <b>{key}</b>: {value} ')
-            htmltext.append('</div>')
-        return htmltext
-
-    def new_create_meta(self, htmltext, story, node, config):
-        """create meta-tags of one chapter"""
-        htmltext.append(f'\n<meta name="story" content="{story.story_title}">\n')
-        htmltext.append(f'<meta name="title" content="{node.value.title}">\n')
-        htmltext.append(f'<meta name="author" content="{node.value.meta.author}">\n')
-        htmltext.append(f'<meta name="language" content="{node.value.meta.language}">\n')
-        if node.value.meta.tag.strip():
-            htmltext.append(f'<meta name="tag" content="{node.value.meta.tag}">\n')
-        if node.value.meta.category.strip():
-            htmltext.append(f'<meta name="category" content="{node.value.meta.category}">\n')
-        if node.value.meta.published_time_short.strip():
-            htmltext.append(f'<meta name="published_time" content="{node.value.meta.published_time_short}">\n')
-        if node.value.meta.modified_time_short.strip():
-            htmltext.append(f'<meta name="modified_time" content="{node.value.meta.modified_time_short}">\n')
-        htmltext.append(f'<meta name="likes" content="{node.value.meta.likes}">\n')
-        htmltext.append(f'<meta name="views" content="{node.value.meta.views}">\n')
-        htmltext.append(f'<meta name="scraper_date" content="{datetime.now().strftime('%Y-%m-%d')}">\n')
-
-        if story.personal_tags:
-            for key, value in story.personal_tags.items():
-                if not value:
-                    continue
-                personal_tag_value = value.replace("<br>", "").replace("<b>", "").replace("</b>", "").replace("<i>",
-                                                                                                              "").replace(
-                    "</i>", "").replace("<u>", "").replace("</u>", "")
-                htmltext.append(f'<meta name="{key}" content="{personal_tag_value}">\n')
-
-        return htmltext
-
     def get_soup(self, debug, session, config, url):
         # A wait time to prevent the web server from becoming overloaded.
         # Random pauses are inserted between two values to prevent the server from being locked out.
@@ -449,8 +179,6 @@ class Chyoa:
             print(f"[ERROR]         Error loading site {url}: {e}")
         return None, None
 
-    # scrape new ending
-
     def get_links_from_site(self, debug, config, root_story, root, node, session, url, story_id, parent_filename, parent_id):
         soup, _ = self.get_soup(debug, session, config, url)
         if not soup:
@@ -466,7 +194,6 @@ class Chyoa:
                 if debug:
                     print(f"Url: {link.url} / Parent {parent_filename} exists and links from url do not follow!")
         return story_id
-
 
     def scrape_links(self, debug, config, root_story, session, soup, root, story_id, parent_filename, parent_id):
         all_links = []
@@ -622,7 +349,7 @@ class Chyoa:
             if child.value.follow:
                 self.get_all_links(debug, child, level + 1)
 
-    def scrape_story_headers(self, debug, soup, config):
+    def scrape_story_title(self, debug, soup, config):
         header = soup.find('header', class_='story-header')
         story_header1 = ""
         story_header2 = ""
@@ -745,8 +472,6 @@ class Chyoa:
             else:
                 img.decompose()
         return filename_image, soup
-
-
 
     def scrape_content(self, debug, config, root_story, soup):
         """scrape the content"""

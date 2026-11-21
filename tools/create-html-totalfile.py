@@ -2,7 +2,7 @@
 
 import argparse
 import re
-import chyoa
+import chyoa_old
 from pathlib import Path
 from typing import Any, Literal
 
@@ -108,8 +108,8 @@ def generate_total_html(directory, output_file=None):
 
     story_title = next((chapter[2] for chapter in chapters if chapter[2]), directory.name)
     htmltext = []
-    htmltext = chyoa.create_html_head(config, htmltext, node, multiple_pages, first_page)
-    htmltext = chyoa.create_javascript(htmltext)
+    htmltext = chyoa_old.create_html_head(config, htmltext, node, multiple_pages, first_page)
+    htmltext = chyoa_old.create_javascript(htmltext)
 
     html = [
         "<!DOCTYPE html>",

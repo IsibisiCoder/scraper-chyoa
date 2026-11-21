@@ -7,7 +7,7 @@ import json
 import requests
 import login
 from config import Config
-from chyoa_new import Chyoa
+from chyoa import Chyoa
 
 #call: python scraper.py scraper_config.json <url>
 def main():
@@ -33,10 +33,6 @@ def main():
         print(f"config-json-file '{config_json_file}' not found or can not loaded!")
         sys.exit(1)
     config: Config = read_config(config_file, version)
-
-    if not config.multiple_pages and not config.whole_story_one_page:
-        print("Configuration error: Please set either `multiplepages` or `wholeStoryOnePage` to True")
-        sys.exit(1)
 
     if not config.question_class:
         print("configfile: question_class not found!")
@@ -93,7 +89,6 @@ def read_config(config_file: dict, version) -> Config:
     chapter_htmltag = config_file.get("htmltag", "div")
     folderpath_stories = config_file.get("folder", "story")
     recursion_limit = config_file.get("recursionlimit", 1500)
-    multiple_pages = config_file.get("multiple_pages", True)
     whole_story_one_page = config_file.get("whole_story_one_page", True)
     override_html_sites = config_file.get("htmlSiteOverride", False)
     storyname_with_id = config_file.get("storyname_with_id", True)
@@ -149,7 +144,6 @@ def read_config(config_file: dict, version) -> Config:
         chapter_htmltag,
         recursion_limit,
         storyname_with_id,
-        multiple_pages,
         whole_story_one_page,
         override_html_sites,
         folderpath_stories,

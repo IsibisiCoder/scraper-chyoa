@@ -27,7 +27,6 @@ class Config:
             chapter_htmltag,
             recursion_limit,
             storyname_with_id,
-            multiple_pages,
             whole_story_one_page,
             override_html_sites,
             folderpath_stories,
@@ -69,7 +68,6 @@ class Config:
         self.content_class = content_class
         self.chapter_htmltag = chapter_htmltag
         self.recursion_limit = recursion_limit
-        self.multiple_pages = multiple_pages
         self.whole_story_one_page = whole_story_one_page
         self.override_html_sites = override_html_sites
         self.storyname_with_id = storyname_with_id
